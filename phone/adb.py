@@ -10,7 +10,6 @@ import time
 from collections.abc import Callable
 
 ADB = os.environ.get("ADB", "adb")
-FOCUS = re.compile(r"mCurrentFocus=Window\{\S+ \S+ (?:\S+:)?([\w.]+)/")
 CLICK = re.compile(r"TYPE_VIEW_CLICKED.*?PackageName: ([^;]*).*?Text: \[([^\]]*)\]")
 RESUMED = re.compile(r"ResumedActivity=ActivityRecord\{\S+ \S+ (\S+)")
 
@@ -24,14 +23,9 @@ def shell(cmd: str, timeout: int = 30) -> str:
     return run("shell", cmd, timeout=timeout)
 
 
-def focus_owner() -> str:
-    """The package owning the focused window, or "" when none."""
-    m = FOCUS.search(shell("dumpsys window"))
-    return m.group(1) if m else ""
-
-
 def ui_xml() -> str:
-    shell("uiautomator dump /sdcard/ui.xml")
+    """The accessibility tree; the old file goes first, so a dump that fails returns nothing."""
+    shell("rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml")
     return run("exec-out", "cat", "/sdcard/ui.xml")
 
 
@@ -61,9 +55,9 @@ def clicked_during[T](act: Callable[[], T]) -> tuple[T, tuple[str, str]]:
     return result, ((m.group(1).strip(), m.group(2)) if m else ("", ""))
 
 
-def tap(x: int, y: int) -> tuple[str, str]:
-    """Tap, and return (package, text) of the TYPE_VIEW_CLICKED event it caused, or ("", "")."""
-    return clicked_during(lambda: shell(f"input tap {x} {y}"))[1]
+def input_dump() -> str:
+    """`dumpsys input`: the dispatcher's window list, read by phone/windows.py."""
+    return shell("dumpsys input")
 
 
 def launch(pkg: str) -> None:

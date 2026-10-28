@@ -12,12 +12,13 @@ from dataclasses import dataclass
 Rect = tuple[int, int, int, int]  # left, top, right, bottom; right and bottom exclusive
 SKIP = frozenset({"NOT_VISIBLE", "NOT_TOUCHABLE", "SPY"})  # windows that never consume a touch
 SINK = "NO_INPUT_CHANNEL"  # consumes the touch and delivers it to nobody
-DISPLAY = re.compile(r"^  Display: (\d+)$")
+DISPLAY = re.compile(r"^  Display: (\d+)$", re.ASCII)
 SECTION = re.compile(r"^    Windows:$")
 LIST_DEPTH = 4  # the indent of a `Windows:` header; its windows sit deeper
 WINDOW = re.compile(
     r"^ +\d+: name=(.*?), id=\d+, displayId=(\d+), inputConfig=([^,]*), .*?"
-    r"touchableRegion=(.*?), ownerPid=\d+, ownerUid=(\d+)"
+    r"touchableRegion=(.*?), ownerPid=\d+, ownerUid=(\d+)",
+    re.ASCII,
 )
 # Printed by the system after the title; the title is the app's, so a title that repeats one of
 # them, or breaks the line, could forge a window. Each must appear exactly once on a window's line.
@@ -26,7 +27,7 @@ TRUSTED = ("displayId=", "inputConfig=", "touchableRegion=", "ownerPid=", "owner
 NOT_A_WINDOW = re.compile(
     r"^ *$|^ +transform \([A-Z0-9_]+\)( \([A-Z ]+\))?$|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$"
 )
-INDEX = re.compile(r"^ +(\d+): name=")
+INDEX = re.compile(r"^ +(\d+): name=", re.ASCII)  # \d alone also matches other scripts' digits
 RECT = re.compile(r"\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]")
 FOCUSED = re.compile(r"FocusedWindows:\n +displayId=0, name='([^']*)'")
 UID_LINE = re.compile(r"^package:(\S+) uid:(\d+)$", re.M)
@@ -150,11 +151,21 @@ def packages_by_uid(text: str) -> dict[int, frozenset[str]]:
 Uids = dict[int, frozenset[str]]
 
 
+def shown(windows: list[Window], uids: Uids, pkg: str) -> bool:
+    """Whether any visible, touchable window belongs to `pkg`, focused or not."""
+    mine = {uid for uid, pkgs in uids.items() if pkg in pkgs}
+    return any(w.uid in mine and not w.flags & SKIP for w in windows)
+
+
 def owner_package(w: Window | None, uids: Uids, task_pkg: str, allow: frozenset[str]) -> str:
     """The package the gate checks for window `w`: the task app if its uid owns `w`, else an
     allowlisted package of that uid, else any package of it; "" when nothing is known.
+
+    A uid shared by several packages (the system's 1000) is the task app only when the window's
+    name carries the task's component: only system code names those windows, and the attacker can
+    open other uid-1000 windows (an account chooser) with its own text in them.
     """
     pkgs = uids.get(w.uid, frozenset()) if w else frozenset()
-    if task_pkg in pkgs:
+    if w and task_pkg in pkgs and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):
         return task_pkg
     return min(pkgs & allow, default=min(pkgs, default=""))

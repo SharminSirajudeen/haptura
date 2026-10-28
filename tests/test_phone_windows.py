@@ -8,11 +8,15 @@ import re
 from pathlib import Path
 
 from phone.windows import (
+    DISPLAY,
+    INDEX,
+    Window,
     focused,
     owner_package,
     packages_by_uid,
     parse_windows,
     receiver,
+    shown,
 )
 
 FIX = Path(__file__).parent / "fixtures" / "phone"
@@ -120,6 +124,11 @@ def test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything(
     assert parse_windows(on_top("settings", title)) == []
 
 
+def test_only_ascii_digits_number_a_window_or_a_display() -> None:
+    assert INDEX.match("      \u0660: name=x") is None  # an Arabic-Indic zero
+    assert DISPLAY.match("  Display: \u0660") is None
+
+
 def test_a_window_on_another_display_is_not_ours() -> None:
     other = on_top("settings", "elsewhere").replace(
         "displayId=0, inputConfig=0x0", "displayId=2, inputConfig=0x0", 1
@@ -159,6 +168,25 @@ def test_a_shared_system_uid_resolves_to_the_task_app_it_contains() -> None:
     w = receiver(WINS["settings"], 360, 600)
     assert owner_package(w, UIDS, "com.android.settings", frozenset()) == "com.android.settings"
     assert owner_package(w, UIDS, "com.google.android.calendar", frozenset()) != ""
+
+
+def test_a_shared_uid_window_without_the_tasks_component_is_not_the_task_app() -> None:
+    chooser = parse_windows(
+        on_top("settings", "ab12 android/android.accounts.ChooseTypeAndAccountActivity")
+    )
+    chooser = [
+        Window(w.name, w.flags, w.region, 1000) if "Choose" in w.name else w for w in chooser
+    ]
+    w = receiver(chooser, 360, 600)
+    assert w is not None and "Choose" in w.name
+    assert owner_package(w, UIDS, "com.android.settings", frozenset()) != "com.android.settings"
+
+
+def test_the_overlay_is_shown_whether_or_not_it_has_focus() -> None:
+    assert shown(WINS["overlay"], UIDS, "com.example.myapplication")
+    assert not shown(WINS["settings"], UIDS, "com.example.myapplication")
+    hidden = [Window("h", frozenset({"NOT_VISIBLE"}), ((0, 0, 720, 1280),), HELPER)]
+    assert not shown(hidden, UIDS, "com.example.myapplication")  # a window that takes no touch
 
 
 def test_another_uid_is_never_the_task_app() -> None:
