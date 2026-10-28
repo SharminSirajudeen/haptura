@@ -6,8 +6,11 @@ from typing import cast
 
 import numpy as np
 
+from gate.arena import Arena, make_scenario, render
+from gate.constants import JUMP_TOL
+from gate.gate import diagnose
 from gate.trackers import colour_tracker, match_ids, truth_tracker
-from gate.types import Frames
+from gate.types import Frames, Tracks
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -81,3 +84,50 @@ def test_truth_tracker_keeps_absent_frames_nan() -> None:
     assert tuple(tracks[1][1]) == (7.0, 5.0)
     assert tuple(tracks[2][0]) == (9.0, 9.0)
     assert np.isnan(tracks[2][1]).all()
+
+
+def _steered_block(seed: int) -> tuple[dict[str, tuple[float, float]], list[str], Tracks, Tracks]:
+    """One act block on a feasible identity-map scenario, steering the subject straight at the
+    goal.
+    """
+    scenario = make_scenario(seed, "feasible")
+    body = dict(scenario.action_maps[0][1])
+    arena = Arena(scenario)
+    arena.start_block()
+    frames, actions = [render(arena)], []
+    gx = (scenario.goal[0] + scenario.goal[2]) / 2
+    gy = (scenario.goal[1] + scenario.goal[3]) / 2
+    for _ in range(30):
+        x, y = arena.positions()[0]
+        horizontal = abs(gx - x) >= abs(gy - y)
+        act = ("right" if gx > x else "left") if horizontal else ("down" if gy > y else "up")
+        actions.append(act)
+        arena.step(act, True)
+        frames.append(render(arena))
+    return body, actions, colour_tracker(np.array(frames)), truth_tracker(arena.history)
+
+
+def _subject_id(tracks: Tracks, truth: Tracks) -> int:
+    start = truth[0][0]
+    return min(
+        tracks, key=lambda i: float(np.nan_to_num(np.hypot(*(tracks[i][0] - start)), nan=1e9))
+    )
+
+
+def test_at_a_forced_crossing_the_colour_tracker_swaps_and_s14_catches_it() -> None:
+    # seed 34: measured 28 Oct, the subject's colour id drifts 26.5 px off its true path after the
+    # crossing
+    body, actions, tracks, truth = _steered_block(34)
+    cid = _subject_id(tracks, truth)
+    assert np.nanmax(np.hypot(*(tracks[cid] - truth[0]).T)) > 2 * JUMP_TOL
+    d = diagnose(body, actions, tracks, cid)
+    assert d.kind == "eyes_swapped"
+    assert d.swap is not None and d.swap[0] == cid
+
+
+def test_where_the_colour_tracker_holds_s14_reports_no_swap() -> None:
+    # seed 0: measured 28 Oct, the colour id stays on the subject through the block
+    body, actions, tracks, truth = _steered_block(0)
+    cid = _subject_id(tracks, truth)
+    assert np.nanmax(np.hypot(*(tracks[cid] - truth[0]).T)) <= JUMP_TOL
+    assert diagnose(body, actions, tracks, cid).kind == "ok"
