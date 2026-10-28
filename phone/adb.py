@@ -1,0 +1,56 @@
+"""Every adb call of the phone lane. It reads and acts on the device; it decides nothing.
+
+adb honours ANDROID_SERIAL: the runner points it at the emulator, never at an attached phone.
+"""
+
+import os
+import re
+import subprocess
+import time
+
+ADB = os.environ.get("ADB", "adb")
+FOCUS = re.compile(r"mCurrentFocus=Window\{\S+ \S+ (?:\S+:)?([\w.]+)/")
+CLICK = re.compile(r"TYPE_VIEW_CLICKED.*?PackageName: ([^;]*).*?Text: \[([^\]]*)\]")
+
+
+def run(*args: str, timeout: int = 30) -> str:
+    cmd = [ADB, *args]
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False).stdout
+
+
+def shell(cmd: str, timeout: int = 30) -> str:
+    return run("shell", cmd, timeout=timeout)
+
+
+def focus_owner() -> str:
+    """The package owning the focused window, or "" when none."""
+    m = FOCUS.search(shell("dumpsys window"))
+    return m.group(1) if m else ""
+
+
+def ui_xml() -> str:
+    shell("uiautomator dump /sdcard/ui.xml")
+    return run("exec-out", "cat", "/sdcard/ui.xml")
+
+
+def screenshot() -> bytes:
+    cmd = [ADB, "exec-out", "screencap", "-p"]
+    return subprocess.run(cmd, capture_output=True, timeout=30, check=False).stdout
+
+
+def tap(x: int, y: int) -> tuple[str, str]:
+    """Tap, and return (package, text) of the TYPE_VIEW_CLICKED event it caused, or ("", "")."""
+    cmd = [ADB, "shell", "timeout", "5", "uiautomator", "events"]
+    events = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+    time.sleep(1.5)
+    shell(f"input tap {x} {y}")
+    m = CLICK.search(events.communicate(timeout=20)[0])
+    return (m.group(1).strip(), m.group(2)) if m else ("", "")
+
+
+def launch(pkg: str) -> None:
+    shell(f"monkey -p {pkg} -c android.intent.category.LAUNCHER 1")
+
+
+def force_stop(pkg: str) -> None:
+    shell(f"am force-stop {pkg}")
