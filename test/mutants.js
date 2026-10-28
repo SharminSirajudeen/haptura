@@ -16,8 +16,12 @@ const MUTANTS = require(path.join(root, LIST));
 const LIMIT = 300000;   // a runaway mutant is killed here; a shard per core runs each test about 2.5x slower than alone
 
 const count = (text, s) => text.split(s).length - 1;
-const sh = (dir, cmd) => spawnSync(cmd, { cwd:dir, shell:true, encoding:'utf8', timeout:LIMIT });
-const run = (dir, m) => { if (m.before) sh(dir, m.before); return m.cmd ? sh(dir, m.cmd) : spawnSync(process.execPath, [m.mustFail], { cwd:dir, encoding:'utf8', timeout:LIMIT }); };
+// Python's bytecode cache is keyed on the source's size and whole-second mtime: a write with the size and mtime of
+// the last compiled version runs that version's code (a stale mutant or the original). Nothing is written, so
+// every run compiles the file on disk. A child started with a scrubbed environment would bring the defect back.
+const ENV = Object.assign({}, process.env, { PYTHONDONTWRITEBYTECODE:'1' });
+const sh = (dir, cmd) => spawnSync(cmd, { cwd:dir, shell:true, encoding:'utf8', timeout:LIMIT, env:ENV });
+const run = (dir, m) => { if (m.before) sh(dir, m.before); return m.cmd ? sh(dir, m.cmd) : spawnSync(process.execPath, [m.mustFail], { cwd:dir, encoding:'utf8', timeout:LIMIT, env:ENV }); };
 // our harness prints `FAIL <name>`; another runner (`cmd`) is matched on its own failure line, e.g. `<name> [E]`
 const failLine = (r, m) => ((r.stdout || '') + '\n' + (r.stderr || '')).split('\n').find(l => (m.cmd || l.startsWith('FAIL')) && l.indexOf(m.expect) >= 0);
 
