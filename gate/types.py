@@ -89,7 +89,7 @@ class BlockRecord:
     evidence: tuple[Evidence, ...]
     advice: Decision | None  # the S15 or S14 line shown to Muse; None in baseline a
     decision: Decision | None  # Muse's call after this block
-    diagnosis: Diagnosis | None  # S14's result and the fix taken; None in probe blocks
+    diagnosis: Diagnosis | None  # S14's result; a diagnostic probe's verdict; None in experiments
 
 
 @dataclass(frozen=True)
