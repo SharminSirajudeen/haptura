@@ -152,6 +152,16 @@ def muse_turn(
     return _reply(raw)
 
 
+def _arguments(text: str) -> dict[str, Any]:
+    """A tool call's JSON arguments; {} when they do not parse (cut off at max_output_tokens), which
+    the agent loop answers as bad arguments. A cached reply that crashed would crash every rerun."""
+    try:
+        args = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return args if isinstance(args, dict) else {}
+
+
 def _reply(raw: dict[str, Any]) -> MuseReply:
     output = raw["output"]
     text = "".join(
@@ -162,7 +172,7 @@ def _reply(raw: dict[str, Any]) -> MuseReply:
         if c["type"] == "output_text"
     )
     calls = tuple(
-        ToolCall(o["name"], json.loads(o["arguments"]), o["call_id"])
+        ToolCall(o["name"], _arguments(o["arguments"]), o["call_id"])
         for o in output
         if o["type"] == "function_call"
     )

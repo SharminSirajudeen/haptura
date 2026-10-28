@@ -3,6 +3,7 @@ condition (no network). A paid condition is only ever projected here; its episod
 a stub that fails the test if it is called.
 """
 
+import math
 import subprocess
 from pathlib import Path
 
@@ -87,14 +88,79 @@ def test_the_run_stops_before_an_episode_would_pass_the_budget(
     assert len(list((tmp_path / run.FREE).iterdir())) == 3 and said[-1] == said[-3]
 
 
-def test_push_commits_and_pushes_after_every_seed(
+class Git:
+    """A stand-in for subprocess.run: records each git command; `staged` is what `git diff --cached
+    --quiet` reports (1: something staged); a command in `fail` raises as a failed check would."""
+
+    def __init__(self, staged: int = 1, fail: str = "") -> None:
+        self.sent: list[tuple[list[str], bool]] = []
+        self.staged, self.fail = staged, fail
+
+    def __call__(self, cmd: list[str], check: bool) -> subprocess.CompletedProcess[str]:
+        self.sent.append((cmd, check))
+        if cmd[1] == self.fail and check:
+            raise subprocess.CalledProcessError(1, cmd)
+        return subprocess.CompletedProcess(cmd, self.staged if cmd[1] == "diff" else 0)
+
+    def verbs(self) -> list[str]:
+        return [c[1] for c, _ in self.sent]
+
+
+def test_push_commits_and_pushes_after_every_seed_and_at_the_end(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    sent: list[list[str]] = []
-    monkeypatch.setattr(subprocess, "run", lambda cmd, check: sent.append(cmd))
+    git = Git()
+    monkeypatch.setattr(subprocess, "run", git)
     run.run(run.FREE, range(2), 0.0, out=tmp_path, push=True, say=lambda _: None)
-    assert [c[1] for c in sent] == ["add", "commit", "push"] * 2  # hand: two seeds
-    assert sent[1][-1] == "run: rules-only+truth seed 0, $0.00 spent"
+    assert git.verbs() == ["add", "diff", "commit", "push"] * 3  # hand: two seeds, then the end
+    assert git.sent[2] == (
+        ["git", "commit", "-q", "-m", "run: rules-only+truth seed 0, $0.00 spent"],
+        True,
+    )
+    assert git.sent[3] == (["git", "push", "-q", "origin", "HEAD"], True)
+    nothing = Git(staged=0)
+    monkeypatch.setattr(subprocess, "run", nothing)
+    run.run(run.FREE, range(1), 0.0, out=tmp_path, push=True, say=lambda _: None)
+    assert nothing.verbs() == ["add", "diff", "push"] * 2  # hand: nothing new staged, no commit
+
+
+def test_a_failed_commit_stops_the_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(subprocess, "run", Git(fail="commit"))
+    with pytest.raises(subprocess.CalledProcessError):
+        run.run(run.FREE, range(1), 0.0, out=tmp_path, push=True, say=lambda _: None)
+
+
+def test_a_crash_mid_run_still_pushes_what_was_written(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    git, calls, real = Git(), [0], run.episode
+
+    def episode(seed: int, case: str, condition: str) -> EpisodeLog:
+        calls[0] += 1
+        if calls[0] == 9:  # hand: 6 projection episodes, 2 run episodes, then the crash
+            raise RuntimeError("the API went away")
+        return real(seed, case, condition)
+
+    monkeypatch.setattr(run, "episode", episode)
+    monkeypatch.setattr(subprocess, "run", git)
+    with pytest.raises(RuntimeError):
+        run.run(run.FREE, range(1), 0.0, out=tmp_path, push=True, say=lambda _: None)
+    assert len(list((tmp_path / run.FREE).glob("*.json"))) == 2 and git.verbs()[-1] == "push"
+
+
+def test_a_nan_budget_refuses(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    no_paid_episode(monkeypatch)
+    said: list[str] = []
+    assert run.run("gated+SAM", range(1), math.nan, out=tmp_path, say=said.append) == 0.0
+    assert said[-1].startswith("refused: $")
+
+
+def test_a_log_cut_off_mid_write_is_not_read_as_done(tmp_path: Path) -> None:
+    folder = tmp_path / run.FREE
+    folder.mkdir()
+    (folder / "0-feasible.part").write_text('{"scenario": ')  # a killed write
+    run.run(run.FREE, range(1), 0.0, out=tmp_path, say=lambda _: None)
+    assert sorted(p.suffix for p in folder.iterdir()) == [".json"] * 6
 
 
 def test_each_condition_runs_as_evals_table_says() -> None:
