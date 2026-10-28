@@ -15,6 +15,6 @@ module.exports = [
   m('S7: the box centre, not its corner', 'gate/meta_api.py', 'track[frame] = ((int(x1) + int(x2)) / 2, (int(y1) + int(y2)) / 2)', 'track[frame] = (int(x1), int(y1))', 'test_sam_track_replays_the_recorded_red_objects'),
   m('S7: a line without a marker is a defect', 'gate/meta_api.py', '        if marker is None:\n            raise ValueError(f"SAM line without a frame marker: {line[:60]!r}")\n', '        if marker is None:\n            continue\n', 'test_parse_tracks_rejects_a_line_without_a_frame_marker'),
   m('S8: previous_response_id sent', 'gate/meta_api.py', '    if previous_response_id is not None:\n        body["previous_response_id"] = previous_response_id\n', '', 'test_muse_turn_sends_the_follow_up_with_previous_response_id'),
-  m('S8: tool arguments decoded from JSON', 'gate/meta_api.py', 'ToolCall(o["name"], json.loads(o["arguments"]), o["call_id"])', 'ToolCall(o["name"], {"raw": o["arguments"]}, o["call_id"])', 'test_muse_turn_replays_the_recorded_first_turn'),
+  m('S8: tool arguments decoded from JSON', 'gate/meta_api.py', 'ToolCall(o["name"], _arguments(o["arguments"]), o["call_id"])', 'ToolCall(o["name"], {"raw": o["arguments"]}, o["call_id"])', 'test_muse_turn_replays_the_recorded_first_turn'),
   m('S4: H.264, the codec SAM accepts', 'gate/video.py', '"libx264"', '"mpeg4"', 'test_encode_mp4_gives_h264_at_the_frame_size_and_rate'),
 ];

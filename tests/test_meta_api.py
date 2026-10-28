@@ -11,6 +11,7 @@ import httpx
 import numpy as np
 import pytest
 
+from gate import meta_api
 from gate.constants import FPS
 from gate.meta_api import (
     ToolCall,
@@ -241,3 +242,10 @@ def test_encode_mp4_gives_h264_at_the_frame_size_and_rate() -> None:
         check=True,
     )
     assert probe.stdout.decode().strip() == f"h264,128,128,{FPS}/1,30"
+
+
+def test_tool_arguments_that_do_not_parse_become_empty() -> None:
+    # Muse cut off at max_output_tokens: the agent loop answers {} as bad arguments
+    assert meta_api._arguments('{"object_id": 3') == {}
+    assert meta_api._arguments("[1, 2]") == {}
+    assert meta_api._arguments('{"object_id": 3}') == {"object_id": 3}
