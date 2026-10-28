@@ -3,9 +3,10 @@
 from dataclasses import dataclass
 
 # System packages a task legitimately taps (rule 7). The README states the list and its size.
+# Not the permission controller: an app holding the overlay permission can start its own activity
+# from the background (GhostEI's helper does, docs/pilot-runs.md P0) and ask for a permission, and
+# that dialog belongs to the controller. A permission prompt asks a person instead.
 SYSTEM_ALLOW = frozenset({
-    "com.google.android.permissioncontroller",  # runtime permission dialogs
-    "com.android.permissioncontroller",
     "com.android.systemui",  # system dialogs and the notification shade
     "com.google.android.inputmethod.latin",  # the keyboard
 })

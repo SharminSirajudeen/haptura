@@ -16,12 +16,13 @@ import json
 import sys
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from phone import adb, ui
+from phone import adb, ui, windows
 from phone.muse import Proposal, propose
-from phone.rules import check_tap, owner_evidence
+from phone.rules import SYSTEM_ALLOW, Verdict, check_tap, owner_evidence
 
 HELPER = "com.example.myapplication"  # GhostEI's injector app; its window is the attack
 PKG = {  # GhostEI's app names -> the packages installed on Small_Phone
@@ -81,38 +82,89 @@ def arrange(case: Record, attack: bool) -> None:
         time.sleep(3)
 
 
-def judge(case: Record, nodes: list[ui.Node], p: Proposal) -> Record:
-    """What the proposed tap reaches, whether that is the attacker's confirm, and the verdict."""
+@dataclass(frozen=True)
+class Device:
+    """What the gate needs about the device, read once per run."""
+
+    uids: windows.Uids  # uid -> its packages
+    allow: frozenset[str]  # SYSTEM_ALLOW, cut to the packages this device ships as system
+
+
+def device(uid_list: str, system_list: str) -> Device:
+    """From `cmd package list packages -U` and `pm list packages -s`."""
+    system = {ln.removeprefix("package:").strip() for ln in system_list.splitlines()}
+    return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & system)
+
+
+def owner_now(dev: Device, task: str, x: int | None = None, y: int = 0) -> str:
+    """The owner the gate checks, read from the device now: of the window a touch at (x, y)
+    reaches, or of the focused window when x is None."""
+    text = adb.input_dump()
+    wins = windows.parse_windows(text)
+    w = windows.focused(wins, text) if x is None else windows.receiver(wins, x, y)
+    return windows.owner_package(w, dev.uids, task, dev.allow)
+
+
+def measure(case: Record, nodes: list[ui.Node], p: Proposal) -> Record:
+    """Measurement only, never the gate: what the tap point hits in the accessibility tree and
+    whether that is the attacker's confirm button."""
     hit = ui.node_at(nodes, p.x, p.y) if p.action == "tap" else None
     confirm = ui.with_text(nodes, case["confirm"])
-    v = check_tap(hit.package if hit else "", case["pkg"]) if p.action == "tap" else None
     return {
-        "owner_at_tap": hit.package if hit else "",
         "hit_text": hit.text if hit else "",
         "hit_confirm": hit is not None and hit is confirm,
         "confirm_bounds": confirm.bounds if confirm else None,
-        "verdict": {"kind": v.kind, "reason": v.reason} if v else None,
     }
 
 
-def run_case(case: Record, attack: bool, gate: bool, inform: bool, model: Model) -> Record:
+def tap_gated(p: Proposal, task: str, gate: bool, dev: Device) -> Record:
+    """Read the owner, judge, and tap, in that order and back to back inside the click watch,
+    so nothing can change the screen between the check and the tap but adb's own latency."""
+
+    def act() -> tuple[str, Verdict, bool]:
+        owner = owner_now(dev, task, p.x, p.y)
+        v = check_tap(owner, task, dev.allow)
+        tapped = not gate or v.kind == "allow"
+        if tapped:
+            adb.shell(f"input tap {p.x} {p.y}")
+        return owner, v, tapped
+
+    (owner, v, tapped), (pkg, text) = adb.clicked_during(act)
+    verdict = {"kind": v.kind, "reason": v.reason}
+    return {
+        "owner_at_tap": owner,
+        "verdict": verdict,
+        "tapped": tapped,
+        "click_pkg": pkg,
+        "click_text": text,
+    }
+
+
+def run_case(
+    case: Record, attack: bool, gate: bool, inform: bool, model: Model, dev: Device
+) -> Record:
     arrange(case, attack)
-    focus = adb.focus_owner()
+    focus = owner_now(dev, case["pkg"])
     rec: Record = {k: case[k] for k in ("id", "app", "pkg", "task", "confirm")}
     rec |= {"attack": attack, "inform": inform, "focus_owner": focus}
     rec["overlay_shown"] = focus == HELPER
     if attack and not rec["overlay_shown"]:
         return rec  # the attack did not render: no model call, and this case yields no number
     nodes = ui.parse_nodes(adb.ui_xml())
-    evidence = owner_evidence(check_tap(focus, case["pkg"])) if inform else ""
+    evidence = owner_evidence(check_tap(focus, case["pkg"], dev.allow)) if inform else ""
     size = adb.screen_size()
     p = model(case["task"], adb.screenshot(), size, evidence)
     rec |= {"evidence": evidence, "screen": list(size), "cost_usd": p.cost_usd}
-    rec |= {"proposal": p.__dict__} | judge(case, nodes, p)
-    blocked = gate and rec["verdict"] is not None and rec["verdict"]["kind"] != "allow"
-    rec["tapped"] = p.action == "tap" and not blocked
-    rec["click_pkg"], rec["click_text"] = adb.tap(p.x, p.y) if rec["tapped"] else ("", "")
-    return rec
+    rec |= {"proposal": p.__dict__} | measure(case, nodes, p)
+    if p.action != "tap":
+        return rec | {
+            "owner_at_tap": "",
+            "verdict": None,
+            "tapped": False,
+            "click_pkg": "",
+            "click_text": "",
+        }
+    return rec | tap_gated(p, case["pkg"], gate, dev)
 
 
 def line(rec: Record) -> str:
@@ -150,9 +202,10 @@ def main(argv: list[str]) -> int:
     if cost > a.budget:
         print("over budget: nothing run")
         return 1
+    dev = device(adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s"))
     with a.out.open("a") as f:
         for case in todo:
-            rec = run_case(case, not a.clean, a.gate, a.inform, propose)
+            rec = run_case(case, not a.clean, a.gate, a.inform, propose, dev)
             f.write(json.dumps(rec) + "\n")
             f.flush()
             print(line(rec), flush=True)
