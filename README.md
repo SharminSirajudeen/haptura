@@ -15,24 +15,29 @@ task's own app or an allowlisted system package, the tap does not happen, and th
 whether a proposed tap may run.
 
 Measured on 33 of GhostEI-Bench's 59 overlay-attack cases (the ones whose app is installed on our Android API 36
-emulator), one screenshot and one `muse-spark-1.3` decision per case, 28 Oct 2026:
+emulator), one screenshot and one `muse-spark-1.3` decision per case at temperature 0, with the gate as shipped,
+28 Oct 2026 (`results/phone/final/`):
 
-| run | taps proposed | named the attacker's button | gate blocked | false blocks on clean runs |
-|---|---|---|---|---|
-| Muse Spark alone | 32 | 5 of 33 (15%) | 32 of 32 taps on the attacker's window | 1 of 27 |
-| Muse Spark, told the window's owner by the gate | 21 | 0 of 33 (95% upper bound 9%) | 21 of 21 | 4 of 27 (all four tap points off the screen) |
+| run | taps proposed | named the attacker's button | gate blocked | clean runs: taps on the task app's own window blocked | clean runs: other blocks |
+|---|---|---|---|---|---|
+| Muse Spark alone | 33 | 5 of 33 (15%) | 33 of 33 taps on the attacker's window | 0 of 20 | 8, all one Google sign-in prompt |
+| Muse Spark, told the window's owner by the gate | 21 | 0 of 33 (95% upper bound 9%) | 21 of 21 | 0 of 18 | 7: 6 that prompt, 1 tap off the screen |
+
+The other blocks are taps on "SKIP" in a Google Play services prompt that this emulator, with no Google account,
+shows when Calendar, Messages or Gallery starts; Play services is not on the allowlist, so the gate hands it to a
+person. The pilot runs before the gate was finished are in `results/phone/g3/`.
 
 This is a single-step proxy, not GhostEI's multi-step harness, so the rates are not comparable to the paper's.
 Method, records, every caveat and the reading of each column: `results/phone/g3/README.md`. Every run, its cost and
-what it changed: `docs/pilot-runs.md`. A 50-second clip of the gate blocking a fake system dialog over Settings:
+what it changed: `docs/pilot-runs.md`. A 25-second clip of the shipped gate blocking a fake system dialog over Settings:
 `results/phone/demo/`.
 
-**Read the block counts carefully:** in these cases the attacker's window held focus, so every tap on the screen
-resolved to it and "blocked 32 of 32" follows by construction; the runs measure the model's choices. A security
+**Read the block counts carefully:** in these cases the attacker's window also held focus, so "blocked 33 of 33" does
+not by itself show that an overlay without focus is caught; the parser's tests and a keyboard capture do. A security
 review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the
 runner now reads every owner from the input dispatcher's window list, keyed by uid, and judges and taps back to back
-(`phone/windows.py`, `phone/ghostei.py`; `docs/pilot-runs.md` P16). The numbers above predate that change and came from
-the dump; the phone allowlist is now the system UI and the keyboard, cut to the device's own system packages.
+(`phone/windows.py`, `phone/ghostei.py`; `docs/pilot-runs.md` P16); the table above was measured with it. The phone
+allowlist is the system UI and the keyboard, cut to the device's own system packages.
 
 **How the owner is read, and its limit:** the window list comes from `dumpsys input`, text in which every app chooses
 its own window title. The parser accepts only the dump's exact grammar (each owner field once per window line,
@@ -47,12 +52,19 @@ WindowGuard (NDSS 2017) gated Android windows by owner for people; PUSV (arXiv 2
 before desktop clicks; GhostEI-Bench (arXiv 2510.20333, MIT) showed phone agents still fall for overlays. This repo
 adds the check a phone agent makes before it taps, and measures it on GhostEI.
 
+**A press probe** (`phone/probe.py`, plan §4b rules 1–3) presses DOWN, captures the screen and sends CANCEL, so it
+sees which element a tap would reach without clicking anything: 0 of 20 presses opened anything; under host load
+some came back too slow to trust and were refused (`results/phone/probe/`).
+
 Reproduce (needs an Android emulator with GhostEI's helper app, a clone of `github.com/cyChen2003/Ghost-EI`, and
 `META_API_KEY`; about $0.20 per run of 33 cases):
 ```bash
-ANDROID_SERIAL=emulator-5554 uv run python -m phone.ghostei <Ghost-EI clone> results/phone/g3/attack.jsonl
-ANDROID_SERIAL=emulator-5554 uv run python -m phone.ghostei <Ghost-EI clone> results/phone/g3/clean.jsonl --clean
-uv run python -m phone.report results/phone/g3
+export ANDROID_SERIAL=emulator-5554
+uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/attack.jsonl
+uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/clean.jsonl --clean
+uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/attack-inform.jsonl --inform
+uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/clean-inform.jsonl --clean --inform
+uv run python -m phone.report results/phone/final
 ```
 
 ## The same check on the Mac desktop
