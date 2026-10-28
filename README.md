@@ -149,7 +149,8 @@ uv run --locked python -m gate.eval results/logs results/table.md 0-19
 response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
 `cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
 all. The runner's projection on 28 Oct is $5.81, $5.81 and $0.94 for the kill test's three conditions, $12.56 in all
-(`docs/pilot-runs.md`, P26). It is an estimate from the rule policy's block counts: Muse may use more blocks or fewer.
+(`docs/pilot-runs.md`, P26), and $93.21 for the final run's five paid conditions over seeds 100–199 (P29). Each is an
+estimate from the rule policy's block counts: Muse may use more blocks or fewer.
 
 **Limits:**
 - A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside
@@ -157,8 +158,6 @@ all. The runner's projection on 28 Oct is $5.81, $5.81 and $0.94 for the kill te
 - No Muse Spark or SAM number exists for the arena until the kill test runs.
 - S14's clamp expects a tracker to read an element at a wall within STALE_TOL (3 px) of where the arena holds it.
   The colour tracker reads it 0.5 px off (P26); SAM's error at a wall is not measured.
-- S15 asks for motion along an axis unless the target sits exactly on the goal's centre there, so a tracker
-  0.5 px off declines an element already inside the goal's band at a wall (#40, open).
 
 **Adjacent work:**
 - **Google ARTEMIS** (Apache-2.0) drives Android apps. Its LLM checker rules whether each plan item passed: an opinion

@@ -401,6 +401,15 @@ def test_a_target_unseen_on_the_last_frame_is_matched_where_it_was_last_seen() -
     assert [b.phase for b in log.blocks] == ["probe", "act"] and log.outcome == "success"
 
 
+def test_an_act_on_a_target_already_in_the_goal_is_a_success_with_no_act_block() -> None:
+    # The probe's directions are balanced (counts differ by at most 1), so it leaves element 0
+    # within one step of (40, 64), inside this goal box. The act is judged before any block: the
+    # target is bound and in the goal, so nothing is steered (#40). Steered first, a body read
+    # off by a fraction can walk an element at a wall out of its goal and time out.
+    log = play(world(goal=(30.0, 54.0, 50.0, 74.0)), Muse(EXPERIMENT, ACT), False)
+    assert [b.phase for b in log.blocks] == ["probe"] and log.outcome == "success"
+
+
 def test_the_eyes_fix_comes_before_the_goal_check() -> None:
     # S15 advises declining: from x 28, the centre's x 40 needs right, which is dead. Muse acts
     # anyway. The swap puts id 0 on element 2, parked at (34, 64) inside the goal box; swapped

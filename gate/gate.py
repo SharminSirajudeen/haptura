@@ -51,19 +51,16 @@ def rule_policy(
 
 
 def centre(goal: Goal) -> Vec:
-    """The goal box's centre: S15's reachability target and the executor's steering target."""
+    """The goal box's centre: the executor's steering target, and the one Muse is told."""
     return ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)
 
 
 def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
-    """Act on the mine element `e` when its live body reaches the goal's centre, else decline."""
-    mid = centre(goal)
+    """Act on the mine element `e` when its live body reaches the goal, else decline. What each
+    axis needs is the way to the goal's band: nothing once the target is inside it (#40)."""
+    need = np.clip(target_pos, goal[:2], goal[2:]) - np.asarray(target_pos)
     live = [v for v in e.body.values() if v is not None]
-    missing = [
-        name
-        for axis, name in enumerate("xy")
-        if not _reaches(live, axis, mid[axis] - target_pos[axis])
-    ]
+    missing = [name for axis, name in enumerate("xy") if not _reaches(live, axis, need[axis])]
     if missing:
         axes = " and ".join(missing)
         reason = (

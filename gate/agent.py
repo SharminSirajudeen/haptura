@@ -364,27 +364,29 @@ def _act(run: _Run, object_id: Any, said: str) -> str:
 
 def _act_phase(run: _Run, target: int) -> str:
     """Act blocks steered by the target's measured body until the goal, a false act, a timeout or a
-    stale block, whose diagnostic probe goes back to Muse. An act that passed the gate is judged
-    before anything is steered, so a commitment to an element with no live action still counts."""
+    stale block, whose diagnostic probe goes back to Muse. The act is judged before every block,
+    and once more after the last: a target the arena does not bind is a false act, and one already
+    in the goal is a success, so a commitment to an element with no live action still counts and
+    a target S15 found inside the goal is not steered out of it (#40)."""
     body = next((e.body for e in run.evidence if e.object_id == target), {})
-    live = _live(body)
+    live, goal = _live(body), run.arena.scenario.goal
     while run.outcome is None:
         if not _controls(run, target):
             run.outcome = "false_act"
-            return ""
-        if not live:
+        elif _in_goal(run.reference[target], goal):
+            run.outcome = "success"
+        elif not live:
             return f"object {target} has no live action to steer with"
-        kind = _act_block(run, target, body, live)
-        if run.outcome is None and kind == "stale":
-            return _probe(run, target, body)
+        elif _act_block(run, target, body, live) == "stale":
+            if not _in_goal(run.reference[target], goal):
+                return _probe(run, target, body)
     return ""
 
 
 def _act_block(run: _Run, target: int, body: Body, live: Mapping[str, Vec]) -> str:
-    """One act block, then S14 when gated; the eyes fix is applied here, without a Muse turn.
-    Sets the outcome when the target ends in the goal; returns S14's kind ('' when ungated)."""
-    goal = run.arena.scenario.goal
-    actions = _steer(live, run.reference[target], centre(goal))
+    """One act block, then S14 when gated; the eyes fix is applied here, without a Muse turn, so
+    the act is judged on the corrected ids. Returns S14's kind ('' when ungated)."""
+    actions = _steer(live, run.reference[target], centre(run.arena.scenario.goal))
     tracks = _block(run, actions, "act")
     if tracks is None:
         return ""
@@ -394,8 +396,6 @@ def _act_block(run: _Run, target: int, body: Body, live: Mapping[str, Vec]) -> s
             a, b = found.swap
             run.reference[a], run.reference[b] = run.reference[b], run.reference[a]
         run.blocks[-1] = replace(run.blocks[-1], diagnosis=found)
-    if _in_goal(run.reference[target], goal):
-        run.outcome = "success" if _controls(run, target) else "false_act"
     return "" if found is None else found.kind
 
 

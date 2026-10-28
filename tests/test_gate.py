@@ -59,8 +59,9 @@ def test_refuses_at_p_just_above_alpha_act_since_the_label_says_not_me() -> None
 
 def test_acts_on_the_single_mine_when_the_goal_is_reachable() -> None:
     # Mirrored body: "left" moves +1.0 px in x, exactly EFFECT_MIN, and at least counts, so x
-    # (needing +60) is reached through "left". y needs 0, so the unsampled up and down do not
-    # matter. The act rule comes first: a spent budget (6 of 6) does not stop it.
+    # (needing +60) is reached through "left". y = 50 is inside the goal's band 40..60, so the
+    # unsampled up and down do not matter. The act rule comes first: a spent budget (6 of 6)
+    # does not stop it.
     body: Body = {"up": None, "down": None, "left": (EFFECT_MIN, 0.0), "right": (-2.0, 0.0)}
     d = rule_policy([ev(3, "mine", P_FLOOR, body), OTHER], BUDGET, BUDGET, TARGET, GOAL)
     assert d.kind == "act" and d.object_id == 3
@@ -73,6 +74,17 @@ def test_declines_citing_the_body_when_no_live_action_moves_toward_the_goal() ->
     body: Body = {"up": (0.0, -2.0), "down": (0.0, 2.0), "left": (-2.0, 0.0), "right": None}
     d = rule_policy([ev(3, "mine", P_FLOOR, body)], 1, BUDGET, TARGET, (60.0, 10.0, 80.0, 30.0))
     assert d.kind == "decline" and d.object_id == 3 and "along x" in d.reason
+
+
+def test_an_axis_inside_the_goals_band_needs_nothing_though_off_its_centre() -> None:
+    # A tracker reads an element held at the right wall at x = 123.5, inside the goal's x band
+    # 120..128 but 0.5 px short of its centre 124 (#40). Pushing right into the wall does
+    # nothing, so "right" is dead; only y (60 -> centre 40) needs a move, and "up" makes it.
+    body: Body = {"up": (0.0, -2.0), "down": (0.0, 2.0), "left": (-2.0, 0.0), "right": (0.0, 0.0)}
+    d = rule_policy(
+        [ev(3, "mine", P_FLOOR, body)], 1, BUDGET, (123.5, 60.0), (120.0, 32.0, 128.0, 48.0)
+    )
+    assert d.kind == "act" and d.object_id == 3
 
 
 def test_a_component_of_the_right_sign_below_effect_min_does_not_count() -> None:
