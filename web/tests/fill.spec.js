@@ -1,6 +1,6 @@
 const { test, expect, panes, ready } = require('./site');
 
-const GUTTER = 16; // body padding, 1rem
+const GUTTER = 16; // slack per side: main is full-bleed, and look.spec.js checks the gutter each band draws itself
 
 for (const width of [1440, 1920, 2560]) {
   test(`the layout fills a ${width} px screen minus the gutter`, async ({ page, site }) => {

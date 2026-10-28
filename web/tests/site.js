@@ -17,6 +17,7 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json',
   '.mp4': 'video/mp4',
+  '.png': 'image/png',
 };
 
 function serve(req, res) {

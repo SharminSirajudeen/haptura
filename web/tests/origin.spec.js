@@ -22,5 +22,5 @@ test('the page makes no request to another origin', async ({ page, site }) => {
 test('the page runs under a sub-path because every path in it is relative', async ({ page, site }) => {
   await page.goto(site);
   await ready(page);
-  await expect(page.locator('video').first()).toHaveJSProperty('videoWidth', 128);
+  await expect(page.locator('.pane video').first()).toHaveJSProperty('videoWidth', 128);
 });
