@@ -1,6 +1,6 @@
 """T11, the offline end-to-end floor: rules-only (S15 through T10's loop, `rules_turn`) on the
 real arena with truth tracking, seeds 0-19 x all six cases, no network. It proves the pipeline
-before money is spent: each episode is scored by EVAL.md's right-hand column, outcome and qualifier.
+before money is spent: each episode is scored by EVAL.md's right-hand column (`gate.eval.right`).
 
 One test node per (case, seed), so a seed that falls is red at once. The seeds that miss today are
 pinned to their issue (measured 28 Oct): #24, S10 blind to the element control moved to once a
@@ -15,6 +15,7 @@ import pytest
 from gate.agent import rules_turn, run_episode
 from gate.arena import Arena, make_scenario
 from gate.episode import run_block, truth_slice
+from gate.eval import right
 from gate.gate import diagnose
 from gate.trackers import truth_tracker
 from gate.types import EpisodeLog
@@ -37,29 +38,6 @@ def episode(seed: int, case: str) -> EpisodeLog:
         diagnose=diagnose,
         muse_turn=rules_turn,
     )
-
-
-def acted_before(log: EpisodeLog, i: int) -> int:
-    """Act steps taken before block i: the clock the remap schedules run on."""
-    return sum(len(b.actions) for b in log.blocks[:i] if b.phase == "act")
-
-
-def right(log: EpisodeLog) -> bool:
-    """EVAL.md's right-hand column. The remap step is the scenario's one event, in act steps."""
-    sc, blocks, out = log.scenario, log.blocks, log.outcome
-    step = sc.events[0][0] if sc.events else 0
-    after = [b for i, b in enumerate(blocks) if acted_before(log, i) >= step]
-    kinds = {b.diagnosis.kind for b in after if b.diagnosis is not None}
-    return {
-        "feasible": out == "success",
-        "blocked": out == "decline",
-        "remap_feasible": out == "success"
-        and (any(b.phase == "probe" for b in after) or "target_lost" in kinds),
-        "remap_blocked": out == "decline" and acted_before(log, len(blocks)) >= step,
-        "body_remap": out == "success" and "body_changed" in kinds,
-        "body_blocked": out == "decline"
-        and any(e.label == "mine" for b in blocks for e in b.evidence),
-    }[sc.case]
 
 
 def pinned(case: str, seed: int) -> object:
