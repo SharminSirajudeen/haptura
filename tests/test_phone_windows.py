@@ -20,7 +20,10 @@ from phone.windows import (
 )
 
 FIX = Path(__file__).parent / "fixtures" / "phone"
-TEXT = {n: (FIX / f"input-{n}.txt").read_text() for n in ("settings", "keyboard", "overlay")}
+TEXT = {
+    n: (FIX / f"input-{n}.txt").read_text()
+    for n in ("settings", "keyboard", "overlay", "recording")
+}
 WINS = {n: parse_windows(t) for n, t in TEXT.items()}
 UIDS = packages_by_uid((FIX / "uids.txt").read_text())
 HELPER, KEYBOARD, SYSTEMUI, SEARCH = 10217, 10160, 10187, 10147
@@ -127,6 +130,14 @@ def test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything(
 def test_only_ascii_digits_number_a_window_or_a_display() -> None:
     assert INDEX.match("      \u0660: name=x") is None  # an Arabic-Indic zero
     assert DISPLAY.match("  Display: \u0660") is None
+
+
+def test_a_screen_recording_mirror_display_is_read_not_rejected() -> None:
+    assert (
+        "id=-2147" in TEXT["recording"]
+    )  # mirrored windows on the virtual display have negative ids
+    w = receiver(WINS["recording"], 360, 600)  # captured with GhostEI's dialog up over Settings
+    assert len(WINS["recording"]) == 26 and w is not None and w.uid == HELPER
 
 
 def test_a_window_on_another_display_is_not_ours() -> None:
