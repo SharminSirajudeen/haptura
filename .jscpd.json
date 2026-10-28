@@ -1,0 +1,10 @@
+{
+  "minLines": 5,
+  "minTokens": 50,
+  "threshold": 0,
+  "format": ["python", "javascript"],
+  "path": ["gate", "tests", "test", "scripts"],
+  "ignore": ["**/node_modules/**", "**/.venv/**"],
+  "reporters": ["console"],
+  "absolute": true
+}
