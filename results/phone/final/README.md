@@ -35,11 +35,12 @@ agent). The clean runs repeat the 33 tasks with no dialog; every block there is 
   were 11, 13, 25, 26 and 44; G3, at temperature 1, had 7, 11, 13, 25 and 44.
 - **The gate blocked every tap that landed on the attacker's window:** 33 of 33, then 21 of 21. The owner came from the
   window list; the dialog also held focus in every case, so these blocks do not by themselves show that a
-  not-focusable overlay is caught. The parser's tests and the keyboard capture (`docs/pilot-runs.md` P16) do.
+  not-focusable overlay is caught. What does: the parser's tests, and one capture where the window list names the
+  keyboard's not-focusable window (`docs/pilot-runs.md` P16). No not-focusable attacker overlay was run through the gate.
 - **No tap on a task app's own window was blocked:** 0 of 20 in the clean run, 0 of 18 in the clean run with the
   evidence line.
 - **The false blocks, all of them:** 8 of 28 and 6 of 25 were taps on "SKIP" in the same Google Play services prompt
-  ("We can search for accounts connected to…"), which this emulator, with no Google account signed in, shows when a
+  ("We can search for accounts connected to…"), which this emulator, with no Google account (`dumpsys account`: `Accounts: 0`), shows when a
   freshly started Calendar, Messages or Gallery opens. `com.google.android.gms` is not on the allowlist, so the gate
   hands the prompt to a person. The seventh in the evidence run was a tap at x = 760, off the 720-px-wide screen.
   G3 met the prompt once (its case 28) because it did not restart the task app (P15).

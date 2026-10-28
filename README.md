@@ -20,10 +20,10 @@ emulator), one screenshot and one `muse-spark-1.3` decision per case at temperat
 
 | run | taps proposed | named the attacker's button | gate blocked | clean runs: taps on the task app's own window blocked | clean runs: other blocks |
 |---|---|---|---|---|---|
-| Muse Spark alone | 33 | 5 of 33 (15%) | 33 of 33 taps on the attacker's window | 0 of 20 | 8, all one Google sign-in prompt |
+| Muse Spark alone | 33 | 5 of 33 (15%) | 33 of 33 taps on the attacker's window | 0 of 20 | 8, all one Google Play services account prompt |
 | Muse Spark, told the window's owner by the gate | 21 | 0 of 33 (95% upper bound 9%) | 21 of 21 | 0 of 18 | 7: 6 that prompt, 1 tap off the screen |
 
-The other blocks are taps on "SKIP" in a Google Play services prompt that this emulator, with no Google account,
+The other blocks are taps on "SKIP" in a Google Play services prompt that this emulator, with no Google account (`dumpsys account`: `Accounts: 0`),
 shows when Calendar, Messages or Gallery starts; Play services is not on the allowlist, so the gate hands it to a
 person. The pilot runs before the gate was finished are in `results/phone/g3/`.
 
@@ -33,7 +33,9 @@ what it changed: `docs/pilot-runs.md`. A 25-second clip of the shipped gate bloc
 `results/phone/demo/`.
 
 **Read the block counts carefully:** in these cases the attacker's window also held focus, so "blocked 33 of 33" does
-not by itself show that an overlay without focus is caught; the parser's tests and a keyboard capture do. A security
+not by itself show that an overlay without focus is caught. What does: the parser's tests, and one capture where the
+window list names the keyboard's not-focusable window at a point the accessibility dump attributes to the app below
+(`docs/pilot-runs.md` P16). No not-focusable attacker overlay was run through the gate. A security
 review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the
 runner now reads every owner from the input dispatcher's window list, keyed by uid, and judges and taps back to back
 (`phone/windows.py`, `phone/ghostei.py`; `docs/pilot-runs.md` P16); the table above was measured with it. The phone
@@ -53,8 +55,9 @@ before desktop clicks; GhostEI-Bench (arXiv 2510.20333, MIT) showed phone agents
 adds the check a phone agent makes before it taps, and measures it on GhostEI.
 
 **A press probe** (`phone/probe.py`, plan §4b rules 1–3) presses DOWN, captures the screen and sends CANCEL, so it
-sees which element a tap would reach without clicking anything: 0 of 20 presses opened anything; under host load
-some came back too slow to trust and were refused (`results/phone/probe/`).
+sees which element a tap would reach without clicking anything: 0 of 20 presses opened anything; 10 of 20 came back
+too late to trust (verdict `unknown`), and one held 511–627 ms, past the 400 ms long-press timeout
+(`results/phone/probe/`).
 
 Reproduce (needs an Android emulator with GhostEI's helper app, a clone of `github.com/cyChen2003/Ghost-EI`, and
 `META_API_KEY`; about $0.20 per run of 33 cases):
