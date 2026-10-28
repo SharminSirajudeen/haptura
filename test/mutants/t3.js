@@ -85,5 +85,5 @@ module.exports.push(
   m('S1: on a one-way axis the goal sits on the wall', '        g[axis] = W - GOAL_PX // 2 if sign > 0 else GOAL_PX // 2\n', '        g[axis] = g[axis]\n', WALL),
   m('S1: the live side\'s wall, not the dead side\'s', 'W - GOAL_PX // 2 if sign > 0 else', 'W - GOAL_PX // 2 if sign < 0 else', WALL),
   m('S1: a one-way axis must be the goal\'s', ' if ways <= {u})', ')', WALL),
-  m('S1: a body remap changes the action toward the goal', ' & changed if ', ' if ', TOWARD),
+  m('S1: a body remap changes the action toward the goal', 'u for u in moved_apart if ways', 'u for u in UNITS if ways', TOWARD),
 );
