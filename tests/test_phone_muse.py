@@ -1,0 +1,27 @@
+"""The parser and the price, by hand. No network."""
+
+from phone.muse import PRICE_PER_M, parse
+
+RAW = '{"action": "tap", "x": 202.0, "y": 612, "target_text": "Cancel", "reason": "r"}'
+FENCED = f"```json\n{RAW}\n```"
+
+
+def test_json_inside_a_fence_is_read() -> None:
+    p = parse(FENCED, (10, 20))
+    assert (p.action, p.x, p.y, p.target_text, p.reason) == ("tap", 202, 612, "Cancel", "r")
+    assert (p.tokens_in, p.tokens_out) == (10, 20)
+
+
+def test_no_json_is_unparsed_with_the_raw_text() -> None:
+    p = parse("I would tap Cancel.", (1, 1))
+    assert p.action == "unparsed" and p.reason == "I would tap Cancel." and p.x == -1
+
+
+def test_broken_json_is_unparsed() -> None:
+    assert parse('{"action": "tap", "x": }', (0, 0)).action == "unparsed"
+
+
+def test_cost_prices_input_and_output_separately() -> None:
+    p = parse('{"action": "stop"}', (1_000_000, 0))
+    assert p.cost_usd == PRICE_PER_M[0]
+    assert parse('{"action": "stop"}', (0, 1_000_000)).cost_usd == PRICE_PER_M[1]

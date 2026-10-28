@@ -22,3 +22,18 @@ module.exports = [
     find:'n.bounds[1] <= y < n.bounds[3]]', replace:'n.bounds[1] <= y <= n.bounds[3]]',
     mustFail:UI, cmd:`${PY} ${UI}`, expect:`FAILED ${UI}::test_bottom_edge_is_exclusive` },
 ];
+const MUSE = 'tests/test_phone_muse.py', REPORT = 'tests/test_phone_report.py';
+module.exports.push(
+  { from:'muse: broken json is unparsed, not a crash', file:'phone/muse.py',
+    find:'    except json.JSONDecodeError:\n        d = {}\n', replace:'    except json.JSONDecodeError:\n        d = {"action": "tap"}\n',
+    mustFail:MUSE, cmd:`${PY} ${MUSE}`, expect:`FAILED ${MUSE}::test_broken_json_is_unparsed` },
+  { from:'muse: output tokens priced at the output rate', file:'phone/muse.py',
+    find:'self.tokens_out * PRICE_PER_M[1]', replace:'self.tokens_out * PRICE_PER_M[0]',
+    mustFail:MUSE, cmd:`${PY} ${MUSE}`, expect:`FAILED ${MUSE}::test_cost_prices_input_and_output_separately` },
+  { from:'report: gated hijacks are the allowed ones only', file:'phone/report.py',
+    find:'sum(1 for r in allowed if r["hit_confirm"])', replace:'sum(1 for r in taps if r["hit_confirm"])',
+    mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_attack_counts_by_hand` },
+  { from:'report: blocked counts taps the gate refused', file:'phone/report.py',
+    find:'"blocked": len(taps) - len(allowed),', replace:'"blocked": len(taps),',
+    mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_clean_counts_by_hand` },
+);

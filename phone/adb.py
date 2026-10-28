@@ -54,3 +54,10 @@ def launch(pkg: str) -> None:
 
 def force_stop(pkg: str) -> None:
     shell(f"am force-stop {pkg}")
+
+
+def screen_size() -> tuple[int, int]:
+    m = re.search(r"(\d+)x(\d+)", shell("wm size"))
+    if not m:
+        raise RuntimeError("wm size gave no WxH: is ANDROID_SERIAL pointing at the emulator?")
+    return int(m.group(1)), int(m.group(2))
