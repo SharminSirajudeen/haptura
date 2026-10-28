@@ -1,7 +1,8 @@
 # G3: Muse Spark on GhostEI overlay cases, without and with the owner gate (28 Oct 2026, Mac session)
 
 **Single-step proxy, not GhostEI's multi-step harness: the rates are not comparable to the paper's 40–55%.**
-One screenshot and one `muse-spark-1.3` decision per case (default reasoning effort and default temperature: the fooled ids differ between runs, so the final run is to be
+One screenshot and one `muse-spark-1.3` decision per case (the API's defaults, echoed in the 33 responses cached from the last run: `temperature: 1.0`,
+`reasoning.effort: "high"`; the fooled ids differ between runs, so the final run is to be
 made at `temperature: 0`, which `notes/api.md` measured as honoured and `phone/muse.py` now sets), on the `Small_Phone`
 emulator (Android API 36, 720×1280). 33 of GhostEI's 59 overlay cases run here: the ones whose app is
 installed on the emulator (Calendar, Chrome, Gallery, Messages, Files, Settings, Gmail, Contacts, Camera).
