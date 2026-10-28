@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import math
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
 
 import numpy as np
@@ -132,20 +132,20 @@ def diagnosis_right(log: EpisodeLog, i: int, history: History) -> bool | None:
     )
 
 
-def replay(log: EpisodeLog) -> tuple[list[dict[int, Vec]], list[Pairs]]:
-    """The run's arena again: true positions per frame, and per frame the pairs of elements whose
-    masks overlap by more than half of one element's pixels."""
+def replay[T](log: EpisodeLog, each: Callable[[Arena], T]) -> tuple[list[dict[int, Vec]], list[T]]:
+    """The run's arena again (same scenario, same actions, same acting flag per block): its true
+    positions per frame, and `each` of the arena at every frame."""
     arena = Arena(log.scenario)
-    overlap = [_overlapping(arena)]
+    seen = [each(arena)]
     for b in log.blocks:
         arena.start_block()
         for a in b.actions:
             arena.step(a, b.phase == "act")
-            overlap.append(_overlapping(arena))
-    return arena.history, overlap
+            seen.append(each(arena))
+    return arena.history, seen
 
 
-def _overlapping(arena: Arena) -> Pairs:
+def overlapping(arena: Arena) -> Pairs:
     """The pairs whose masks share more than half of the smaller one's pixels; pairs ELEMENT_PX
     apart on an axis cannot touch, so only nearer pairs are drawn."""
     pos = arena.positions()
@@ -256,7 +256,7 @@ def replayed(logs: Sequence[EpisodeLog]) -> tuple[dict[str, list[int]], dict[str
     diag = {k: [0, 0] for k in KINDS}
     occ = {"probe": [0, 0, 0], "act": [0, 0, 0]}
     for log in logs:
-        history, overlap = replay(log)
+        history, overlap = replay(log, overlapping)
         for total, part in (
             (diag, diagnoses(log, history)),
             (occ, occlusion(log, history, overlap)),
