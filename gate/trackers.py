@@ -93,7 +93,7 @@ def _last(track: Array) -> Vec | None:
     visible = np.nonzero(~np.isnan(track[:, 0]))[0]
     if len(visible) == 0:
         return None
-    return (float(track[visible[0], 0]), float(track[visible[0], 1]))
+    return (float(track[visible[-1], 0]), float(track[visible[-1], 1]))
 
 
 def _nearest(points: list[Vec], anchors: dict[int, Vec | None]) -> list[int | None]:

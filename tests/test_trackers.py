@@ -39,6 +39,21 @@ def test_colour_tracker_swaps_the_two_red_ids_at_the_crossing() -> None:
     assert np.isnan(circle[14, 0])  # one blob for two elements: one id is absent there
 
 
+def test_colour_tracker_associates_from_the_latest_position_not_the_first() -> None:
+    # Two red squares walk right 3 px per frame, A along y=20 from x=10 and B along y=40 from x=70.
+    # At frame 20 A's blob (70, 20) is 20 px from B's frame-0 position and 60 px from A's own, so
+    # association from first positions hands it to B's id; from latest positions it is 3 px from A.
+    frames = np.zeros((30, 64, 256, 3), np.uint8)
+    for t in range(30):
+        for x, y in ((10 + 3 * t, 20), (70 + 3 * t, 40)):
+            frames[t, y - 4 : y + 4, x - 4 : x + 4] = (220, 40, 40)
+    tracks = colour_tracker(frames)
+    assert len(tracks) == 2
+    for track in tracks.values():
+        assert np.all(np.diff(track[:, 0]) == 3.0)
+        assert np.all(track[:, 1] == track[0, 1])
+
+
 def test_match_ids_links_by_nearest_first_position_and_mints_fresh_ids() -> None:
     tracks = {
         7: np.array([[math.nan, math.nan], [10.0, 10.0], [52.0, 50.0]]),  # first visible at frame 1
