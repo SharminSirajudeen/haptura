@@ -14,7 +14,7 @@ module.exports = [
   m('windows: focus matched by the full name',
     'if m and w.name == m.group(1)', 'if m', 'test_focus_is_matched_by_the_full_window_name'),
   m('windows: the task app is found in a shared uid',
-    '    if task_pkg in pkgs:\n        return task_pkg\n', '', 'test_a_shared_system_uid_resolves_to_the_task_app_it_contains'),
+    '    if w and task_pkg in pkgs and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):\n        return task_pkg\n', '', 'test_a_shared_system_uid_resolves_to_the_task_app_it_contains'),
   m('windows: an allowlisted package of the uid is preferred',
     'min(pkgs & allow, default=min(pkgs, default=""))', 'min(pkgs, default="")', 'test_an_allowlisted_package_of_the_uid_is_named'),
 ];
@@ -48,4 +48,11 @@ module.exports.push(
 module.exports.push(
   m('windows: window indices are ASCII digits', 'INDEX = re.compile(r"^ +(\\d+): name=", re.ASCII)', 'INDEX = re.compile(r"^ +(\\d+): name=")',
     'test_only_ascii_digits_number_a_window_or_a_display'),
+);
+module.exports.push(
+  m('windows: a shared uid needs the task component in the window name',
+    ' and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):', ':', 'test_a_shared_uid_window_without_the_tasks_component_is_not_the_task_app'),
+  m('windows: shown counts only visible, touchable windows',
+    '    return any(w.uid in mine and not w.flags & SKIP for w in windows)\n', '    return any(w.uid in mine for w in windows)\n',
+    'test_the_overlay_is_shown_whether_or_not_it_has_focus'),
 );

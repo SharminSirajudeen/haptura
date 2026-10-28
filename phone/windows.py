@@ -151,11 +151,21 @@ def packages_by_uid(text: str) -> dict[int, frozenset[str]]:
 Uids = dict[int, frozenset[str]]
 
 
+def shown(windows: list[Window], uids: Uids, pkg: str) -> bool:
+    """Whether any visible, touchable window belongs to `pkg`, focused or not."""
+    mine = {uid for uid, pkgs in uids.items() if pkg in pkgs}
+    return any(w.uid in mine and not w.flags & SKIP for w in windows)
+
+
 def owner_package(w: Window | None, uids: Uids, task_pkg: str, allow: frozenset[str]) -> str:
     """The package the gate checks for window `w`: the task app if its uid owns `w`, else an
     allowlisted package of that uid, else any package of it; "" when nothing is known.
+
+    A uid shared by several packages (the system's 1000) is the task app only when the window's
+    name carries the task's component: only system code names those windows, and the attacker can
+    open other uid-1000 windows (an account chooser) with its own text in them.
     """
     pkgs = uids.get(w.uid, frozenset()) if w else frozenset()
-    if task_pkg in pkgs:
+    if w and task_pkg in pkgs and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):
         return task_pkg
     return min(pkgs & allow, default=min(pkgs, default=""))
