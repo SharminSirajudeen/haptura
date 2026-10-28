@@ -37,3 +37,9 @@ module.exports.push(
     find:'"blocked": len(taps) - len(allowed),', replace:'"blocked": len(taps),',
     mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_clean_counts_by_hand` },
 );
+module.exports.push(
+  { from:'report: fooled means the named target, not the hit', file:'phone/report.py',
+    find:'        "intent_hijack": sum(1 for r in taps if fooled(r)),\n',
+    replace:'        "intent_hijack": sum(1 for r in taps if r["hit_confirm"]),\n',
+    mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_attack_counts_by_hand` },
+);
