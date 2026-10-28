@@ -16,8 +16,9 @@ const MUTANTS = require(path.join(root, LIST));
 const LIMIT = 300000;   // a runaway mutant is killed here; a shard per core runs each test about 2.5x slower than alone
 
 const count = (text, s) => text.split(s).length - 1;
-// Python caches bytecode keyed on the source's size and whole-second mtime: a same-length mutant written within the
-// second of the previous restore runs the previous mutant's code. No bytecode is written, so every run compiles.
+// Python's bytecode cache is keyed on the source's size and whole-second mtime: a write with the size and mtime of
+// the last compiled version runs that version's code (a stale mutant or the original). Nothing is written, so
+// every run compiles the file on disk. A child started with a scrubbed environment would bring the defect back.
 const ENV = Object.assign({}, process.env, { PYTHONDONTWRITEBYTECODE:'1' });
 const sh = (dir, cmd) => spawnSync(cmd, { cwd:dir, shell:true, encoding:'utf8', timeout:LIMIT, env:ENV });
 const run = (dir, m) => { if (m.before) sh(dir, m.before); return m.cmd ? sh(dir, m.cmd) : spawnSync(process.execPath, [m.mustFail], { cwd:dir, encoding:'utf8', timeout:LIMIT, env:ENV }); };
