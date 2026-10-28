@@ -68,6 +68,7 @@ Written before the event started on 26 Oct 2026, and copied in or kept as refere
 
 ```bash
 uv sync --locked && npm ci
+npx playwright install chromium   # the demo page's tests need its browser build
 scripts/gate.sh
 ```
 
