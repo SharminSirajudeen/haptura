@@ -7,10 +7,12 @@ import os
 import re
 import subprocess
 import time
+from collections.abc import Callable
 
 ADB = os.environ.get("ADB", "adb")
 FOCUS = re.compile(r"mCurrentFocus=Window\{\S+ \S+ (?:\S+:)?([\w.]+)/")
 CLICK = re.compile(r"TYPE_VIEW_CLICKED.*?PackageName: ([^;]*).*?Text: \[([^\]]*)\]")
+RESUMED = re.compile(r"ResumedActivity=ActivityRecord\{\S+ \S+ (\S+)")
 
 
 def run(*args: str, timeout: int = 30) -> str:
@@ -33,19 +35,35 @@ def ui_xml() -> str:
     return run("exec-out", "cat", "/sdcard/ui.xml")
 
 
-def screenshot() -> bytes:
-    cmd = [ADB, "exec-out", "screencap", "-p"]
+def resumed() -> str:
+    """The resumed activity (package/.Activity), or "": it changes when a press opens a screen."""
+    m = RESUMED.search(shell("dumpsys activity activities"))
+    return m.group(1) if m else ""
+
+
+def exec_bytes(*args: str) -> bytes:
+    """`adb exec-out`, as bytes: captures, which text mode would mangle."""
+    cmd = [ADB, "exec-out", *args]
     return subprocess.run(cmd, capture_output=True, timeout=30, check=False).stdout
+
+
+def screenshot() -> bytes:
+    return exec_bytes("screencap", "-p")
+
+
+def clicked_during[T](act: Callable[[], T]) -> tuple[T, tuple[str, str]]:
+    """Run `act`; its result, and (package, text) of the TYPE_VIEW_CLICKED it caused or ("", "")."""
+    cmd = [ADB, "shell", "timeout", "5", "uiautomator", "events"]
+    events = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
+    time.sleep(1.5)
+    result = act()
+    m = CLICK.search(events.communicate(timeout=20)[0])
+    return result, ((m.group(1).strip(), m.group(2)) if m else ("", ""))
 
 
 def tap(x: int, y: int) -> tuple[str, str]:
     """Tap, and return (package, text) of the TYPE_VIEW_CLICKED event it caused, or ("", "")."""
-    cmd = [ADB, "shell", "timeout", "5", "uiautomator", "events"]
-    events = subprocess.Popen(cmd, stdout=subprocess.PIPE, text=True)
-    time.sleep(1.5)
-    shell(f"input tap {x} {y}")
-    m = CLICK.search(events.communicate(timeout=20)[0])
-    return (m.group(1).strip(), m.group(2)) if m else ("", "")
+    return clicked_during(lambda: shell(f"input tap {x} {y}"))[1]
 
 
 def launch(pkg: str) -> None:
