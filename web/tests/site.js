@@ -17,6 +17,7 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json',
   '.mp4': 'video/mp4',
+  '.png': 'image/png',
 };
 
 function serve(req, res) {
@@ -49,6 +50,7 @@ const test = base.extend({
     },
     { scope: 'worker' },
   ],
+  viewer: [async ({ site }, use) => use(`${site}arena.html`), { scope: 'worker' }], // the arena viewer's page
 });
 
 const panes = (page) => page.locator('.pane');

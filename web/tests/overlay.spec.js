@@ -12,8 +12,8 @@ function ink(canvas, { points, r }) {
   return points.map((p) => alphas(p).filter((a) => a > 0).length);
 }
 
-test('the overlay draws and the caption names the eyes swap', async ({ page, site }) => {
-  await page.goto(site);
+test('the overlay draws and the caption names the eyes swap', async ({ page, viewer }) => {
+  await page.goto(viewer);
   await ready(page);
   const tracked = Object.values(LOG.blocks[2].tracks).map((pts) => pts[FRAME.act - 60]);
   const empty = [110, 10]; // far from every element and from every label

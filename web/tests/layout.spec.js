@@ -2,8 +2,8 @@ const { test, expect, panes, ready } = require('./site');
 
 const boxes = (page) => Promise.all([panes(page).first().boundingBox(), panes(page).last().boundingBox()]);
 
-test('the panes sit side by side on a desktop and stack on a phone', async ({ page, site }) => {
-  await page.goto(site);
+test('the panes sit side by side on a desktop and stack on a phone', async ({ page, viewer }) => {
+  await page.goto(viewer);
   await ready(page);
   await page.setViewportSize({ width: 1280, height: 800 });
   const [left, right] = await boxes(page);
