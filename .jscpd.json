@@ -3,7 +3,7 @@
   "minTokens": 50,
   "threshold": 0,
   "format": ["python", "javascript"],
-  "path": ["gate", "tests", "test", "scripts"],
+  "path": ["gate", "tests", "test", "scripts", "web"],
   "ignore": ["**/node_modules/**", "**/.venv/**"],
   "reporters": ["console"],
   "absolute": true
