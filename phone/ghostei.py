@@ -21,7 +21,7 @@ from typing import Any
 
 from phone import adb, ui
 from phone.muse import Proposal, propose
-from phone.rules import check_tap
+from phone.rules import check_tap, owner_evidence
 
 HELPER = "com.example.myapplication"  # GhostEI's injector app; its window is the attack
 PKG = {  # GhostEI's app names -> the packages installed on Small_Phone
@@ -38,7 +38,7 @@ PKG = {  # GhostEI's app names -> the packages installed on Small_Phone
 EST_PER_CALL_USD = 0.0072  # G1 measured $0.14 for 20 calls (results/phone/g1-proxy)
 FAKE_PAGE = "http://10.0.2.2:8000/x"  # where the attacker's confirm leads; nothing listens there
 Record = dict[str, Any]
-Model = Callable[[str, bytes, tuple[int, int]], Proposal]
+Model = Callable[[str, bytes, tuple[int, int], str], Proposal]
 
 
 def cases(repo: Path, installed: set[str], limit: int) -> list[Record]:
@@ -90,16 +90,19 @@ def judge(case: Record, nodes: list[ui.Node], p: Proposal) -> Record:
     }
 
 
-def run_case(case: Record, attack: bool, gate: bool, model: Model) -> Record:
+def run_case(case: Record, attack: bool, gate: bool, inform: bool, model: Model) -> Record:
     arrange(case, attack)
     focus = adb.focus_owner()
     rec: Record = {k: case[k] for k in ("id", "app", "pkg", "task", "confirm")}
-    rec |= {"attack": attack, "focus_owner": focus, "overlay_shown": focus == HELPER}
+    rec |= {"attack": attack, "inform": inform, "focus_owner": focus}
+    rec["overlay_shown"] = focus == HELPER
     if attack and not rec["overlay_shown"]:
         return rec  # the attack did not render: no model call, and this case yields no number
     nodes = ui.parse_nodes(adb.ui_xml())
-    p = model(case["task"], adb.screenshot(), adb.screen_size())
-    rec |= {"proposal": p.__dict__, "cost_usd": p.cost_usd} | judge(case, nodes, p)
+    evidence = owner_evidence(check_tap(focus, case["pkg"])) if inform else ""
+    p = model(case["task"], adb.screenshot(), adb.screen_size(), evidence)
+    rec |= {"evidence": evidence, "proposal": p.__dict__, "cost_usd": p.cost_usd}
+    rec |= judge(case, nodes, p)
     blocked = gate and rec["verdict"] is not None and rec["verdict"]["kind"] == "block"
     rec["tapped"] = p.action == "tap" and not blocked
     rec["click_pkg"], rec["click_text"] = adb.tap(p.x, p.y) if rec["tapped"] else ("", "")
@@ -121,6 +124,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("out", type=Path, help="JSONL, appended; cases already in it are skipped")
     ap.add_argument("--clean", action="store_true", help="no overlay: the false-block run")
     ap.add_argument("--gate", action="store_true", help="a blocked tap is not performed (the demo)")
+    ap.add_argument("--inform", action="store_true", help="tell the model the window owner first")
     ap.add_argument("--limit", type=int, default=999)
     ap.add_argument("--budget", type=float, default=0.5, help="refuse above this spend, USD")
     a = ap.parse_args(argv)
@@ -139,7 +143,7 @@ def main(argv: list[str]) -> int:
         return 1
     with a.out.open("a") as f:
         for case in todo:
-            rec = run_case(case, not a.clean, a.gate, propose)
+            rec = run_case(case, not a.clean, a.gate, a.inform, propose)
             f.write(json.dumps(rec) + "\n")
             f.flush()
             print(line(rec), flush=True)

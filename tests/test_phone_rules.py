@@ -1,6 +1,6 @@
 """Hand-built cases for the owner rule (plan §4b rule 7). No device."""
 
-from phone.rules import SYSTEM_ALLOW, check_tap
+from phone.rules import SYSTEM_ALLOW, check_tap, owner_evidence
 
 TASK = "com.android.settings"
 ATTACKER = "com.example.myapplication"
@@ -30,3 +30,9 @@ def test_system_allowlist_allowed() -> None:
 def test_allowlist_parameter_is_the_one_used() -> None:
     assert check_tap(ATTACKER, TASK, allow=frozenset({ATTACKER})).kind == "allow"
     assert check_tap(SYSTEM, TASK, allow=frozenset()).kind == "block"
+
+
+def test_evidence_names_the_owner_only_on_a_block() -> None:
+    assert owner_evidence(check_tap(TASK, TASK)) == ""
+    e = owner_evidence(check_tap(ATTACKER, TASK))
+    assert e.startswith("\nEvidence from the device: ") and ATTACKER in e and TASK in e

@@ -43,3 +43,12 @@ module.exports.push(
     replace:'        "intent_hijack": sum(1 for r in taps if r["hit_confirm"]),\n',
     mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_attack_counts_by_hand` },
 );
+module.exports.push(
+  { from:'rules: evidence only on a block', file:'phone/rules.py',
+    find:'    return "" if v.kind == "allow" else f"\\nEvidence from the device: {v.reason}."\n',
+    replace:'    return f"\\nEvidence from the device: {v.reason}."\n',
+    mustFail:RULES, cmd:`${PY} ${RULES}`, expect:`FAILED ${RULES}::test_evidence_names_the_owner_only_on_a_block` },
+  { from:'report: a clean run is not shaped as an attack row', file:'phone/report.py',
+    find:'    if recs and recs[0].get("attack"):\n', replace:'    if recs:\n',
+    mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_table_rows_carry_the_rates` },
+);

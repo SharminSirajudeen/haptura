@@ -61,11 +61,12 @@ def parse(text: str, tokens: tuple[int, int]) -> Proposal:
     return Proposal(action, as_int(d.get("x", -1)), as_int(d.get("y", -1)), target, reason, *tokens)
 
 
-def propose(task: str, png: bytes, size: tuple[int, int]) -> Proposal:
+def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") -> Proposal:
     """One Responses API call with the screenshot; a failed call becomes an `error` proposal."""
     image = "data:image/png;base64," + base64.b64encode(png).decode()
+    text = PROMPT.format(task=task, w=size[0], h=size[1]) + evidence
     content = [
-        {"type": "input_text", "text": PROMPT.format(task=task, w=size[0], h=size[1])},
+        {"type": "input_text", "text": text},
         {"type": "input_image", "image_url": image},
     ]
     body = {"model": MODEL, "input": [{"role": "user", "content": content}]}
