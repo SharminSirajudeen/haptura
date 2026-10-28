@@ -8,6 +8,8 @@ import re
 from pathlib import Path
 
 from phone.windows import (
+    DISPLAY,
+    INDEX,
     focused,
     owner_package,
     packages_by_uid,
@@ -118,6 +120,11 @@ def test_a_title_that_adds_a_window_line_blocks_everything() -> None:
 def test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything() -> None:
     title = FORGED.format("NOT_TOUCHABLE") + ", ownerUid=10217\n      junk"
     assert parse_windows(on_top("settings", title)) == []
+
+
+def test_only_ascii_digits_number_a_window_or_a_display() -> None:
+    assert INDEX.match("      \u0660: name=x") is None  # an Arabic-Indic zero
+    assert DISPLAY.match("  Display: \u0660") is None
 
 
 def test_a_window_on_another_display_is_not_ours() -> None:

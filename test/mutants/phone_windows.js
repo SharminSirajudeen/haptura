@@ -45,3 +45,7 @@ module.exports.push(
   m('windows: a window line carries its list\'s display',
     'or m.group(2) != self.display or', 'or', 'test_a_title_that_forges_a_list_header_blocks_everything'),
 );
+module.exports.push(
+  m('windows: window indices are ASCII digits', 'INDEX = re.compile(r"^ +(\\d+): name=", re.ASCII)', 'INDEX = re.compile(r"^ +(\\d+): name=")',
+    'test_only_ascii_digits_number_a_window_or_a_display'),
+);
