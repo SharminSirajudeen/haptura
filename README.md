@@ -181,7 +181,8 @@ gate (`mac/`), the results under `results/`, and every test and mutant.
 
 Written before the event started on 26 Oct 2026, and copied in or kept as reference:
 - `docs/project-kit/` and the files copied from it and adapted: `CLAUDE.md` (template), `test/mutants.js`,
-  `test/check.js`, `test/floorguard.js`, `test/floorguard.test.js`, `scripts/ci.sh`, `scripts/merge.sh`.
+  `test/mutants.list.js`, `test/check.js`, `test/floorguard.js`, `test/floorguard.test.js`, `scripts/ci.sh`,
+  `scripts/merge.sh`.
 - `docs/doctrine.md`, `docs/meta-form-answers.md`, `docs/meta-alignment.md`.
 - Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. If the stretch demo on a real phone is built,
   it is called as an external tool; none of its source is in this repository.

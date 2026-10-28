@@ -26,17 +26,17 @@
 
 <header id="top" class="hero band">
   <div class="intro">
-    <div class="say">
+    <div>
       <p class="kicker">Meta AI Developer Hackathon entry</p>
       <h1>control-gate</h1>
       <p class="lead" data-source="README.md">A gate that makes an agent prove, by its own experiments, that it still controls what it is about to act on, and stop, probe or decline when it cannot.</p>
     </div>
-    <div class="proof">
+    <div>
       <ul class="claim" role="list" aria-label="Measured on GhostEI-Bench">
         <li class="before"><strong>5 of 33</strong> <span>cases where Muse Spark alone named the attacker’s button (15%).</span></li>
         <li><strong>0 of 33</strong> <span>with the gate telling it the window’s owner (95% upper bound 9%).</span></li>
       </ul>
-      <p class="note">The gate blocked every tap that landed on the attacker’s window. On clean runs, no tap on a task app’s own window was blocked.</p>
+      <p class="note">The gate blocked every tap that landed on the attacker’s window. On clean runs it blocked no tap on a task app’s own window; it handed 8 of Muse Spark’s 28 clean taps to a person, all on one Google Play services prompt.</p>
       <p class="scope">33 of GhostEI-Bench’s 59 overlay-attack cases, one Muse Spark decision per case. <span data-source="README.md">This is a single-step proxy, not GhostEI’s multi-step harness, so the rates are not comparable to the paper’s.</span> <span data-source="README.md">In these cases the attacker’s window also held focus.</span></p>
       <p class="actions"><a class="button" href="#result">See the full result</a> <a class="more" href="#clip">What the clip shows</a></p>
     </div>
@@ -45,7 +45,7 @@
     <video controls playsinline preload="metadata" width="720" height="1280" poster="media/case26-poster.png" aria-describedby="clip-caption">
       <source src="media/case26-dialog.mp4" type="video/mp4">
     </video>
-    <figcaption id="clip-caption">GhostEI case 26, 16 s, no sound, from the moment another app’s fake “System Update Required” dialog appears over Settings. Muse Spark proposed a tap on it; the gate blocked the tap, and nothing is tapped to the end.</figcaption>
+    <figcaption id="clip-caption">GhostEI case 26, 16 s, no sound, from the moment another app’s fake “System Update Required” dialog appears over Settings. Muse Spark proposed a tap aimed at its Cancel button, to dismiss it; the point fell on the attacker’s window, so the gate blocked the tap, and nothing is tapped to the end.</figcaption>
   </figure>
 </header>
 
@@ -175,8 +175,8 @@
       <dd>
         <p data-source="README.md">Written before the event started on 26 Oct 2026, and copied in or kept as reference:</p>
         <ul>
-          <li>The gate files, copied from a pre-event project kit and adapted: <code>CLAUDE.md</code> (from its template), <code>test/mutants.js</code>, <code>test/mutants.list.js</code>, <code>test/check.js</code>, <code>test/floorguard.js</code>, <code>test/floorguard.test.js</code>, <code>scripts/ci.sh</code>, <code>scripts/merge.sh</code>.</li>
-          <li><code>docs/meta-form-answers.md</code>.</li>
+          <li data-source="README.md"><code>docs/project-kit/</code> and the files copied from it and adapted: <code>CLAUDE.md</code> (template), <code>test/mutants.js</code>, <code>test/mutants.list.js</code>, <code>test/check.js</code>, <code>test/floorguard.js</code>, <code>test/floorguard.test.js</code>, <code>scripts/ci.sh</code>, <code>scripts/merge.sh</code>.</li>
+          <li data-source="README.md"><code>docs/doctrine.md</code>, <code>docs/meta-form-answers.md</code>, <code>docs/meta-alignment.md</code>.</li>
           <li data-source="README.md">Actuator (actuator.drengr.dev) is a separate, pre-existing product. If the stretch demo on a real phone is built, it is called as an external tool; none of its source is in this repository.</li>
         </ul>
       </dd>
@@ -187,7 +187,7 @@
     </div>
     <div>
       <dt>Source</dt>
-      <dd><p><a href="https://github.com/SharminSirajudeen/control-gate">The repository</a>, with its <a href="https://github.com/SharminSirajudeen/control-gate#readme">README</a>: every number on this page, its records and every caveat. MIT licence.</p></dd>
+      <dd><p><a href="https://github.com/SharminSirajudeen/control-gate">The repository</a> holds every number on this page, its records and every caveat; start with its <a href="https://github.com/SharminSirajudeen/control-gate#readme">README</a>. MIT licence.</p></dd>
     </div>
   </dl>
 </section>

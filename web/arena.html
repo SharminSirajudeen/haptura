@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a class="skip" href="#main">Skip to the viewer</a>
 <nav class="topnav" aria-label="Site">
   <a class="brand" href="./">control-gate</a>
   <a class="repo" href="https://github.com/SharminSirajudeen/control-gate">Repository</a>
@@ -19,7 +20,7 @@
   <p class="intro-p">Two panes play one episode. Each box is a tracked element and says what the agent believes about it. Until real episodes exist, both panes play the same placeholder.</p>
 </header>
 <noscript><p>This page needs JavaScript to draw its labels.</p></noscript>
-<main class="panes band alt"></main>
+<main id="main" class="panes band alt"></main>
 <template id="pane">
   <section class="pane">
     <div class="pane-head"><h2></h2><p class="tag">Placeholder data</p></div>
