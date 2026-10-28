@@ -5,7 +5,7 @@ stop, probe or decline when it cannot.**
 
 An entry for the Meta AI Developer Hackathon (Startup track, Oct 27 – Nov 4, 2026). Status: in progress. The phone and
 desktop owner gates run and are measured (below). The arena, its agent loop, its evaluation and its runner are built
-and tested offline. The paid runs, the kill test and the final evaluation, have not run yet (`docs/meta-build-plan.md`;
+and tested offline. The paid runs (the kill test and the final evaluation) have not run yet (`docs/meta-build-plan.md`;
 live state in the open issues).
 
 ## The phone tap gate, measured on GhostEI
@@ -89,20 +89,20 @@ at most one of up to 8 elements obeys it. The others are:
 - decoys, which walk at random;
 - echoes, which repeat the agent's action 1 to 4 steps late;
 - replays, which follow another seed's motion;
-- two look-alikes in the controlled element's colour. Each block, one crosses where the controlled element stands,
-  and the other waits halfway along the route to the goal.
+- two look-alikes in the starting element's colour, each a different shape. Each block, one crosses where the
+  controlled element stands, and the other waits halfway along the route to the goal.
 
 The action map can be mirrored, rotated, or have one action dead. Control, or the map, can change at a secret step
 after the agent starts acting. There are six case types: feasible, blocked, remap_feasible, remap_blocked,
 body_remap and body_blocked.
 
-**What the gate does.** From the agent's own randomized probe, it measures three things:
+**What the gate does.** From the agent's own randomized probes and its act blocks, it measures three things:
 1. **Which element moves with its actions.** A permutation test per element labels each one `mine`, `echo` or
    `not_me` (S10, `gate/control.py`).
 2. **What each action does to that element:** its body map, from the same test.
 3. **Whether its eyes still hold.** Each act block predicts the target's motion from the body map, and S14
    (`gate/gate.py`) diagnoses a miss. A swapped tracker id is fixed in place. A changed body is relearned from a short
-   probe. A lost target sends every element back to probing.
+   probe. A lost target brings the advice to re-probe every element; Muse decides.
 
 `act` runs only on the single element labelled `mine` (S13); otherwise it is refused, with the reason. The check sits
 inside the tool, the pattern Meta's own agent workshop teaches (`legal-agent-workshop`, HANDBOOK, Session 2), applied
@@ -111,14 +111,15 @@ here to proving control.
 **Which model does what:**
 - **Muse Spark** (`muse-spark-1.3`, temperature 0, low reasoning effort) is the agent. It reads the evidence table and
   the gate's advice line, then calls `run_experiment`, `act` or `decline`.
-- **SAM 3.1** tracks every element, with one video call per block and the prompt "colored object" (T2,
-  `notes/api.md`).
+- **SAM 3.1** is the tracker, with one video call per block and the prompt "colored object". In T2 it kept the ids
+  of 3 shapes through a crossing (`notes/api.md`). It has not yet run on an arena clip.
 - The statistics, the gate and its advice are plain code, with no model.
 
 **The conditions** (EVAL.md):
+- **`gated+SAM`** is the product: Muse Spark, the gate, and SAM 3.1.
 - **Baseline a** (`no-gate+SAM`) keeps the same three tools. `run_experiment` returns only each element's mean
   displacement per action, with no p, no label and no advice. `act` is unchecked and steers by those means. No S14.
-- **Baseline b** (`gated+colour`) is the gate with a colour tracker, which cannot tell look-alikes apart.
+- **Baseline b** (`gated+colour`) is the gate with a colour tracker, which can swap the look-alikes' ids where they cross.
 - `rules-only+SAM` replaces Muse with the gate's own rule policy (S15).
 - `gated+truth` gives the gate perfect eyes: an upper bound.
 
@@ -133,26 +134,35 @@ here to proving control.
 **Run it.** Every paid run prints its projected cost first and refuses above its budget:
 
 ```bash
-uv run --locked python -m pytest -q tests/test_e2e.py                                    # T11, offline, about a minute
+uv run --locked python -m pytest -q tests/test_e2e.py                                    # T11, offline, 1 to 2 minutes
 uv run --locked python -m gate.run --condition gated+SAM --seeds 0-19 --budget 0         # prints the projection, refuses
 uv run --locked python -m gate.run --condition rules-only+truth --seeds 0-19 --budget 0  # free: no model is called
 uv run --locked python -m gate.eval results/logs results/table.md 0-19
 ```
 
 `gate.run` writes one EpisodeLog per episode to `results/logs/<condition>/` and resumes a stopped run. Every model
-response is cached under `cache/`, so `REPLAY=1` reruns from the cache with no network, and a cache miss is an error.
-The runner's projection on 28 Oct, a floor, is $5.85, $5.85 and $0.95 for the kill test's three conditions (`docs/pilot-runs.md`, P24).
+response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
+`cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
+all. The runner's projection on 28 Oct is $5.85, $5.85 and $0.95 for the kill test's three conditions, $12.64 in all
+(`docs/pilot-runs.md`, P24). It is an estimate from the rule policy's block counts: Muse may use more blocks or fewer.
+
+**Limits:**
+- A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside
+  them is claimed.
+- No Muse Spark or SAM number exists for the arena until the kill test runs.
+- S10's wall rule (#24) is above.
 
 **Adjacent work:**
 - **Google ARTEMIS** (Apache-2.0) drives Android apps. Its LLM checker rules whether each plan item passed: an opinion
-  on whether the goal looks met. This gate measures whether the agent's own action caused the change. So it catches
-  decoys, echoes and replays that look like success, learns the body map, and detects remaps.
+  on whether the goal looks met. This gate measures whether the agent's own action caused the change. It is built to
+  catch decoys, echoes and replays that look like success, learn the body map, and detect remaps.
 - **Tethral** is an authority layer that governs what an agent may do, not whether it controls the thing.
 - **Robot self-modelling** is older: Gold and Scassellati (2009), Lipson's line of work, and Neural Jacobian Fields
   (2025). What is ours is the three-level diagnosis, a gate any agent loop can call, and its evaluation.
 
 **Who it is for:** first, agents that operate real phone apps, such as Actuator (separate and pre-existing). There an
-app can change under the agent while it keeps tapping, which is the remap case.
+app can change under the agent while it keeps tapping, which is the remap case. The arena gate has not yet run on a
+phone (the plan's stretch task, T18).
 
 ## Built during the hackathon
 
