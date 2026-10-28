@@ -6,6 +6,8 @@ const SECRET = 'test_the_secret_step_covers_5_to_block_steps_minus_5';
 const LAYOUT = 'test_every_scenario_is_laid_out_without_overlap_inside_the_frame';
 const LOOK = 'test_every_scenario_has_two_look_alikes_and_an_echo_and_a_replay';
 const GOAL = 'test_the_goal_lies_along_a_live_action_unless_the_body_is_blocked';
+const WALL = 'test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall';
+const TOWARD = 'test_a_body_remap_changes_the_action_that_moves_toward_the_goal';
 const MAPS = 'test_s1_draws_exactly_the_eight_action_maps';
 const FIRST_ACT = 'test_a_remap_case_with_the_first_act_at_step_40_fires_after_step_40';
 const ECHO = 'test_an_echo_moves_by_the_action_lag_steps_ago';
@@ -32,11 +34,9 @@ module.exports = [
   m('S1: a replay exists', '"decoy", "decoy", "echo", "replay"]', '"decoy", "decoy", "echo", "decoy"]', LOOK),
   m('S1: the goal is BLOCK_STEPS cells from the subject', 'reach = BLOCK_STEPS * CELL_PX + GOAL_PX // 2', 'reach = BLOCK_STEPS * CELL_PX', 'test_the_goal_is_at_least_block_steps_cells_from_the_subject'),
   m('S1: the goal stays inside the frame', 'hi = min(W - MARGIN, W - GOAL_PX // 2 - sign * reach)', 'hi = W - MARGIN', 'test_the_goal_is_at_least_block_steps_cells_from_the_subject'),
-  m('S1: body_blocked puts the goal where the dead action goes', 'pool = sorted(UNITS - lives[0] if case == "body_blocked" else set.intersection(*lives))', 'pool = sorted(set.intersection(*lives))', GOAL),
+  m('S1: body_blocked puts the goal where the dead action goes', '    if case == "body_blocked":\n        return sorted(UNITS - _live(bodies[0]))\n', '', GOAL),
   m('S1: body_blocked draws a dead action', 'deads if case == "body_blocked" else list(BODIES)', 'list(BODIES)', GOAL),
-  m('S1: the goal is live under every map of the schedule', 'set.intersection(*lives)', 'lives[0]', GOAL),
-  m('S1: a zero move is no direction', 'for dx, dy in moves if (dx, dy) != (0.0, 0.0)}', 'for dx, dy in moves}', 'test_the_goal_is_at_least_block_steps_cells_from_the_subject'),
-  m('S1: a body remap changes the map', '[k for k in BODIES if k != body]', 'list(BODIES)', 'test_body_remap_switches_the_map_at_the_secret_step_and_logs_it'),
+  m('S1: a body remap changes the map, and the action toward the goal', 'if _pool(case, [body, k])]', 'if k != body]', TOWARD),
   m('S1: a control remap is logged', 'if len(binding) > 1:', 'if len(binding) > 2:', 'test_control_remap_cases_switch_at_the_secret_step_and_log_it'),
   m('S1: a body remap is logged as one', '"body_remap", f"{body} -> {swap}"', '"body", f"{body} -> {swap}"', 'test_body_remap_switches_the_map_at_the_secret_step_and_logs_it'),
   m('S1: control passes to a decoy', '"remap_feasible": ((0, 0), (step, 5))', '"remap_feasible": ((0, 0), (step, 4))', 'test_control_remap_cases_switch_at_the_secret_step_and_log_it'),
@@ -81,8 +81,6 @@ module.exports = [
   m('S3: the triangle fills its box', '(dy + HALF + 0.5) / 2', '(dy + HALF) / 2', MASKS),
 ];
 // #21: a feasible-type case stays reachable whatever the agent's own probe does, and a body remap shows in the steering.
-const WALL = 'test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall';
-const TOWARD = 'test_a_body_remap_changes_the_action_that_moves_toward_the_goal';
 module.exports.push(
   m('S1: on a one-way axis the goal sits on the wall', '        g[axis] = W - GOAL_PX // 2 if sign > 0 else GOAL_PX // 2\n', '        g[axis] = g[axis]\n', WALL),
   m('S1: the live side\'s wall, not the dead side\'s', 'W - GOAL_PX // 2 if sign > 0 else', 'W - GOAL_PX // 2 if sign < 0 else', WALL),

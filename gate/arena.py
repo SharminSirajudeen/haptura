@@ -68,13 +68,12 @@ def _cell(rng: np.random.Generator, lo: int, hi: int) -> int:
 
 
 def _live(name: str) -> set[tuple[int, int]]:
-    """The unit directions some action of the map moves along."""
-    moves = BODIES[name].values()
-    return {(int(dx // CELL_PX), int(dy // CELL_PX)) for dx, dy in moves if (dx, dy) != (0.0, 0.0)}
+    """The directions the map's actions move along in cells; (0, 0) for noop and a dead action."""
+    return {(int(dx // CELL_PX), int(dy // CELL_PX)) for dx, dy in BODIES[name].values()}
 
 
 def _one_way(bodies: list[str]) -> set[tuple[int, int]]:
-    """The live directions some body of the schedule cannot reverse: that axis is one-way."""
+    """The directions some body of the schedule cannot reverse: that axis is one-way for it."""
     return {u for b in bodies for u in _live(b) if (-u[0], -u[1]) not in _live(b)}
 
 
@@ -84,15 +83,16 @@ def _mover(body: str, u: tuple[int, int]) -> str | None:
 
 
 def _pool(case: str, bodies: list[str]) -> list[tuple[int, int]]:
-    """The goal directions the plan wants: in `body_blocked` the dead action's; otherwise one every
-    body follows, along any axis a body leaves one-way and toward its live side (the goal then sits
-    at that wall, so no drift can strand it), and moved by a different action after a body remap."""
-    lives = [_live(b) for b in bodies]
+    """The goal directions the plan wants: in `body_blocked` the dead action's. Otherwise a
+    direction u that no body can only go the other way along (a map has at most one dead action, so
+    every body then moves along u, and on an axis a body leaves one-way u is its live side, where
+    the goal sits on the wall and no drift can strand it), moved by a different action after a body
+    remap."""
     if case == "body_blocked":
-        return sorted(UNITS - lives[0])
+        return sorted(UNITS - _live(bodies[0]))
     ways = _one_way(bodies)
-    changed = {u for u in UNITS if len({_mover(b, u) for b in bodies}) == len(bodies)}
-    return sorted(u for u in set.intersection(*lives) & changed if ways <= {u})
+    moved_apart = {u for u in UNITS if len({_mover(b, u) for b in bodies}) == len(bodies)}
+    return sorted(u for u in moved_apart if ways <= {u})
 
 
 def _layout(rng: np.random.Generator, case: str, bodies: list[str]) -> tuple[Pt, Pt]:
@@ -158,7 +158,7 @@ def make_scenario(seed: int, case: str) -> Scenario:
     body = str(rng.choice(deads if case == "body_blocked" else list(BODIES)))
     swap = None
     if case == "body_remap":
-        swap = str(rng.choice([k for k in BODIES if k != body and _pool(case, [body, k])]))
+        swap = str(rng.choice([k for k in BODIES if _pool(case, [body, k])]))
     x, g = _layout(rng, case, [b for b in (body, swap) if b is not None])
     mid = _halfway(x, g)
     far = _scatter(rng, [x, g, mid], n - 2)
