@@ -1,0 +1,100 @@
+"""The runner's gate path with the device faked by three real `dumpsys input` captures.
+
+The owner is read and judged inside the click watch, right before the tap; a gated tap on a window
+the task app does not own is never sent. No device, no model.
+"""
+
+from collections.abc import Callable
+from pathlib import Path
+
+import pytest
+
+from phone import adb, ghostei
+from phone.muse import Proposal
+from phone.rules import SYSTEM_ALLOW
+
+FIX = Path(__file__).parent / "fixtures" / "phone"
+UIDS = (FIX / "uids.txt").read_text()
+SETTINGS, HELPER = "com.android.settings", "com.example.myapplication"
+SYSTEM = "package:com.android.systemui\npackage:com.android.settings\n"
+TAP = Proposal("tap", 513, 739, "Install", "r", 1, 1)  # GhostEI's Install button on the overlay
+
+
+def recorder(sent: list[str]) -> Callable[..., str]:
+    """A stand-in for adb.shell that records each command and answers nothing."""
+
+    def shell(cmd: str, timeout: int = 30) -> str:
+        sent.append(cmd)
+        return ""
+
+    return shell
+
+
+def fake_device(monkeypatch: pytest.MonkeyPatch, capture: str) -> list[str]:
+    """adb answers from a capture; the shell commands sent are returned in order."""
+    sent: list[str] = []
+    text = (FIX / f"input-{capture}.txt").read_text()
+
+    def dump() -> str:
+        sent.append("dump")
+        return text
+
+    monkeypatch.setattr(adb, "input_dump", dump)
+    monkeypatch.setattr(adb, "shell", recorder(sent))
+
+    def watch(act: Callable[[], object]) -> tuple[object, tuple[str, str]]:
+        sent.append("watch")  # the click watch starts before the act, as in adb.clicked_during
+        return act(), ("", "")
+
+    monkeypatch.setattr(adb, "clicked_during", watch)
+    return sent
+
+
+def test_the_allowlist_is_cut_to_this_devices_system_packages() -> None:
+    dev = ghostei.device(UIDS, SYSTEM)
+    assert dev.allow == {"com.android.systemui"} and dev.allow <= SYSTEM_ALLOW
+    assert SETTINGS in dev.uids[1000]
+
+
+def test_a_gated_tap_on_the_overlay_is_never_sent(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent = fake_device(monkeypatch, "overlay")
+    rec = ghostei.tap_gated(TAP, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    assert rec["owner_at_tap"] == HELPER and rec["verdict"]["kind"] == "block"
+    assert not rec["tapped"] and sent == ["watch", "dump"]  # read inside the watch
+
+
+def test_an_ungated_tap_is_sent_and_still_judged(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent = fake_device(monkeypatch, "overlay")
+    rec = ghostei.tap_gated(TAP, SETTINGS, False, ghostei.device(UIDS, SYSTEM))
+    assert rec["tapped"] and rec["verdict"]["kind"] == "block"
+    assert sent == ["watch", "dump", "input tap 513 739"]
+
+
+def test_a_tap_on_the_task_apps_own_window_is_sent(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent = fake_device(monkeypatch, "settings")
+    rec = ghostei.tap_gated(TAP, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    assert rec["owner_at_tap"] == SETTINGS and rec["tapped"]
+    assert sent == ["watch", "dump", "input tap 513 739"]
+
+
+def test_the_keyboard_is_not_the_task_app(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_device(monkeypatch, "keyboard")
+    key = Proposal("tap", 100, 1000, "q", "r", 1, 1)  # under the keyboard, not the search page
+    rec = ghostei.tap_gated(
+        key, "com.google.android.settings.intelligence", True, ghostei.device(UIDS, SYSTEM)
+    )
+    assert rec["owner_at_tap"] == "com.google.android.inputmethod.latin"
+    assert rec["verdict"]["kind"] == "block"  # Gboard is not a system package on this list
+
+
+def test_focus_is_read_from_the_window_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_device(monkeypatch, "overlay")
+    assert ghostei.owner_now(ghostei.device(UIDS, SYSTEM), SETTINGS) == HELPER
+
+
+def test_the_dump_file_is_removed_before_each_dump(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent: list[str] = []
+    monkeypatch.setattr(adb, "shell", recorder(sent))
+    monkeypatch.setattr(adb, "run", lambda *args, timeout=30: "")
+    adb.ui_xml()
+    assert sent == ["rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml"]
