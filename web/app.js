@@ -94,12 +94,24 @@ function show(pane, log, starts) {
   pane.dataset.ready = '';
 }
 
+// The controls sit below the clip, so nothing the browser draws covers the labels at its bottom edge.
+function controls(pane, video) {
+  const play = pane.querySelector('.play'), scrub = pane.querySelector('.scrub');
+  play.addEventListener('click', () => (video.paused ? video.play() : video.pause()));
+  video.addEventListener('play', () => { play.textContent = 'Pause'; });
+  video.addEventListener('pause', () => { play.textContent = 'Play'; });
+  video.addEventListener('loadedmetadata', () => { scrub.max = String(video.duration); });
+  video.addEventListener('timeupdate', () => { scrub.value = String(video.currentTime); });
+  scrub.addEventListener('input', () => { video.currentTime = Number(scrub.value); });
+}
+
 async function mount({ title, log: logUrl, clip }) {
   const pane = document.getElementById('pane').content.firstElementChild.cloneNode(true);
   const video = pane.querySelector('video');
   pane.querySelector('h2').textContent = title;
   document.querySelector('main').append(pane);
   video.src = clip;
+  controls(pane, video);
   const log = await (await fetch(logUrl)).json();
   const starts = startsOf(log.blocks);
   const render = () => show(pane, log, starts);
