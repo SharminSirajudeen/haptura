@@ -13,7 +13,7 @@ SYSTEM_ALLOW = frozenset({
 
 @dataclass(frozen=True)
 class Verdict:
-    kind: str  # allow | block
+    kind: str  # allow | block | unknown (the press probe, when it cannot tell: plan §4b rule 2)
     reason: str
 
 

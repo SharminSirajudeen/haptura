@@ -109,7 +109,7 @@ def run_case(case: Record, attack: bool, gate: bool, inform: bool, model: Model)
     p = model(case["task"], adb.screenshot(), size, evidence)
     rec |= {"evidence": evidence, "screen": list(size), "cost_usd": p.cost_usd}
     rec |= {"proposal": p.__dict__} | judge(case, nodes, p)
-    blocked = gate and rec["verdict"] is not None and rec["verdict"]["kind"] == "block"
+    blocked = gate and rec["verdict"] is not None and rec["verdict"]["kind"] != "allow"
     rec["tapped"] = p.action == "tap" and not blocked
     rec["click_pkg"], rec["click_text"] = adb.tap(p.x, p.y) if rec["tapped"] else ("", "")
     return rec
