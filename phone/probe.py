@@ -24,7 +24,7 @@ from phone import adb, ghostei, ui
 from phone.rules import Verdict, check_tap
 
 Frame = np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
-WAIT_S = 0.20  # DOWN to capture; measured 28 Oct: the hold's upper bound stays at or under 272 ms
+WAIT_S = 0.20  # DOWN to capture (plan §4b: the measured holds and the ones that ran late)
 CANCEL_SHARE = 0.75  # rule 2: CANCEL lands strictly before this share of long_press_timeout
 BASE, PRESS = "/data/local/tmp/cg_base.raw", "/data/local/tmp/cg_press.raw"
 STATUS_BAR = re.compile(r"type=statusBars frame=\[\d+,\d+\]\[\d+,(\d+)\]")
@@ -36,13 +36,16 @@ class ProbeResult:
     highlight_bounds: ui.Bounds | None
     cancel_ms: float  # the hold's upper bound, device clock: CANCEL returned minus DOWN started
     status: str  # ok | late | none
+    long_press_ms: int  # the device's long_press_timeout, read in the same run; 0 when unread
+    hold_min_ms: float  # the hold's lower bound: CANCEL started minus DOWN returned
 
 
 def probe_script(x: int, y: int, wait_s: float = WAIT_S) -> str:
     """One shell string, one round trip: the device's settings, a baseline, then DOWN, capture,
-    CANCEL (rule 1). Never UP, never a slide.
+    CANCEL (rule 1). Never UP, never a slide. Old captures go first, so a failed one is never read.
     """
     return (
+        f"rm -f {BASE} {PRESS}; "
         "settings get secure long_press_timeout; "
         r"dumpsys window 2>/dev/null | grep -m1 -o 'type=statusBars frame=\[[0-9,]*\]\[[0-9,]*\]'; "
         f"screencap {BASE}; "
@@ -53,18 +56,22 @@ def probe_script(x: int, y: int, wait_s: float = WAIT_S) -> str:
     )
 
 
-def parse_run(out: str) -> tuple[int, int, float] | None:
-    """(long_press_timeout ms, status bar bottom row, hold upper bound ms), or None when malformed.
+def parse_run(out: str) -> tuple[int, int, float, float] | None:
+    """(long_press_timeout ms, status bar bottom row, hold upper and lower bound ms), or None.
 
-    An unset long_press_timeout prints "null" and reads as malformed: unknown, never safe.
+    None when malformed. An unset long_press_timeout prints "null": malformed, so unknown, never
+    safe. So is a hold shorter than the wait in it, which only a clock stepping back can produce.
     No status bar line means nothing is excluded, so the clock can only widen the highlight.
     """
-    lpt, stamps = re.match(r"(\d+)\n", out), STAMPS.search(out)
+    m, stamps = re.match(r"(\d+)\n", out), STAMPS.search(out)
+    lpt = int(m.group(1)) if m else 0
     if not (lpt and stamps):
         return None
     bar = STATUS_BAR.search(out)
     t0, t1, t2, t3 = (int(v) for v in stamps.groups())
-    return int(lpt.group(1)), int(bar.group(1)) if bar else 0, (t3 - t0) / 1e6
+    if t2 - t1 < WAIT_S * 1e9:
+        return None
+    return lpt, int(bar.group(1)) if bar else 0, (t3 - t0) / 1e6, (t2 - t1) / 1e6
 
 
 def frames(raw: bytes) -> tuple[Frame, Frame]:
@@ -114,17 +121,21 @@ def check_press(p: ProbeResult, intended: ui.Bounds) -> Verdict:
 
 def press_probe(x: int, y: int) -> ProbeResult:
     """Rules 1-2 on the device: one shell string, then both captures in one pull."""
+    out = ""
     try:
         out = adb.shell(probe_script(x, y), timeout=5)
     except subprocess.TimeoutExpired:
-        out = ""
-    run = parse_run(out)
-    if run is None:  # the press may still be down: release it, and trust nothing
-        adb.shell(f"input motionevent CANCEL {x} {y}")
-        return ProbeResult(None, math.inf, "late")
-    long_press_ms, top, cancel_ms = run
+        pass
+    finally:  # whatever stopped the run, even ^C, a press that may still be down is released
+        run = parse_run(out)
+        if run is None:
+            adb.shell(f"input motionevent CANCEL {x} {y}")
+    if run is None:  # trust nothing from a run that did not finish
+        return ProbeResult(None, math.inf, "late", 0, 0.0)
+    long_press_ms, top, cancel_ms, hold_min_ms = run
     box = highlight(*frames(adb.exec_bytes("cat", BASE, PRESS)), top)
-    return ProbeResult(box, cancel_ms, status(cancel_ms, long_press_ms, box))
+    lit = status(cancel_ms, long_press_ms, box)
+    return ProbeResult(box, cancel_ms, lit, long_press_ms, hold_min_ms)
 
 
 # The runner: the probe's measured record on the emulator (results/phone/probe/).
@@ -151,8 +162,9 @@ def trial(x: int, y: int) -> Record:
 
 
 def row(r: Record) -> str:
-    hold, click = f"{r['cancel_ms']:.0f}", r["click"][0] or "none"
-    cells = [r["x"], r["y"], r["intended"], r["highlight_bounds"], hold, r["status"], r["verdict"]]
+    hold, click = f"{r['hold_min_ms']:.0f}-{r['cancel_ms']:.0f}", r["click"][0] or "none"
+    lit = r["highlight_bounds"] and list(r["highlight_bounds"])  # a list, as a reread record has it
+    cells = [r["x"], r["y"], r["intended"], lit, hold, r["status"], r["verdict"]]
     return "| " + " | ".join(str(c) for c in [*cells, r["opened"], click]) + " |"
 
 
@@ -163,6 +175,7 @@ def readme(rows: list[Record], overlay: Record) -> str:
     lit = [(r["highlight_bounds"], r["intended"]) for r in rows if r["highlight_bounds"]]
     box, el = min(lit, key=lambda b: b[0][3] - b[0][1], default=((0, 0, 0, 0), (0, 0, 0, 0)))
     bound = f"95% upper bound {3 / n:.0%} (rule of three)" if bad == 0 else "no rule of three"
+    longest = max(rows, key=lambda r: r["cancel_ms"])
     return README.format(
         wait=WAIT_S * 1000,
         share=CANCEL_SHARE,
@@ -180,11 +193,14 @@ def readme(rows: list[Record], overlay: Record) -> str:
         owner_kind=check_tap(overlay["owner"], SETTINGS).kind,
         box_h=box[3] - box[1],
         row_h=el[3] - el[1],
+        n_long=sum(1 for r in rows if r["cancel_ms"] >= r["long_press_ms"]),
+        lpt="/".join(sorted({str(r["long_press_ms"]) for r in rows})),
+        long_lo=longest["hold_min_ms"],
     )
 
 
 TABLE = (
-    "| x | y | intended | lit up | hold ≤ ms | status | verdict | opened | click |\n"
+    "| x | y | intended | lit up | hold ms | status | verdict | opened | click |\n"
     + "|---" * 9
     + "|"
 )
@@ -192,9 +208,10 @@ README = """# Press probe: plan §4b rules 1-3, §4d P4
 
 Written by `ANDROID_SERIAL=emulator-5554 uv run python -m phone.probe` on Small_Phone (Android
 API 36, 720×1280); the records are `trials.jsonl`. One `adb shell` string per probe: DOWN, wait
-{wait:.0f} ms, raw `screencap`, CANCEL, timed by the device's `date +%s%N`. The hold is its upper
-bound, CANCEL returned minus DOWN started; it is late at {share:.0%} of `long_press_timeout` or
-more, read from the device on every probe. Rule 3 allows only a highlight inside the clickable
+{wait:.0f} ms, raw `screencap`, CANCEL, timed by the device's `date +%s%N`. "hold ms" is at least
+CANCEL started minus DOWN returned and at most CANCEL returned minus DOWN started. A probe is
+late when the upper bound reaches {share:.0%} of `long_press_timeout`, read from the device on
+every probe. Rule 3 allows only a highlight inside the clickable
 node under the press point. `sweep.jsonl` is the 28 Oct method sweep behind the wait, 10 trials
 per method (the plan's host round trip per step with PNG, and one string with raw at 100-220 ms).
 
@@ -215,6 +232,10 @@ is rule 7's question: its owner is `{owner}`, and `check_tap` says {owner_kind} 
 Settings task.
 
 ## Known limits
+- **{n_long} of {n} held up to the {lpt} ms long-press timeout or past it, by the upper bound (the
+  longest hold: {long_lo:.0f}-{hi:.0f} ms); a long press is not detected.** CANCEL cannot undo a
+  long press that already fired, and nothing in the probe looks for one. Such a probe is `late`,
+  so `unknown`.
 - **An early press lights a dot, and a dot passes the inside check.** The highlight is a ripple
   growing from the press point. At a 100 ms wait, 1 of 10 probes showed a 2×2 px change at the
   press point and 9 showed nothing (`sweep.jsonl`). At {wait:.0f} ms the smallest box here was

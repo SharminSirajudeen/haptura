@@ -1,12 +1,14 @@
 """The press probe (plan §4b rules 1-3) on hand-built frames and shell output; no device."""
 
 import math
+import subprocess
 
 import numpy as np
 import pytest
 
 from phone import adb, probe
 from phone.probe import (
+    BASE,
     PRESS,
     ProbeResult,
     check_press,
@@ -26,22 +28,37 @@ def blank() -> probe.Frame:
     return np.zeros((1280, 720, 3), np.uint8)
 
 
+def res(box: tuple[int, int, int, int] | None, hold: float, kind: str) -> ProbeResult:
+    return ProbeResult(box, hold, kind, 400, hold - 15.0)
+
+
 def test_script_presses_then_cancels_never_up() -> None:
     s = probe_script(360, 490)
-    steps = ["motionevent DOWN 360 490", f"screencap {PRESS}", "motionevent CANCEL 360 490"]
-    at = [s.index(step) for step in steps]
-    assert at == sorted(at)
+    steps = [
+        f"rm -f {BASE} {PRESS}; ",
+        f"screencap {BASE}",
+        "t0=$(date",
+        "motionevent DOWN 360 490",
+    ]
+    steps += ["t1=$(date", f"screencap {PRESS}", "t2=$(date", "motionevent CANCEL 360 490"]
+    at = [s.find(step) for step in [*steps, "t3=$(date"]]
+    assert at[0] == 0 and -1 not in at and at == sorted(at)
     assert s.count("motionevent") == 2 and "motionevent UP" not in s and "MOVE" not in s
 
 
 def test_hold_is_the_upper_bound() -> None:
-    assert parse_run(OUT) == (400, 48, 265.0)
+    assert parse_run(OUT) == (400, 48, 265.0, 250.0)
 
 
 def test_missing_status_bar_excludes_nothing_and_garbage_is_none() -> None:
-    assert parse_run(OUT.replace("type=statusBars frame=[0,0][720,48]\n", "")) == (400, 0, 265.0)
-    assert parse_run("null\n1 2 3 4\n") is None
+    no_bar = OUT.replace("type=statusBars frame=[0,0][720,48]\n", "")
+    assert parse_run(no_bar) == (400, 0, 265.0, 250.0)
+    assert parse_run(OUT.replace("400\n", "null\n")) is None
     assert parse_run("400\n") is None
+
+
+def test_a_clock_step_back_is_malformed() -> None:
+    assert parse_run(OUT.replace("1257000000", "1100000000")) is None
 
 
 def test_cancel_at_75_percent_is_late() -> None:
@@ -91,15 +108,15 @@ def test_header_size_is_derived(head: int) -> None:
 
 
 def test_late_is_unknown() -> None:
-    assert check_press(ProbeResult(BOX, 310.0, "late"), ROW).kind == "unknown"
+    assert check_press(res(BOX, 310.0, "late"), ROW).kind == "unknown"
 
 
 def test_no_highlight_blocks() -> None:
-    assert check_press(ProbeResult(None, 260.0, "none"), ROW).kind == "block"
+    assert check_press(res(None, 260.0, "none"), ROW).kind == "block"
 
 
 def test_inside_allows() -> None:
-    v = check_press(ProbeResult(BOX, 260.0, "ok"), ROW)
+    v = check_press(res(BOX, 260.0, "ok"), ROW)
     assert v.kind == "allow" and str(BOX) in v.reason
 
 
@@ -109,21 +126,45 @@ def test_inside_allows() -> None:
     ids=["left", "top", "right", "bottom"],
 )
 def test_overhang_blocks(box: tuple[int, int, int, int]) -> None:
-    assert check_press(ProbeResult(box, 260.0, "ok"), ROW).kind == "block"
+    assert check_press(res(box, 260.0, "ok"), ROW).kind == "block"
 
 
-def test_malformed_run_cancels_and_is_late(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "stop",
+    [None, subprocess.TimeoutExpired("adb", 5), KeyboardInterrupt()],
+    ids=str.split("empty timeout interrupt"),
+)
+def test_malformed_run_cancels_and_is_late(
+    monkeypatch: pytest.MonkeyPatch, stop: BaseException | None
+) -> None:
     sent: list[str] = []
 
     def shell(cmd: str, timeout: int = 30) -> str:
         sent.append(cmd)
-        return ""  # the shell string died: no timestamps came back
+        if stop and len(sent) == 1:
+            raise stop  # the run was stopped between DOWN and CANCEL
+        return ""  # or it died: no timestamps came back
 
     monkeypatch.setattr(adb, "ADB", "/nonexistent/adb")
     monkeypatch.setattr(adb, "shell", shell)
-    p = probe.press_probe(360, 490)
-    assert p.status == "late" and math.isinf(p.cancel_ms) and p.highlight_bounds is None
+    if isinstance(stop, KeyboardInterrupt):
+        with pytest.raises(KeyboardInterrupt):
+            probe.press_probe(360, 490)
+    else:
+        assert probe.press_probe(360, 490) == ProbeResult(None, math.inf, "late", 0, 0.0)
     assert sent[1:] == ["input motionevent CANCEL 360 490"]
+
+
+def rec(hold: float) -> probe.Record:
+    r = {"x": 360, "y": 490, "intended": list(ROW), "highlight_bounds": list(BOX), "status": "ok"}
+    r |= {"cancel_ms": hold, "hold_min_ms": hold - 15.0, "long_press_ms": 400, "verdict": "allow"}
+    return r | {"opened": False, "click": ["", ""], "owner": "com.android.settings"}
+
+
+def test_readme_counts_holds_at_or_past_long_press() -> None:
+    text = probe.readme([rec(432.0), rec(400.0), rec(399.0)], rec(265.0))
+    want = "2 of 3 held up to the 400 ms long-press timeout or past it, by the upper bound (the\n"
+    assert want + "  longest hold: 417-432 ms)" in text
 
 
 @pytest.mark.parametrize("serial", ["", "RF8WC0SEPKF"])
