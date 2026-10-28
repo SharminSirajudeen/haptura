@@ -3,9 +3,9 @@ real arena with truth tracking, seeds 0-19 x all six cases, no network. It prove
 before money is spent: each episode is scored by EVAL.md's right-hand column, outcome and qualifier.
 
 One test node per (case, seed), so a seed that falls is red at once. The seeds that miss today are
-pinned to their issue (measured 28 Oct): #21, a one-way body drifted past the goal by the agent's
-own probe, or a body remap the steering never uses; #24, S10 blind to an element against a wall.
-A fix turns its seeds into unexpected passes, which are red until the pin is removed.
+pinned to their issue (measured 28 Oct): #24, S10 blind to the element control moved to once a
+one-way body has pressed it against a wall. A fix turns its seeds into unexpected passes, which are
+red until the pin is removed.
 """
 
 import functools
@@ -21,13 +21,7 @@ from gate.types import EpisodeLog
 
 CASES = ("feasible", "blocked", "remap_feasible", "remap_blocked", "body_remap", "body_blocked")
 SEEDS = range(20)
-MISSES = {
-    **{("feasible", s): 21 for s in (0, 4, 7, 11, 12, 15, 16)},
-    **{("remap_feasible", s): 21 for s in (0, 4, 7, 11, 12, 13, 15, 16)},
-    ("remap_feasible", 9): 24,
-    **{("remap_blocked", s): 21 for s in (0, 4, 7, 11, 12, 15, 16)},
-    **{("body_remap", s): 21 for s in (0, 1, 4, 5, 6, 7, 9, 11, 12, 13, 14, 15)},
-}
+MISSES = {("remap_feasible", 0): 24, ("remap_feasible", 12): 24}
 
 
 @functools.cache

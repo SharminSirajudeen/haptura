@@ -126,8 +126,9 @@ def test_at_a_forced_crossing_the_colour_tracker_swaps_and_s14_catches_it() -> N
 
 
 def test_where_the_colour_tracker_holds_s14_reports_no_swap() -> None:
-    # seed 0: measured 28 Oct, the colour id stays on the subject through the block
-    body, actions, tracks, truth = _steered_block(0)
+    # seed 5, an identity map: measured 28 Oct, the colour id stays on the subject through the
+    # block (0.7 px). Seed 0 was the witness until #21 moved its goal: it draws `up` dead.
+    body, actions, tracks, truth = _steered_block(5)
     cid = _subject_id(tracks, truth)
     assert np.nanmax(np.hypot(*(tracks[cid] - truth[0]).T)) <= JUMP_TOL
     assert diagnose(body, actions, tracks, cid).kind == "ok"

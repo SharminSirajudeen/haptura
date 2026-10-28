@@ -272,6 +272,48 @@ def test_the_goal_lies_along_a_live_action_unless_the_body_is_blocked() -> None:
             assert all(np.dot(IDENTITY[dead], c - pos) > 0 for c in corners)
 
 
+def one_way(m: Mapping[str, Vec]) -> list[Vec]:
+    """The live steps of a map whose opposite step is dead: the axis it leaves one-way."""
+    live = {v for v in m.values() if v != (0.0, 0.0)}
+    return [v for v in live if (-v[0], -v[1]) not in live]
+
+
+def test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall() -> None:
+    # issue 21: the agent's own probe drifts an element the one way it can go; a goal in mid-frame
+    # on that axis can be passed for good. The goal is the strip the clamp holds an element in, its
+    # centre the clamp, so every position on the axis can still reach that centre.
+    hand = make_scenario(0, "feasible")
+    assert hand.action_maps[0][1]["up"] == (0.0, 0.0)  # hand: seed 0 draws `up` dead, so...
+    assert hand.goal[1::2] == (120.0, 128.0)  # ...the goal is the bottom 8 px, centre 124 = 128 - 4
+    for sc in scenarios():
+        pos = np.array(sc.elements[0].pos)
+        lo, hi = np.array(sc.goal[:2]), np.array(sc.goal[2:])
+        way = np.sign((lo + hi) / 2 - pos)
+        steps = [v for _, m in sc.action_maps for v in one_way(m)]
+        for v in steps if sc.case != "body_blocked" else []:
+            k = 0 if v[0] else 1
+            strip = (W - 8.0, float(W)) if v[k] > 0 else (0.0, 8.0)  # hand: an 8 px element
+            assert way[k] == np.sign(v[k]) and (lo[k], hi[k]) == strip
+
+
+def toward_goal(sc: Scenario) -> list[list[str]]:
+    """Per map of the body schedule, the actions that step the subject straight at the goal."""
+    centre = np.array([sc.goal[0] + sc.goal[2], sc.goal[1] + sc.goal[3]]) / 2
+    want = tuple(2.0 * np.sign(centre - np.array(sc.elements[0].pos)))
+    return [[a for a, v in m.items() if v == want] for _, m in sc.action_maps]
+
+
+def test_a_body_remap_changes_the_action_that_moves_toward_the_goal() -> None:
+    # issue 21: a remap that leaves this action alone never shows in the steering, so S14 misses it
+    hand = make_scenario(2, "body_remap")
+    assert [m for _, m in hand.action_maps] == [IDENTITY, MIRROR_X]
+    # hand: the goal (34, 60) is left of the subject (102, 60): `left` under identity, then `right`
+    assert toward_goal(hand) == [["left"], ["right"]]
+    for sc in scenarios("body_remap"):
+        first, then = toward_goal(sc)
+        assert first != then, sc.seed
+
+
 def test_same_seed_same_scenario_and_same_world() -> None:
     assert make_scenario(7, "remap_feasible") == make_scenario(7, "remap_feasible")
     assert make_scenario(7, "feasible") != make_scenario(8, "feasible")
@@ -352,9 +394,11 @@ def test_steering_to_the_goal_runs_into_the_look_alike_on_the_route(seed: int) -
     want = tuple(2.0 * np.sign(centre - pos))
     (steer,) = [a for a, v in sc.action_maps[0][1].items() if tuple(v) == want]
     shown, _ = visible_fractions(sc, [steer] * BLOCK_STEPS, 2)
-    # hand: halfway is 34 px = 17 steps along the route; passing it at 2 px a step the centres are
-    # 2, 0 and 2 px apart for three frames, and the one on top hides over half of the other in at
-    # least 2 of them (the same count as the crossing, for every pair of shapes)
+    # hand: halfway is 34 px = 17 steps along the route, or at most 52 px = 26 steps when a one-way
+    # axis puts the goal on a wall (the subject starts at least 20 px from the other wall, the
+    # strip's centre is 4 px from this one: 104 px at most), so 30 steps pass it; at 2 px a step the
+    # centres are 2, 0 and 2 px apart for three frames, and the one on top hides over half of the
+    # other in at least 2 of them (the same count as the crossing, for every pair of shapes)
     assert sum(share < 0.5 for share in shown) >= 2
 
 
