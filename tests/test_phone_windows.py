@@ -51,9 +51,17 @@ def on_top(capture: str, title: str, config: str = "0x0", display: int = 0) -> s
         f" frame=[0,0][720,1280], touchableRegion=[0,0][720,1280], ownerPid=1, ownerUid={HELPER},"
         " dispatchingTimeout=5000ms"
     )
-    m = re.search(r"^ +Windows:\n", TEXT[capture], re.M)  # the list, not "FocusedWindows:"
+    m = re.search(r"^( +)Windows:\n", TEXT[capture], re.M)  # the list, not "FocusedWindows:"
     assert m is not None
-    return TEXT[capture][: m.end()] + line + "\n" + TEXT[capture][m.end() :]
+    rest, depth, in_list = [], len(m.group(1)), True
+    for old in TEXT[capture][m.end() :].split("\n"):  # the real windows move down one index
+        in_list = in_list and not (old.strip() and len(old) - len(old.lstrip()) <= depth)
+        rest.append(re.sub(r"^( +)(\d+): name=", shift, old) if in_list else old)
+    return TEXT[capture][: m.end()] + line + "\n" + "\n".join(rest)
+
+
+def shift(m: re.Match[str]) -> str:
+    return f"{m.group(1)}{int(m.group(2)) + 1}: name="
 
 
 def test_a_visible_input_sink_swallows_the_touch() -> None:
@@ -91,6 +99,25 @@ def test_a_title_that_ends_the_list_early_blocks_everything() -> None:
 
 def test_a_title_that_hides_its_own_line_blocks_everything() -> None:
     assert parse_windows(on_top("settings", "x\n        y")) == []
+
+
+FORGED = "x, id=2, displayId=0, inputConfig={}, touchableRegion=[0,0][720,1280], ownerPid=1"
+
+
+def test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything() -> None:
+    title = FORGED.format("NOT_TOUCHABLE") + ", ownerUid=10217\n      transform (ROT_0)"
+    assert parse_windows(on_top("settings", title)) == []
+
+
+def test_a_title_that_adds_a_window_line_blocks_everything() -> None:
+    for brk in ("\n", "\u2028"):
+        title = FORGED.format("0x0") + f", ownerUid=1000{brk}      1: name=y"
+        assert parse_windows(on_top("settings", title)) == []
+
+
+def test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything() -> None:
+    title = FORGED.format("NOT_TOUCHABLE") + ", ownerUid=10217\n      junk"
+    assert parse_windows(on_top("settings", title)) == []
 
 
 def test_a_window_on_another_display_is_not_ours() -> None:

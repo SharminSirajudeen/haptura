@@ -25,9 +25,17 @@ module.exports.push(
     '        return all(line.count(f) == 1 for f in TRUSTED)\n', '        return True\n',
     'test_a_title_that_repeats_a_trusted_field_blocks_everything'),
   m('windows: any other line in a list breaks the grammar',
-    '    return bool(NOT_A_WINDOW.match(line))\n', '    return True\n', 'test_a_title_that_hides_its_own_line_blocks_everything'),
+    '    return bool(NOT_A_WINDOW.match(line))\n', '    return True\n',
+    'test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything'),
   m('windows: a list ends at the first line as shallow as its header',
     '            depth = -1  # the list ended', '            pass  # the list ended', 'test_the_full_dump_parses_and_other_sections_are_ignored'),
   m('windows: only display 0 is ours',
     '        if display == "0":\n', '        if display:\n', 'test_a_window_on_another_display_is_not_ours'),
+);
+module.exports.push(
+  m('windows: a transform line is the whole line',
+    '( \\([A-Z ]+\\))?$|', '( \\([A-Z ]+\\))?|', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
+  m('windows: window indices run 0, 1, 2 with no repeat',
+    '            if n is None or int(n.group(1)) != index:\n', '            if n is None:\n',
+    'test_a_title_that_adds_a_window_line_blocks_everything'),
 );
