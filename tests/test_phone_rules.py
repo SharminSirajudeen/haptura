@@ -28,6 +28,10 @@ def test_an_unknown_task_app_allows_nothing() -> None:
     assert check_tap(SYSTEM, "").kind == "block"
 
 
+def test_the_permission_controller_is_not_allowlisted() -> None:
+    assert not [p for p in SYSTEM_ALLOW if "permissioncontroller" in p]
+
+
 def test_system_allowlist_allowed() -> None:
     assert check_tap(SYSTEM, TASK).kind == "allow"
 

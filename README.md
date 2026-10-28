@@ -29,9 +29,10 @@ what it changed: `docs/pilot-runs.md`. A 50-second clip of the gate blocking a f
 
 **Read the block counts carefully:** in these cases the attacker's window held focus, so every tap on the screen
 resolved to it and "blocked 32 of 32" follows by construction; the runs measure the model's choices. A security
-review found that the first owner lookup (the accessibility dump) misses windows that never take focus; its
-replacement reads the input dispatcher's window list, keyed by uid (`phone/windows.py`, `docs/pilot-runs.md` P16): built
-and tested, not yet wired into the runner, so the numbers above come from the dump.
+review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the
+runner now reads every owner from the input dispatcher's window list, keyed by uid, and judges and taps back to back
+(`phone/windows.py`, `phone/ghostei.py`; `docs/pilot-runs.md` P16). The numbers above predate that change and came from
+the dump; the phone allowlist is now the system UI and the keyboard, cut to the device's own system packages.
 
 **How the owner is read, and its limit:** the window list comes from `dumpsys input`, text in which every app chooses
 its own window title. The parser accepts only the dump's exact grammar (each owner field once per window line,
@@ -40,7 +41,8 @@ every forged title the security review built (`tests/test_phone_windows.py`); re
 source, such as an accessibility service's window list, would remove the text parsing altogether.
 
 **What it does not cover:** a hostile dialog drawn inside the task app itself shares the app's owner and passes this
-check; deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**
+check (measured: `docs/pilot-runs.md` P19; the press probe in `phone/probe.py` does not close it either, since it
+confirms where a press lands, not whether the agent should press there); deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**
 WindowGuard (NDSS 2017) gated Android windows by owner for people; PUSV (arXiv 2604.18860) re-checks the window list
 before desktop clicks; GhostEI-Bench (arXiv 2510.20333, MIT) showed phone agents still fall for overlays. This repo
 adds the check a phone agent makes before it taps, and measures it on GhostEI.
