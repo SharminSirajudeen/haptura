@@ -1,0 +1,418 @@
+"""T10: the agent loop and the executor (plan §4 T10).
+
+Muse Spark makes every act, probe or decline call through three tools; the executor runs the world
+and every number. One flag separates the conditions: `gated=True` puts S13 before `act`, S14 after
+each act block and the advice line under each table; `gated=False` (baseline a) removes exactly
+those three. The world (T9 `run_block`), the diagnosis (S14 `diagnose`) and the model (S8
+`muse_turn`) are arguments, so production passes the real functions and the tests pass fakes.
+
+The agent never sees ground truth: ids are carried across blocks from tracked positions (S9), and
+`_controls` is the only reader of the arena's binding and true positions; its answer sets the
+outcome and nothing else.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
+from typing import Any
+
+import numpy as np
+
+from gate.arena import ACTIONS, Arena
+from gate.constants import (
+    BLOCK_BUDGET,
+    BLOCK_STEPS,
+    EFFECT_MIN,
+    MAX_FRAMES,
+    MAX_LAG,
+    MAX_MUSE_CALLS,
+    PROBE_STEPS,
+)
+from gate.control import control_scores, design_block
+from gate.gate import PROBE_SEED, _mine, check_act, rule_policy  # _mine: lane C makes it public
+from gate.meta_api import MuseReply, ToolCall
+from gate.trackers import _last, match_ids  # _last: lane B will make it public
+from gate.types import (
+    BlockRecord,
+    Decision,
+    Diagnosis,
+    EpisodeLog,
+    Evidence,
+    Frames,
+    Scenario,
+    Tracks,
+    Vec,
+)
+
+Body = Mapping[str, Vec | None]
+Goal = tuple[float, float, float, float]
+Tracker = Callable[..., Tracks]  # frames for SAM and colour, the arena history for truth (T9)
+RunBlock = Callable[[Arena, Sequence[str], Tracker, bool], tuple[Frames, Tracks, str]]
+Diagnose = Callable[
+    [Body, Sequence[str], Tracks, int, tuple[Sequence[str], Tracks] | None], Diagnosis
+]
+MuseTurn = Callable[[str, str | list[dict[str, Any]], list[dict[str, Any]], str | None], MuseReply]
+
+DIRS = ACTIONS[1:]  # up, down, left, right
+DESIGN_STREAM = 3  # the arena draws from streams 1 and 2 of the seed; the agent's designs from this
+SEED_STRIDE = MAX_FRAMES  # above the blocks one episode can run (each takes at least two frames),
+# so S10's seed `scenario.seed * SEED_STRIDE + block index` never repeats across episodes
+USAGE = ("muse_calls", "input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens")
+NUDGE = "Call one of the three tools."
+
+PROMPT = (
+    "You control one element in a 2D world through the actions noop, up, down, left and right, "
+    "but you do not know which element, and your actions may be mirrored, rotated or dead. Other "
+    "elements may copy your actions late, replay old motion or look like yours, and control or "
+    "your body may change during the task. Goal: drive the element you control into the goal "
+    "box, or decline when it cannot get there. Each run_experiment is one block of random "
+    "actions; it returns one line per element with its position and the measured effect of each "
+    "action, and may also show p0 (the chance the element ignores your actions; small means it "
+    "follows them), a label (mine, echo, not_me) and an advice line from a rule policy. Follow "
+    "the advice unless the evidence says otherwise. Experiments cost money: act or decline as "
+    "soon as the evidence is clear. Call one tool per turn."
+)
+TOOLS: list[dict[str, Any]] = [
+    {
+        "type": "function",
+        "name": "run_experiment",
+        "description": f"Run one block of at most {BLOCK_STEPS} random actions, a share p_noop of "
+        "them no-ops and the rest spread over dirs; returns the evidence table.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "n": {"type": "integer", "minimum": 1, "maximum": BLOCK_STEPS},
+                "p_noop": {"type": "number", "minimum": 0, "maximum": 1},
+                "dirs": {"type": "array", "items": {"type": "string", "enum": list(DIRS)}},
+            },
+            "required": ["n", "p_noop", "dirs"],
+        },
+    },
+    {
+        "type": "function",
+        "name": "act",
+        "description": "Steer object_id into the goal; it may be refused, or stopped with a "
+        "diagnosis.",
+        "parameters": {
+            "type": "object",
+            "properties": {"object_id": {"type": "integer"}},
+            "required": ["object_id"],
+        },
+    },
+    {
+        "type": "function",
+        "name": "decline",
+        "description": "Stop because the goal cannot be reached; say why.",
+        "parameters": {
+            "type": "object",
+            "properties": {"reason": {"type": "string"}},
+            "required": ["reason"],
+        },
+    },
+]
+
+
+@dataclass
+class _Run:
+    """One episode's state. `reference` is each id's last tracked position: S9's reference for the
+    next block, and the only positions the agent knows."""
+
+    arena: Arena
+    tracker: Tracker
+    gated: bool
+    run_block: RunBlock
+    diagnose: Diagnose
+    rng: np.random.Generator
+    reference: dict[int, Vec] = field(default_factory=dict)
+    pool: list[tuple[tuple[str, ...], Tracks]] = field(default_factory=list)
+    evidence: list[Evidence] = field(default_factory=list)
+    blocks: list[BlockRecord] = field(default_factory=list)
+    looks: int = 0
+    frames: int = 0
+    steps: int = 0
+    outcome: str | None = None
+
+
+def run_episode(
+    arena: Arena,
+    tracker: Tracker,
+    condition: str,
+    gated: bool,
+    *,
+    run_block: RunBlock,
+    diagnose: Diagnose,
+    muse_turn: MuseTurn,
+) -> EpisodeLog:
+    """S8 turns until an act reaches the goal, a decline, a false act, MAX_MUSE_CALLS or
+    MAX_FRAMES; the conversation is carried by `previous_response_id`."""
+    scenario: Scenario = arena.scenario
+    rng = np.random.default_rng([scenario.seed, DESIGN_STREAM])
+    run = _Run(arena, tracker, gated, run_block, diagnose, rng)
+    usage = dict.fromkeys(USAGE, 0)
+    given: str | list[dict[str, Any]] = _task(scenario.goal)
+    previous: str | None = None
+    for _ in range(MAX_MUSE_CALLS):
+        reply = muse_turn(PROMPT, given, TOOLS, previous)
+        _add_usage(usage, reply.usage)
+        previous = reply.response_id
+        given = _answer(run, reply)
+        if run.outcome is not None:
+            break
+    usage |= {"frames": run.frames, "sam_calls": len(run.blocks)}
+    outcome = run.outcome or "timeout"
+    return EpisodeLog(scenario, condition, tuple(run.blocks), outcome, {}, usage)
+
+
+def _task(goal: Goal) -> str:
+    x0, y0, x1, y1 = goal
+    return f"The goal box spans x {x0:.0f} to {x1:.0f} and y {y0:.0f} to {y1:.0f}."
+
+
+def _add_usage(total: dict[str, int], usage: Mapping[str, Any]) -> None:
+    """S8's usage, in the shape T2 measured (notes/api/muse-2-follow-up.json)."""
+    total["muse_calls"] += 1
+    total["input_tokens"] += usage.get("input_tokens", 0)
+    total["output_tokens"] += usage.get("output_tokens", 0)
+    total["cached_tokens"] += usage.get("input_tokens_details", {}).get("cached_tokens", 0)
+    total["reasoning_tokens"] += usage.get("output_tokens_details", {}).get("reasoning_tokens", 0)
+
+
+def _answer(run: _Run, reply: MuseReply) -> str | list[dict[str, Any]]:
+    """Each tool call's output in order, until one ends the episode; a reply with none is nudged."""
+    if not reply.tool_calls:
+        return NUDGE
+    outputs: list[dict[str, Any]] = []
+    for call in reply.tool_calls:
+        said = reply.text or f"{call.name} {json.dumps(call.arguments)}"
+        output = _tool(run, call, said)
+        outputs.append({"type": "function_call_output", "call_id": call.call_id, "output": output})
+        if run.outcome is not None:
+            break
+    return outputs
+
+
+def _tool(run: _Run, call: ToolCall, said: str) -> str:
+    """The three tools; model arguments are checked here, and a bad one is answered, not raised."""
+    args = call.arguments
+    if call.name == "run_experiment":
+        return _experiment(run, args, said)
+    if call.name == "act":
+        return _act(run, args.get("object_id"), said)
+    if call.name == "decline":
+        _decide(run, Decision("decline", None, str(args.get("reason", ""))))
+        run.outcome = "decline"
+        return ""
+    return f"unknown tool {call.name}; call run_experiment, act or decline"
+
+
+def _decide(run: _Run, decision: Decision) -> None:
+    """Log Muse's first call after a block that handed control back to it (a probe-phase block)."""
+    if run.blocks and run.blocks[-1].phase == "probe" and run.blocks[-1].decision is None:
+        run.blocks[-1] = replace(run.blocks[-1], decision=decision)
+
+
+def _experiment(run: _Run, args: Mapping[str, Any], said: str) -> str:
+    """One block designed by S12, run by T9, re-keyed by S9; S10 on the pool, then the table."""
+    parsed = _parse(args)
+    if parsed is None:
+        return f"bad arguments: n is 1..{BLOCK_STEPS}, p_noop is 0..1, dirs lists {', '.join(DIRS)}"
+    n, p_noop, dirs = parsed
+    _decide(run, Decision("probe", None, said))
+    actions = design_block(run.rng, min(n, BLOCK_STEPS), p_noop, dirs)
+    tracks = _block(run, actions, "probe")
+    if tracks is None:
+        return ""
+    run.pool.append((actions, tracks))
+    seed = run.arena.scenario.seed * SEED_STRIDE + len(run.blocks) - 1
+    evidence = _look(run, *_pool(run.pool), seed)
+    advice = _advice(run, evidence) if run.gated else None
+    run.blocks[-1] = replace(run.blocks[-1], evidence=tuple(evidence), advice=advice)
+    clamped = f"n clamped to {BLOCK_STEPS}\n" if n > BLOCK_STEPS else ""
+    return clamped + _table(run, advice)
+
+
+def _parse(args: Mapping[str, Any]) -> tuple[int, float, list[str]] | None:
+    """run_experiment's arguments, or None when any is malformed."""
+    n, p_noop, dirs = args.get("n"), args.get("p_noop"), args.get("dirs")
+    if not (isinstance(n, int) and isinstance(p_noop, (int, float)) and isinstance(dirs, list)):
+        return None
+    if n < 1 or not 0 <= p_noop <= 1 or not dirs or not set(dirs) <= set(DIRS):
+        return None
+    return n, float(p_noop), dirs
+
+
+def _block(run: _Run, actions: tuple[str, ...], phase: str) -> Tracks | None:
+    """T9 runs the block if it fits MAX_FRAMES; S9 re-keys its ids to the ones carried so far."""
+    if run.frames + len(actions) + 1 > MAX_FRAMES:
+        run.outcome = "timeout"
+        return None
+    _, raw, clip = run.run_block(run.arena, actions, run.tracker, phase == "act")
+    ids = match_ids(raw, run.reference)
+    tracks = {ids[i]: pos for i, pos in raw.items()}
+    for i, pos in tracks.items():
+        last = _last(pos)
+        if last is not None:
+            run.reference[i] = last
+    run.blocks.append(BlockRecord(run.steps, phase, actions, clip, tracks, (), None, None, None))
+    run.frames += len(actions) + 1
+    run.steps += len(actions)
+    return tracks
+
+
+def _pool(blocks: Sequence[tuple[tuple[str, ...], Tracks]]) -> tuple[tuple[str, ...], Tracks]:
+    """The blocks since the last diagnosis as one: frame 0 of each later block is the last frame of
+    the one before, so it is kept once; an id a block lacks is NaN there."""
+    actions = tuple(a for acts, _ in blocks for a in acts)
+    ids = sorted({i for _, tracks in blocks for i in tracks})
+    gaps = [np.full((len(acts) + 1, 2), np.nan) for acts, _ in blocks]
+    tracks: Tracks = {
+        i: np.vstack([t.get(i, g)[min(k, 1) :] for k, ((_, t), g) in enumerate(zip(blocks, gaps))])
+        for i in ids
+    }
+    return actions, tracks
+
+
+def _look(run: _Run, actions: Sequence[str], tracks: Tracks, seed: int) -> list[Evidence]:
+    """S10, one look more: the evidence every later table, S13 and S15 read."""
+    run.looks += 1
+    run.evidence = control_scores(actions, tracks, MAX_LAG, seed)
+    return run.evidence
+
+
+def _advice(run: _Run, evidence: list[Evidence]) -> Decision:
+    """S15's verdict on the pooled evidence, shown to Muse as advice."""
+    goal = run.arena.scenario.goal
+    mine = _mine(evidence)
+    # S15 reads target_pos only when exactly one element is mine
+    pos = run.reference[mine[0].object_id] if len(mine) == 1 else _centre(goal)
+    return rule_policy(evidence, run.looks, BLOCK_BUDGET, pos, goal)
+
+
+def _table(run: _Run, advice: Decision | None) -> str:
+    """The evidence table: one rounded line per element; ungated it has no p0, label or advice."""
+    cx, cy = _centre(run.arena.scenario.goal)
+    steps = sum(len(acts) for acts, _ in run.pool)
+    head = f"goal centre ({cx:.0f},{cy:.0f}); look {run.looks} of {BLOCK_BUDGET}; {steps} steps"
+    cols = "id (x,y)" + (" p0 label" if run.gated else "") + " " + " ".join(DIRS)
+    rows = [_row(e, run.reference[e.object_id], run.gated) for e in run.evidence]
+    tail = [] if advice is None else [_say(advice)]
+    return "\n".join([head, cols, *rows, *tail])
+
+
+def _row(e: Evidence, pos: Vec, gated: bool) -> str:
+    test = f" {e.p0:.2g} {e.label}" if gated else ""
+    effects = " ".join(
+        "?" if v is None else f"{v[0]:.1f},{v[1]:.1f}" for v in map(e.body.get, DIRS)
+    )
+    return f"{e.object_id} ({pos[0]:.0f},{pos[1]:.0f}){test} {effects}"
+
+
+def _say(advice: Decision) -> str:
+    target = "" if advice.object_id is None else f" {advice.object_id}"
+    return f"advice: {advice.kind}{target}: {advice.reason}"
+
+
+def _act(run: _Run, object_id: Any, said: str) -> str:
+    """S13 first when gated; a refusal goes back to Muse with its reason."""
+    if not isinstance(object_id, int) or object_id not in run.reference:
+        return f"unknown object {object_id}; act on an id from the table"
+    decision = check_act(run.evidence, object_id) if run.gated else Decision("act", object_id, said)
+    _decide(run, decision)
+    if decision.kind == "refused":
+        return f"refused: {decision.reason}"
+    return _act_phase(run, object_id)
+
+
+def _act_phase(run: _Run, target: int) -> str:
+    """Act blocks steered by the target's measured body until the goal, a false act, a timeout or a
+    stale block, whose diagnostic probe goes back to Muse. An act that passed the gate is judged
+    before anything is steered, so a commitment to an element with no live action still counts."""
+    body = next((e.body for e in run.evidence if e.object_id == target), {})
+    live = _live(body)
+    while run.outcome is None:
+        if not _controls(run, target):
+            run.outcome = "false_act"
+            return ""
+        if not live:
+            return f"object {target} has no live action to steer with"
+        kind = _act_block(run, target, body, live)
+        if run.outcome is None and kind == "stale":
+            return _probe(run, target, body)
+    return ""
+
+
+def _act_block(run: _Run, target: int, body: Body, live: Mapping[str, Vec]) -> str:
+    """One act block, then S14 when gated; the eyes fix is applied here, without a Muse turn.
+    Sets the outcome when the target ends in the goal; returns S14's kind ('' when ungated)."""
+    goal = run.arena.scenario.goal
+    actions = _steer(live, run.reference[target], _centre(goal))
+    tracks = _block(run, actions, "act")
+    if tracks is None:
+        return ""
+    found = run.diagnose(body, actions, tracks, target, None) if run.gated else None
+    if found is not None:
+        if found.swap is not None:
+            a, b = found.swap
+            run.reference[a], run.reference[b] = run.reference[b], run.reference[a]
+        run.blocks[-1] = replace(run.blocks[-1], diagnosis=found)
+    if _in_goal(run.reference[target], goal):
+        run.outcome = "success" if _controls(run, target) else "false_act"
+    return "" if found is None else found.kind
+
+
+def _probe(run: _Run, target: int, body: Body) -> str:
+    """S14's diagnostic probe after a stale block, 3 of each action; S14 on it decides, and its fix
+    reaches Muse as advice under the probe's own evidence, since the pool restarts here."""
+    stale = run.blocks[-1]
+    actions = design_block(run.rng, PROBE_STEPS, 1 / (len(DIRS) + 1), DIRS)
+    tracks = _block(run, actions, "probe")
+    if tracks is None:
+        return ""
+    found = run.diagnose(body, stale.actions, stale.tracks, target, (actions, tracks))
+    run.pool = [(actions, tracks)]
+    # the very call S14 just made on this probe, so the table and S14's verdict cannot disagree
+    evidence = _look(run, actions, tracks, PROBE_SEED)
+    if found.kind == "body_changed":
+        advice = Decision("act", target, found.fix)
+    else:
+        advice = Decision("probe", None, found.fix)
+    run.blocks[-1] = replace(
+        run.blocks[-1], evidence=tuple(evidence), advice=advice, diagnosis=found
+    )
+    return f"{found.kind}: {found.fix}\n{_table(run, advice)}"
+
+
+def _live(body: Body) -> dict[str, Vec]:
+    """The measured actions that are alive: an effect of at least EFFECT_MIN (S10, step 5)."""
+    return {a: v for a, v in body.items() if v is not None and math.hypot(*v) >= EFFECT_MIN}
+
+
+def _steer(live: Mapping[str, Vec], start: Vec, centre: Vec) -> tuple[str, ...]:
+    """BLOCK_STEPS actions, each the live one that takes the predicted position nearest the goal
+    centre; ties go to the first in `live`'s order."""
+    x, y = start
+    out = []
+    for _ in range(BLOCK_STEPS):
+        a = min(live, key=lambda k: math.dist((x + live[k][0], y + live[k][1]), centre))
+        x, y = x + live[a][0], y + live[a][1]
+        out.append(a)
+    return tuple(out)
+
+
+def _controls(run: _Run, target: int) -> bool:
+    """The one read of ground truth, for the outcome only: S9 matches the target's tracked position
+    to the nearest true element, which must be the element the arena binds now."""
+    arena = run.arena
+    true = match_ids({target: np.array([run.reference[target]])}, arena.history[-1])
+    return true[target] == arena._at(arena.scenario.binding_schedule)  # lane A will make _at public
+
+
+def _in_goal(pos: Vec, goal: Goal) -> bool:
+    return goal[0] <= pos[0] <= goal[2] and goal[1] <= pos[1] <= goal[3]
+
+
+def _centre(goal: Goal) -> Vec:
+    return ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)
