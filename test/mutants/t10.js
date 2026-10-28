@@ -9,10 +9,15 @@ const LOST = 'test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprob
 const EYES_FIRST = 'test_the_eyes_fix_comes_before_the_goal_check';
 const TIE = 'test_a_tie_on_the_last_frame_is_told_apart_along_the_targets_own_track';
 const HELD = 'test_a_tie_held_through_the_whole_block_is_not_control';
+const SWAPTIE = 'test_after_an_eyes_fix_a_tie_is_walked_along_the_track_s14_gave_the_target';
+const UNSEEN = 'test_a_target_unseen_on_the_last_frame_is_matched_where_it_was_last_seen';
 module.exports = [
   m('#37: a tie is walked back one frame at a time', '        if len(near) == 1:\n            break\n', '        break\n', TIE),
   m('#37: the walk follows the track that ends on the target', 'if _last(t) == pos]', 'if False]', TIE),
-  m('#37: the target\'s own track first when two end on its pixel', 'sorted(tracks.items(), key=lambda it: it[0] != target)', 'tracks.items()', TIE),
+  m('#37: the target\'s own track first when two end on its pixel', 'sorted(last.tracks.items(), key=lambda it: it[0] != own)', 'last.tracks.items()', TIE),
+  m('#37: after an eyes fix the walk follows the track S14 gave the target', 'own = fix[1 - fix.index(target)] if fix and target in fix else target', 'own = target', SWAPTIE),
+  m('#37: an unseen frame is skipped, not matched', '        if not np.isnan(seen).any():\n', '        if True:\n', UNSEEN),
+  m('#37: the walk is not capped', '(ends[0] if ends else np.array([pos]))[::-1]', '(ends[0] if ends else np.array([pos]))[::-1][:2]', TIE),
   m('#37: a tie that lasts the block is not control', 'return near == {arena._at(arena.scenario.binding_schedule)}', 'return arena._at(arena.scenario.binding_schedule) in near', HELD),
   m('T10: a gated act goes through S13', 'check_act(run.evidence, object_id) if run.gated else', 'Decision("act", object_id, said) if run.gated else', REFUSE),
   m('T10: an ungated act skips S13', 'if run.gated else Decision("act", object_id, said)', 'if True else Decision("act", object_id, said)', REFUSE),

@@ -441,12 +441,16 @@ def _steer(live: Mapping[str, Vec], start: Vec, aim: Vec) -> tuple[str, ...]:
 def _controls(run: _Run, target: int) -> bool:
     """The one read of ground truth, for the outcome only: the true element nearest the target's
     tracked position must be the element the arena binds now. Two on one pixel, which a wall's
-    clamp can hold there, are told apart along the track that ends there, the target's own first,
-    one frame back at a time (#37); a pair that shared every frame of the block is a tie, and a
-    tie is not control."""
-    arena, pos = run.arena, run.reference[target]
-    tracks = run.blocks[-1].tracks if run.blocks else {}
-    ends = [t for i, t in sorted(tracks.items(), key=lambda it: it[0] != target) if _last(t) == pos]
+    clamp can hold there, are told apart one frame back at a time along the track that ends there
+    (#37): the one S14's eyes fix in this block handed the target to, else the target's own. A
+    frame where that track is unseen is skipped, so a target unseen at the end is matched where it
+    was last seen, against that frame's truth. A pair that shared every frame of the block is a
+    tie, and a tie is not control."""
+    arena, pos, last = run.arena, run.reference[target], run.blocks[-1]
+    fix = last.diagnosis.swap if last.diagnosis else None
+    own = fix[1 - fix.index(target)] if fix and target in fix else target
+    order = sorted(last.tracks.items(), key=lambda it: it[0] != own)
+    ends = [t for _, t in order if _last(t) == pos]
     near = set(arena.history[-1])
     for seen, frame in zip((ends[0] if ends else np.array([pos]))[::-1], reversed(arena.history)):
         if not np.isnan(seen).any():
