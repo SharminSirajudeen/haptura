@@ -358,7 +358,25 @@ def test_rules_only_acts_on_the_single_mine_and_reaches_the_goal() -> None:
     assert log.blocks[0].advice is not None and log.blocks[0].advice.kind == "act"
 
 
+def test_rules_only_relearns_a_remapped_body_and_reaches_the_goal() -> None:
+    log = rules_only(world(((0, BODIES["identity"]), (10, BODIES["mirror_x"]))))
+    assert [b.phase for b in log.blocks] == ["probe", "act", "probe", "act", "act"]
+    found = log.blocks[2].diagnosis
+    assert found is not None and found.kind == "body_changed" and log.outcome == "success"
+
+
+def test_rules_only_reprobes_when_control_moves_and_then_declines() -> None:
+    log = rules_only(world(binding=((0, 0), (10, None))))
+    assert [b.phase for b in log.blocks] == ["probe", "act", "probe", "probe"]
+    found = log.blocks[2].diagnosis
+    assert found is not None and found.kind == "target_lost" and log.outcome == "decline"
+
+
 def test_rules_only_declines_when_nothing_obeys() -> None:
     log = rules_only(world(binding=((0, None),)))
     assert log.outcome == "decline"
     assert all(b.decision is None or b.decision.kind != "act" for b in log.blocks)
+    said = [(b.advice.reason, b.decision.reason) for b in log.blocks if b.advice and b.decision]
+    assert len(said) == len(log.blocks) and all(
+        a == d for a, d in said
+    )  # S15 decides, word for word

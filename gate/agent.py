@@ -348,7 +348,7 @@ def rules_turn(
         call = ToolCall("decline", {"reason": reason}, "rules")
     else:
         call = ToolCall("run_experiment", dict(RULES_PROBE), "rules")
-    return MuseReply(f"rules: {kind}", (call,), "", {})
+    return MuseReply(reason or "no advice yet", (call,), "", {})
 
 
 def _act(run: _Run, object_id: Any, said: str) -> str:

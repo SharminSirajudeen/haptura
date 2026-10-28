@@ -57,3 +57,7 @@ module.exports.push(
   m('rules: decline advice becomes a decline', '    elif kind == "decline":\n', '    elif kind == "declines":\n', RULES),
   m('rules: the probe is a full block', 'RULES_PROBE = {"n": BLOCK_STEPS,', 'RULES_PROBE = {"n": PROBE_STEPS,', RULES),
 );
+module.exports.push(
+  m('rules: a decision carries S15\'s sentence', '    return MuseReply(reason or "no advice yet", (call,), "", {})', '    return MuseReply("rules", (call,), "", {})',
+    'test_rules_only_declines_when_nothing_obeys'),
+);
