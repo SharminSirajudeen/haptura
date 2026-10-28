@@ -304,6 +304,103 @@ def test_a_success_the_tracker_fakes_is_scored_false_act() -> None:
     assert [b.phase for b in log.blocks] == ["probe", "act"] and log.outcome == "false_act"
 
 
+def tie_world() -> Arena:
+    """Element 2 obeys from step 0 and element 0 is a decoy, so a tie broken by id goes to 0."""
+    elements = (
+        Element(0, "square", RED, "decoy", (40.0, 100.0)),
+        Element(1, "triangle", RED, "decoy", (70.0, 30.0)),
+        Element(2, "circle", RED, "controlled", (40.0, 64.0)),
+    )
+    return Arena(Scenario(7, elements, ((0, 2),), IDENTITY, (), GOAL, "feasible"))
+
+
+def onto_target(every_frame: bool) -> RunBlock:
+    """T9's run_block, then each act block puts element 0 on element 2's pixel, in the truth and
+    in the tracks as the truth tracker sees it: on the block's last three frames, or on all."""
+
+    def hook(
+        arena: Arena, actions: Sequence[str], tracker: Tracker, acting: bool, clip: Path | None
+    ) -> tuple[Frames, Tracks]:
+        frames, tracks = run_block(arena, actions, tracker, acting, clip)
+        if acting:
+            span = slice(0, None) if every_frame else slice(-3, None)
+            for frame in arena.history[-len(actions) - 1 :][span]:
+                frame[0] = frame[2]
+            tracks[0][span] = tracks[2][span]
+        return frames, tracks
+
+    return hook
+
+
+TIE_ACT = ("act", {"object_id": 2})
+
+
+def test_a_tie_on_the_last_frame_is_told_apart_along_the_targets_own_track() -> None:
+    # Element 2 is steered into the goal. On each act block's last three frames element 0 stands
+    # on the same pixel, in the truth and in the tracks, so a tie broken by id says false_act; four
+    # frames back element 0 is still at its own spot, so the target's own track is element 2's
+    arena = tie_world()
+    log = play(arena, Muse(EXPERIMENT, TIE_ACT), False, onto_target(False))
+    assert arena.history[-1][0] == arena.history[-1][2] and log.outcome == "success"
+
+
+def test_a_tie_held_through_the_whole_block_is_not_control() -> None:
+    # The same, but element 0 shares element 2's pixel on every frame of the act block: nothing
+    # tells them apart, and a tie is not control
+    arena = tie_world()
+    log = play(arena, Muse(EXPERIMENT, TIE_ACT), False, onto_target(True))
+    assert arena.history[-1][0] == arena.history[-1][2] and log.outcome == "false_act"
+
+
+def swap_tie() -> RunBlock:
+    """T9's run_block; in the act block element 2 stands on element 0's pixel on the last frame, in
+    the truth and in the tracks, and the tracker trades ids 0 and 2 from frame 25."""
+    done = [0]
+
+    def hook(
+        arena: Arena, actions: Sequence[str], tracker: Tracker, acting: bool, clip: Path | None
+    ) -> tuple[Frames, Tracks]:
+        frames, tracks = run_block(arena, actions, tracker, acting, clip)
+        if done[0] == 1:
+            arena.history[-1][2] = arena.history[-1][0]
+            tracks[2][-1] = tracks[0][-1]
+            tracks[0][25:], tracks[2][25:] = tracks[2][25:].copy(), tracks[0][25:].copy()
+        done[0] += 1
+        return frames, tracks
+
+    return hook
+
+
+def test_after_an_eyes_fix_a_tie_is_walked_along_the_track_s14_gave_the_target() -> None:
+    # S14's scripted eyes fix swaps ids 0 and 2 back in the reference, so the target's track is
+    # now id 2's, which from frame 25 follows element 0, the bound subject; both tracks end on
+    # one pixel. Walked along id 2: success. Along id 0's own track, which from frame 25 follows
+    # element 2, it would be false_act.
+    log = play(world(), Muse(EXPERIMENT, ACT), True, swap_tie(), scripted("eyes_swapped"))
+    assert [b.phase for b in log.blocks] == ["probe", "act"] and log.outcome == "success"
+
+
+def test_a_target_unseen_on_the_last_frame_is_matched_where_it_was_last_seen() -> None:
+    # On the act block's last frame the target is unseen and element 2 steps onto the pixel where
+    # it was last seen. Matched on that last-seen frame, against that frame's truth, it is
+    # element 0, the bound subject: success. Matched against the latest frame, it is element 2.
+    done = [0]
+
+    def nan_end(
+        arena: Arena, actions: Sequence[str], tracker: Tracker, acting: bool, clip: Path | None
+    ) -> tuple[Frames, Tracks]:
+        frames, tracks = run_block(arena, actions, tracker, acting, clip)
+        if done[0] == 1:
+            arena.history[-1][2] = arena.history[-2][0]
+            tracks[2][-1] = arena.history[-2][0]
+            tracks[0][-1] = np.nan
+        done[0] += 1
+        return frames, tracks
+
+    log = play(world(), Muse(EXPERIMENT, ACT), False, nan_end)
+    assert [b.phase for b in log.blocks] == ["probe", "act"] and log.outcome == "success"
+
+
 def test_the_eyes_fix_comes_before_the_goal_check() -> None:
     # S15 advises declining: from x 28, the centre's x 40 needs right, which is dead. Muse acts
     # anyway. The swap puts id 0 on element 2, parked at (34, 64) inside the goal box; swapped

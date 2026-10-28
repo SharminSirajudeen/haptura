@@ -123,7 +123,7 @@ here to proving control.
 - `rules-only+SAM` replaces Muse with the gate's own rule policy (S15).
 - `gated+truth` gives the gate perfect eyes: an upper bound.
 
-**Measured so far, at no cost** (`docs/pilot-runs.md`, P22, P23 and P26):
+**Measured so far, at no cost** (`docs/pilot-runs.md`, P22, P23, P26 and P27):
 - **The offline floor (T11).** The rule policy with perfect tracking scores 120 of 120 right by EVAL.md's table, on
   seeds 0–19 of all six cases. Getting there found two defects. One was in the arena: a goal the agent's own probe
   could make unreachable (#21, fixed in PR #26). One was in the gate (#24): the plan's first wall rule dropped every
@@ -131,9 +131,10 @@ here to proving control.
 - **The wall rule, rewritten (#24).** S10 now keeps a step at a wall as the motion the clamp left, and S14 predicts
   with the same clamp. Rules-only with perfect tracking, wrong of 200 per case: remap_feasible 42 → 4 and body_remap
   19 → 2 on seeds 0–199; 29 → 3 and 23 → 0 on seeds 200–399; no other case got worse, and blocked made no false act
-  in 1,000 seeds. Every remap_feasible miss left is a scoring tie, two elements on one pixel at the end (#37). The
-  rule was chosen on seeds 200–399 and the colour tracker's error at a wall; 0–199, which hold the final run's
-  100–199, were measured for each candidate first, so they are not a clean hold-out.
+  in 1,000 seeds. The remap_feasible misses left were a scoring defect: two elements on one pixel at the end, a tie
+  the scorer broke by id. With that fixed (#37), remap_feasible is wrong in 0 of 400 (P27). The rule was chosen on
+  seeds 200–399 and the colour tracker's error at a wall; 0–199, which hold the final run's 100–199, were measured
+  for each candidate first, so they are not a clean hold-out.
 
 **Run it.** Every paid run prints its projected cost first and refuses above its budget:
 
