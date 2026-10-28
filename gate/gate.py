@@ -51,22 +51,16 @@ def rule_policy(
 
 
 def centre(goal: Goal) -> Vec:
-    """The goal box's centre: S15's reachability target and the executor's steering target."""
+    """The goal box's centre: the executor's steering target, and the one Muse is told."""
     return ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)
 
 
 def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
-    """Act on the mine element `e` when its live body reaches the goal, else decline. An axis on
-    which the target already sits inside the goal's band needs nothing (#40); on any other, a live
-    action must move it toward the goal's centre."""
-    mid = centre(goal)
+    """Act on the mine element `e` when its live body reaches the goal, else decline. What each
+    axis needs is the way to the goal's band: nothing once the target is inside it (#40)."""
+    need = np.clip(target_pos, goal[:2], goal[2:]) - np.asarray(target_pos)
     live = [v for v in e.body.values() if v is not None]
-    missing = [
-        name
-        for axis, name in enumerate("xy")
-        if not goal[axis] <= target_pos[axis] <= goal[axis + 2]
-        and not _reaches(live, axis, mid[axis] - target_pos[axis])
-    ]
+    missing = [name for axis, name in enumerate("xy") if not _reaches(live, axis, need[axis])]
     if missing:
         axes = " and ".join(missing)
         reason = (
@@ -79,8 +73,8 @@ def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
 
 
 def _reaches(live: list[Vec], axis: int, need: float) -> bool:
-    """A live vector moves `need`'s way along `axis` by at least EFFECT_MIN."""
-    return any(v[axis] * need > 0 and abs(v[axis]) >= EFFECT_MIN for v in live)
+    """Nothing is needed on `axis`, or a live vector moves `need`'s way by at least EFFECT_MIN."""
+    return need == 0 or any(v[axis] * need > 0 and abs(v[axis]) >= EFFECT_MIN for v in live)
 
 
 def _mine(evidence: Sequence[Evidence]) -> list[Evidence]:

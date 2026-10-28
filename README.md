@@ -149,7 +149,7 @@ uv run --locked python -m gate.eval results/logs results/table.md 0-19
 response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
 `cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
 all. The runner's projection on 28 Oct is $5.81, $5.81 and $0.94 for the kill test's three conditions, $12.56 in all
-(`docs/pilot-runs.md`, P26), and $93.55 for the final run's five paid conditions over seeds 100–199 (P29). Each is an
+(`docs/pilot-runs.md`, P26), and $93.21 for the final run's five paid conditions over seeds 100–199 (P29). Each is an
 estimate from the rule policy's block counts: Muse may use more blocks or fewer.
 
 **Limits:**
