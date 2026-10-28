@@ -22,3 +22,8 @@ STALE_M = 3  # consecutive misses before S14 calls the belief stale
 JUMP_TOL = 2.5 * CELL_PX  # a one-step jump larger than this is a tracker identity swap
 MAX_MUSE_CALLS = 12  # per episode
 MAX_FRAMES = (BLOCK_BUDGET + 4) * (BLOCK_STEPS + 1)  # per episode: the budget plus four act blocks
+SAM_PROMPT = (
+    "colored object"  # the one noun phrase SAM 3.1 matched on every flat shape (notes/api.md)
+)
+MUSE_EFFORT = "low"  # the lowest reasoning effort; the kill test says whether it keeps accuracy
+MUSE_MAX_OUTPUT_TOKENS = 400  # one tool call with a one-line reason needs about 160

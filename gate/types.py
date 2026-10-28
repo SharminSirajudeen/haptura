@@ -21,6 +21,8 @@ Array = np.ndarray[tuple[int, int], np.dtype[np.float64]]
 """A [T, 2] float array, spelled out: numpy's NDArray alias hides np.ndarray from get_origin."""
 Tracks = dict[int, Array]
 """Object id to an array [T, 2] of centroids. The ids are the tracker's own; S9 maps them."""
+Frames = np.ndarray[tuple[int, int, int, int], np.dtype[np.uint8]]
+"""A clip: [T, H, W, 3] RGB, as S3 renders it and S4 encodes it."""
 
 
 @dataclass(frozen=True)
