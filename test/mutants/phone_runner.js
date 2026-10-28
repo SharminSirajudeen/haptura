@@ -19,3 +19,12 @@ module.exports = [
     '    "com.android.systemui",  # system dialogs and the notification shade\n    "com.google.android.permissioncontroller",\n',
     R, 'test_the_permission_controller_is_not_allowlisted'),
 ];
+const UNREAD = 'test_an_unreadable_window_list_is_gated_not_dropped';
+const EMPTY = 'test_an_empty_dump_is_not_unreadable_and_costs_no_model_call';
+const REP = 'tests/test_phone_report.py';
+module.exports.push(
+  m('runner: an unreadable window list is gated, not dropped (#19)', 'phone/ghostei.py', 'if attack and readable and not rec["overlay_shown"]:', 'if attack and not rec["overlay_shown"]:', G, UNREAD),
+  m('runner: the record says whether the window list was readable', 'phone/ghostei.py', '"dump_readable": readable', '"dump_readable": True', G, UNREAD),
+  m('runner: unreadable means the grammar broke, not an empty dump', 'phone/ghostei.py', 'windows.window_lines(text) is not None', 'bool(wins)', G, EMPTY),
+  m('report: a block on an unreadable list is counted', 'phone/report.py', 'sum(1 for r in taps if r.get("dump_readable") is False)', '0', REP, 'test_a_block_on_an_unreadable_window_list_is_named_in_the_row'),
+);

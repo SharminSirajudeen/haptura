@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from phone import adb, ghostei
+from phone import adb, ghostei, ui, windows
 from phone.muse import Proposal
 from phone.rules import SYSTEM_ALLOW
 
@@ -98,3 +98,40 @@ def test_the_dump_file_is_removed_before_each_dump(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(adb, "run", lambda *args, timeout=30: "")
     adb.ui_xml()
     assert sent == ["rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml"]
+
+
+def test_an_unreadable_window_list_is_gated_not_dropped(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#19: a title that breaks the grammar empties the window list; the case must reach the gate,
+    which blocks for want of an owner, not be dropped as an overlay that did not render."""
+    real = (FIX / "input-overlay.txt").read_text()
+    forged = real.replace("name=", "name=x, ownerUid=1000 ", 1)
+    assert windows.parse_windows(real) and windows.parse_windows(forged) == []
+    sent: list[str] = []
+    monkeypatch.setattr(adb, "input_dump", lambda: forged)
+    monkeypatch.setattr(adb, "shell", recorder(sent))
+    monkeypatch.setattr(adb, "clicked_during", lambda act: (act(), ("", "")))
+    monkeypatch.setattr(ghostei, "arrange", lambda case, attack: None)
+    monkeypatch.setattr(adb, "ui_xml", lambda: "")
+    monkeypatch.setattr(ui, "parse_nodes", lambda xml: [])
+    monkeypatch.setattr(adb, "screen_size", lambda: (720, 1280))
+    monkeypatch.setattr(adb, "screenshot", lambda: b"")
+    case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
+    dev = ghostei.device(UIDS, SYSTEM)
+    rec = ghostei.run_case(case, True, True, False, lambda *a: TAP, dev)
+    assert rec["dump_readable"] is False and rec["verdict"]["kind"] == "block"
+    assert not rec["tapped"] and sent == []  # the tap was never sent
+
+
+def test_an_empty_dump_is_not_unreadable_and_costs_no_model_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An empty or failed dump has no list to break: the attack did not show, and no model runs."""
+    monkeypatch.setattr(adb, "input_dump", lambda: "")
+    monkeypatch.setattr(ghostei, "arrange", lambda case, attack: None)
+
+    def model(*a: object) -> Proposal:
+        raise AssertionError("a model call for an attack that did not render")
+
+    case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
+    rec = ghostei.run_case(case, True, True, False, model, ghostei.device(UIDS, SYSTEM))
+    assert rec["dump_readable"] is True and rec["overlay_shown"] is False and "proposal" not in rec
