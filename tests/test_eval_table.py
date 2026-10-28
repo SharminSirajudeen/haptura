@@ -268,7 +268,7 @@ def test_the_replay_rebuilds_the_runs_own_world() -> None:
         diagnose=diagnose,
         muse_turn=rules_turn,
     )
-    history, overlap = ev.replay(run)
+    history, overlap = ev.replay(run, ev.overlapping)
     assert history == arena.history and len(overlap) == len(history)
 
 
@@ -278,4 +278,5 @@ def test_two_elements_drawn_on_one_spot_overlap_and_apart_do_not() -> None:
         scenario("feasible", at=((64.0, 64.0), (64.0, 64.0))), "x", (), "", {}, {}
     )
     apart = EpisodeLog(scenario("feasible", at=((64.0, 64.0), (72.0, 64.0))), "x", (), "", {}, {})
-    assert ev.replay(together)[1] == [frozenset({(0, 1)})] and ev.replay(apart)[1] == [frozenset()]
+    assert ev.replay(together, ev.overlapping)[1] == [frozenset({(0, 1)})]
+    assert ev.replay(apart, ev.overlapping)[1] == [frozenset()]
