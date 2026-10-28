@@ -3,6 +3,7 @@ const PYTEST = 'uv run --locked python -m pytest -q tests/test_gate.py';
 const T = 'tests/test_gate.py', G = 'gate/gate.py';
 const m = (from, find, replace, test) => ({ from, file:G, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
 const WALL = 'test_ok_when_the_target_pushes_into_a_wall';
+const SLIDE = 'test_ok_when_the_target_slides_along_a_wall';
 module.exports = [
   m('S14: an unseen target is stale, not a crash', '    if pos is None or np.count_nonzero(~np.isnan(pos).any(axis=1)) < 2:\n', '    if pos is None:\n', 'test_a_target_never_seen_in_the_block_is_stale_so_the_probe_decides'),
   m('S13: a single mine, not any mine', '    if len(mine) != 1:\n', '    if not mine:\n', 'test_refuses_when_two_are_mine'),
@@ -27,6 +28,7 @@ module.exports = [
   m("S14: the probe skips both rules", "    if probe is not None:\n        return _reprobe(probe[0], probe[1], target_id)\n", "", "test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body"),
   m("S14: an unmeasured action predicts no motion", "body[a] or (0.0, 0.0)", "body[a]", "test_stale_when_a_dead_steering_action_was_used_twice"),
   m("S14: the walls hold each predicted step", "guess = np.clip(guess + step, HALF, LIMIT)", "guess = guess + step", WALL),
+  m("S14: a step along a wall is predicted (#24): the old skip, back", "guess = np.clip(guess + step, HALF, LIMIT)", "guess = np.clip(guess + step * (np.minimum(guess, LIMIT + HALF - guess) > HALF + 1).all(), HALF, LIMIT)", SLIDE),
   m("S14: the near walls hold at HALF", "np.clip(guess + step, HALF, LIMIT)", "np.clip(guess + step, 0, LIMIT)", WALL),
   m("S14: the far walls hold at LIMIT", "np.clip(guess + step, HALF, LIMIT)", "np.clip(guess + step, HALF, LIMIT + HALF)", WALL),
   m("S14: spans run between visible frames", "seen = np.flatnonzero(~np.isnan(pos).any(axis=1))", "seen = np.arange(len(pos))", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),

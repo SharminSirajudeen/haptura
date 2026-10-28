@@ -73,7 +73,8 @@ $150 credit. Details for the phone runs: `results/phone/g3/README.md`.
    keep the goal reachable from wherever the probe leaves the element, or the eval scores the arena, not the gate.
 10. **A wall rule that drops steps hides an element the gate must see** (P23, P26): an element pressed to a wall
     still moves along it, and the clamp is part of what an action does there. Kept and clamped, the steps cost
-    nothing: the false-act count and the block count did not move.
+    nothing measurable: blocked made 0 false acts in 1,000 seeds before and after, and the block count went from
+    4,926 to 4,908 on seeds 200–399.
 
 ## Still open
 - #37: the outcome scorer breaks a same-pixel tie by element id (P26).
