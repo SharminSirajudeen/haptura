@@ -12,6 +12,7 @@ const HELD = 'test_a_tie_held_through_the_whole_block_is_not_control';
 const SWAPTIE = 'test_after_an_eyes_fix_a_tie_is_walked_along_the_track_s14_gave_the_target';
 const UNSEEN = 'test_a_target_unseen_on_the_last_frame_is_matched_where_it_was_last_seen';
 module.exports = [
+  { from:'S15: the goal centre, not its corner (the line Muse is told, and the steering aim)', file:'gate/gate.py', find:'return ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)', replace:'return (goal[0], goal[1])', mustFail:T, expect:`FAILED ${T}::${LOST}`, cmd:PYTEST },
   m('#37: a tie is walked back one frame at a time', '        if len(near) == 1:\n            break\n', '        break\n', TIE),
   m('#37: the walk follows the track that ends on the target', 'if _last(t) == pos]', 'if False]', TIE),
   m('#37: the target\'s own track first when two end on its pixel', 'sorted(last.tracks.items(), key=lambda it: it[0] != own)', 'last.tracks.items()', TIE),

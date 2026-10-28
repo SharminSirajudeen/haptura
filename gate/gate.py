@@ -56,13 +56,16 @@ def centre(goal: Goal) -> Vec:
 
 
 def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
-    """Act on the mine element `e` when its live body reaches the goal's centre, else decline."""
+    """Act on the mine element `e` when its live body reaches the goal, else decline. An axis on
+    which the target already sits inside the goal's band needs nothing (#40); on any other, a live
+    action must move it toward the goal's centre."""
     mid = centre(goal)
     live = [v for v in e.body.values() if v is not None]
     missing = [
         name
         for axis, name in enumerate("xy")
-        if not _reaches(live, axis, mid[axis] - target_pos[axis])
+        if not goal[axis] <= target_pos[axis] <= goal[axis + 2]
+        and not _reaches(live, axis, mid[axis] - target_pos[axis])
     ]
     if missing:
         axes = " and ".join(missing)
@@ -76,8 +79,8 @@ def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
 
 
 def _reaches(live: list[Vec], axis: int, need: float) -> bool:
-    """Nothing is needed on `axis`, or a live vector moves `need`'s way by at least EFFECT_MIN."""
-    return need == 0 or any(v[axis] * need > 0 and abs(v[axis]) >= EFFECT_MIN for v in live)
+    """A live vector moves `need`'s way along `axis` by at least EFFECT_MIN."""
+    return any(v[axis] * need > 0 and abs(v[axis]) >= EFFECT_MIN for v in live)
 
 
 def _mine(evidence: Sequence[Evidence]) -> list[Evidence]:
