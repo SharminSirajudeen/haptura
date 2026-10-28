@@ -2,17 +2,18 @@
 
 `python -m gate.run --condition gated+SAM --seeds 0-19 --budget 25 [--push]`
 
-It first prints EVAL.md's projection, a floor, and refuses above the budget: episodes x blocks per
-episode (T11's rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per SAM
-block + Muse tokens per turn x price), with tokens, frames and wall-clock from T2's measurements in
-notes/api.md. Each episode's EpisodeLog is then written to
+It first prints EVAL.md's projection, an estimate, and refuses above the budget: episodes x blocks
+per episode (T11's rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per
+SAM block + Muse tokens per turn x price), with tokens, frames and wall-clock from T2's measurements
+in notes/api.md. Each episode's EpisodeLog is then written to
 results/logs/<condition>/<seed>-<case>.json the moment it ends; one already on disk is skipped and
 its spend counted, so a restarted container resumes. Before each episode it stops if that episode
 would take the spend past the budget, at the larger of the projected and the measured cost per
-episode. The projection counts one Muse turn per block at T2's sizes; turns without a block, growing
-prompts and retries are not in it, which the measured mean catches, so the run stops early rather
-than late. With --push, cache/ and the logs are committed and pushed after every seed and when the
-run stops for any reason: the container is temporary.
+episode. The projection counts the rule policy's blocks, one Muse turn per block at T2's sizes: Muse
+may use more blocks or fewer, and turns without a block, growing prompts and retries are not in it.
+The guard's measured mean catches a projection that was low. With --push, cache/ and the logs are
+committed and pushed after every seed and when the run stops for any reason: the container is
+temporary.
 """
 
 from __future__ import annotations
@@ -99,7 +100,7 @@ def run(
     budget check is written as the passing test, so a NaN budget refuses."""
     plan = projection(condition, [len(episode(s, c, FREE).blocks) for s in seeds for c in CASES])
     sizes = ", ".join(f"{k} {v:.4g}" for k, v in plan.items())
-    say(f"{condition}, seeds {seeds[0]}-{seeds[-1]}, a floor: {sizes}; budget ${budget:.2f}")
+    say(f"{condition}, seeds {seeds[0]}-{seeds[-1]}, estimated: {sizes}; budget ${budget:.2f}")
     if not plan["usd"] <= budget:
         say(f"refused: ${plan['usd']:.2f} projected is not within the ${budget:.2f} budget")
         return 0.0
