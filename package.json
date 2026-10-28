@@ -6,6 +6,7 @@
     "floorguard": "node test/floorguard.test.js && node test/floorguard.js"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "jscpd": "5.4.2"
   }
 }
