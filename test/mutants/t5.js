@@ -3,6 +3,7 @@ const PYTEST = 'uv run --locked python -m pytest -q tests/test_gate.py';
 const T = 'tests/test_gate.py', G = 'gate/gate.py';
 const m = (from, find, replace, test) => ({ from, file:G, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
 module.exports = [
+  m('S14: an unseen target is stale, not a crash', '    if pos is None or np.count_nonzero(~np.isnan(pos).any(axis=1)) < 2:\n', '    if pos is None:\n', 'test_a_target_never_seen_in_the_block_is_stale_so_the_probe_decides'),
   m('S13: a single mine, not any mine', '    if len(mine) != 1:\n', '    if not mine:\n', 'test_refuses_when_two_are_mine'),
   m('S13: the object must be the mine one', '    if mine[0] != object_id:\n        return Decision(\n            "refused", object_id, f"object {object_id} is not mine; object {mine[0]} is"\n        )\n', '', 'test_refuses_when_the_object_is_not_the_mine_one'),
   m('S13, S15: the label says mine, never p', 'e.label == "mine"', 'e.p0 < ALPHA_PROBE', 'test_refuses_at_p_just_above_alpha_act_since_the_label_says_not_me'),

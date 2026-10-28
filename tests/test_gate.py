@@ -224,3 +224,12 @@ def test_target_lost_on_a_probe_where_the_target_ignores_the_actions() -> None:
     tracks = {1: follow(acts, drift, (30.0, 64.0)), 2: follow(acts, FULL, (64.0, 64.0))}
     d = diagnose(STALE_BODY, STALE_ACTIONS, STALE_TRACKS, 1, (acts, tracks))
     assert d.kind == "target_lost" and d.body is None
+
+
+def test_a_target_never_seen_in_the_block_is_stale_so_the_probe_decides() -> None:
+    body = {"right": (2.0, 0.0)}
+    hidden = {7: np.full((4, 2), np.nan)}
+    assert diagnose(body, ["right"] * 3, hidden, 7).kind == "stale"
+    assert diagnose(body, ["right"] * 3, {}, 7).kind == "stale"
+    once = {7: np.array([[40.0, 40.0], [np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan]])}
+    assert diagnose(body, ["right"] * 3, once, 7).kind == "stale"

@@ -91,7 +91,12 @@ def diagnose(
     at a wall, predicts no motion."""
     if probe is not None:
         return _reprobe(probe[0], probe[1], target_id)
-    pos = tracks[target_id]
+    pos = tracks.get(target_id)
+    if pos is None or np.count_nonzero(~np.isnan(pos).any(axis=1)) < 2:
+        # nothing to predict from: a belief is wrong, and the probe decides which
+        return Diagnosis(
+            "stale", f"object {target_id} was not seen in this block; probe it", None, None
+        )
     steps = np.array([body[a] or (0.0, 0.0) for a in actions])
     wall = at_wall(pos)
     steps[wall[:-1] | wall[1:]] = 0.0
