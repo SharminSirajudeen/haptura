@@ -1,0 +1,17 @@
+package:android uid:1000
+package:com.android.DeviceAsWebcam uid:1000
+package:com.android.dynsystem uid:1000
+package:com.android.emulator.multidisplay uid:1000
+package:com.android.inputdevices uid:1000
+package:com.android.keychain uid:1000
+package:com.android.localtransport uid:1000
+package:com.android.location.fused uid:1000
+package:com.android.providers.settings uid:1000
+package:com.android.server.telecom uid:1000
+package:com.android.settings uid:1000
+package:com.android.systemui uid:10187
+package:com.example.myapplication uid:10217
+package:com.google.android.apps.nexuslauncher uid:10182
+package:com.google.android.inputmethod.latin uid:10160
+package:com.google.android.permissioncontroller uid:10191
+package:com.google.android.settings.intelligence uid:10147
