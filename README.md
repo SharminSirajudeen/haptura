@@ -141,7 +141,7 @@ uv run --locked python -m gate.eval results/logs results/table.md 0-19
 
 `gate.run` writes one EpisodeLog per episode to `results/logs/<condition>/` and resumes a stopped run. Every model
 response is cached under `cache/`, so `REPLAY=1` reruns from the cache with no network, and a cache miss is an error.
-Projected by the runner on 28 Oct, the kill test's three conditions cost $5.85, $5.85 and $0.95.
+The runner's projection on 28 Oct, a floor, is $5.85, $5.85 and $0.95 for the kill test's three conditions (`docs/pilot-runs.md`, P24).
 
 **Adjacent work:**
 - **Google ARTEMIS** (Apache-2.0) drives Android apps. Its LLM checker rules whether each plan item passed: an opinion
