@@ -11,8 +11,11 @@ const d = (from, find, replace, test) => ({ from, file:'gate/demo.py', find, rep
 const RULE = 'test_the_plans_rule_picks_the_pairs', WRITE = 'test_only_a_picked_pair_is_written_for_the_page';
 module.exports.push(
   d('demo: the clip is every replayed frame', 'np.stack(replay(log, render)[1])', 'np.stack(replay(log, render)[1][:1])', 'test_the_clip_is_the_runs_own_frames'),
-  d('demo: the baseline must have acted on what it did not control', 'for x in baseline if x.outcome == "false_act"}', 'for x in baseline}', RULE),
-  d('demo: the gated run must be right', 'for x in gated if right(x)}', 'for x in gated}', RULE),
-  d('demo: a pair the rule did not pick is refused', '        if (int(seed), case) not in pairs:\n', '        if False:\n', WRITE),
-  d('demo: each pane gets its own log', '(("gated", gated), ("baseline", baseline))', '(("gated", baseline), ("baseline", gated))', WRITE),
+  d('demo: the baseline must have ended in a false act', 'log.outcome != "false_act" or not acted', 'not acted', RULE),
+  d('demo: within the first 20 seconds', 'f <= FIRST_FRAMES', 'f <= 10 * FIRST_FRAMES', RULE),
+  d('demo: while the gated run had not acted', 'out += [] if any(b.phase == "act" and b.step0 < f for b in g.blocks) else [k]', 'out += [k]', RULE),
+  d('demo: the gated run must be right', 'for k, x in one_each(gated).items() if right(x)}', 'for k, x in one_each(gated).items()}', RULE),
+  d('demo: two logs for one episode are an error', 'if len(by) != len(logs):', 'if False:', RULE),
+  d('demo: a pair the rule did not pick is refused', 'if len(argv) > 2 and argv[2] not in names:', 'if False:', WRITE),
+  d('demo: each pane gets its own log', 'write(gated[names[argv[2]]], "gated", out)', 'write(baseline[names[argv[2]]], "gated", out)', WRITE),
 );
