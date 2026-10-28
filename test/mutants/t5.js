@@ -1,4 +1,4 @@
-// T5: S13, the gate, and S15, the rule policy. Each break is the one a reviewer would try first.
+// T5: S13, the gate; S14, the diagnosis; S15, the rule policy. Each break is the one a reviewer would try first.
 const PYTEST = 'uv run --locked python -m pytest -q tests/test_gate.py';
 const T = 'tests/test_gate.py', G = 'gate/gate.py';
 const m = (from, find, replace, test) => ({ from, file:G, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
@@ -22,4 +22,18 @@ module.exports = [
   m('S15: reachability needs the sign', 'v[axis] * need > 0 and ', '', 'test_declines_citing_the_body_when_no_live_action_moves_toward_the_goal'),
   m('S15: reachability needs the magnitude', ' and abs(v[axis]) >= EFFECT_MIN', '', 'test_a_component_of_the_right_sign_below_effect_min_does_not_count'),
   m('S15: a component of exactly EFFECT_MIN counts', 'abs(v[axis]) >= EFFECT_MIN', 'abs(v[axis]) > EFFECT_MIN', 'test_acts_on_the_single_mine_when_the_goal_is_reachable'),
+  m("S14: the probe skips both rules", "    if probe is not None:\n        return _reprobe(probe[0], probe[1], target_id)\n", "", "test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body"),
+  m("S14: an unmeasured action predicts no motion", "body[a] or (0.0, 0.0)", "body[a]", "test_stale_when_a_dead_steering_action_was_used_twice"),
+  m("S14: wall steps are skipped", "    steps[wall[:-1] | wall[1:]] = 0.0\n", "", "test_ok_when_the_target_pushes_into_a_wall"),
+  m("S14: spans run between visible frames", "seen = np.flatnonzero(~np.isnan(pos).any(axis=1))", "seen = np.arange(len(pos))", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),
+  m("S14: a span predicts every step up to t2", "pos[t1] + moved[t2] - moved[t1]", "pos[t1] + moved[t1 + 1] - moved[t1]", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),
+  m("S14: a swap needs the target off its prediction", "if _dist(pos[t2], guess) > JUMP_TOL and near:", "if near:", "test_crossing_a_look_alike_without_a_swap_is_not_flagged"),
+  m("S14: a swap needs another track on the prediction", " > JUMP_TOL and near:", " > JUMP_TOL:", "test_a_jump_with_no_look_alike_near_is_stale_not_a_swap"),
+  m("S14: the eyes rule comes before stale", "    swap = _swap(tracks, target_id, moved, seen)\n    if swap is not None:\n        other, t2 = swap\n        fix = f\"tracker ids {target_id} and {other} swapped at frame {t2}; swap them back\"\n        return Diagnosis(\"eyes_swapped\", fix, (target_id, other), None)\n    first, last = seen[0], seen[-1]\n    residual = _dist(pos[last], _predict(pos, moved, first, last))\n    if residual > STALE_TOL:\n        fix = f\"object {target_id} ended {residual:.1f} px from its prediction; probe its body\"\n        return Diagnosis(\"stale\", fix, None, None)\n", "    first, last = seen[0], seen[-1]\n    residual = _dist(pos[last], _predict(pos, moved, first, last))\n    if residual > STALE_TOL:\n        fix = f\"object {target_id} ended {residual:.1f} px from its prediction; probe its body\"\n        return Diagnosis(\"stale\", fix, None, None)\n    swap = _swap(tracks, target_id, moved, seen)\n    if swap is not None:\n        other, t2 = swap\n        fix = f\"tracker ids {target_id} and {other} swapped at frame {t2}; swap them back\"\n        return Diagnosis(\"eyes_swapped\", fix, (target_id, other), None)\n", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),
+  m("S14: the summed residual, not the last step", "first, last = seen[0], seen[-1]", "first, last = seen[-2], seen[-1]", "test_stale_when_a_dead_steering_action_was_used_twice"),
+  m("S14: stale above STALE_TOL, not JUMP_TOL", "if residual > STALE_TOL:", "if residual > JUMP_TOL:", "test_stale_when_a_dead_steering_action_was_used_twice"),
+  m("S14: jitter within STALE_TOL is ok", "residual > STALE_TOL", "residual > 0", "test_ok_with_one_px_jitter_on_every_frame"),
+  m("S14: the probe decides on the target alone", " if e.object_id == target_id", "", "test_target_lost_on_a_probe_where_the_target_ignores_the_actions"),
+  m("S14: body_changed needs the mine label", "mine = _mine(found)", "mine = found", "test_target_lost_on_a_probe_where_the_target_ignores_the_actions"),
+  m("S14: the new body map comes from the probe", "Diagnosis(\"body_changed\", fix, None, mine[0].body)", "Diagnosis(\"body_changed\", fix, None, None)", "test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body"),
 ];

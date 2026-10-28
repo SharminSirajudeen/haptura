@@ -1,13 +1,19 @@
-"""S13 and S15 on hand-written Evidence tuples. Each expected value is derived in its comment.
+"""S13, S14 and S15 on hand-written Evidence and tracks. Each expected value is derived by hand.
 
-Constants used: ALPHA_ACT = 0.01 / 48 = 2.083e-4, ALPHA_PROBE = 0.2, EFFECT_MIN = 0.5 * 2 = 1.0.
+Constants used: ALPHA_ACT = 0.01 / 48 = 2.083e-4, ALPHA_PROBE = 0.2, EFFECT_MIN = 0.5 * 2 = 1.0,
+STALE_TOL = 1.5 * 2 = 3.0, JUMP_TOL = 2.5 * 2 = 5.0; a wall frame is within 8/2 + 1 = 5 px of an
+edge.
 """
 
-from collections.abc import Mapping
+import math
+from collections.abc import Mapping, Sequence
 
-from gate.constants import ALPHA_ACT, ALPHA_PROBE, EFFECT_MIN
-from gate.gate import check_act, rule_policy
-from gate.types import Evidence, Vec
+import numpy as np
+
+from gate.constants import ALPHA_ACT, ALPHA_PROBE, EFFECT_MIN, PROBE_STEPS
+from gate.control import design_block
+from gate.gate import check_act, diagnose, rule_policy
+from gate.types import Array, Evidence, Tracks, Vec
 
 Body = Mapping[str, Vec | None]
 FULL: Body = {"up": (0.0, -2.0), "down": (0.0, 2.0), "left": (-2.0, 0.0), "right": (2.0, 0.0)}
@@ -107,3 +113,114 @@ def test_does_not_decline_early_after_two_looks() -> None:
     # The same evidence after 2 looks: 2 < 3, so the early rule waits and the policy probes.
     d = rule_policy([OTHER, ev(7, "not_me", 0.3)], 2, BUDGET, TARGET, GOAL)
     assert d.kind == "probe"
+
+
+# S14. Tracks are (x, y) per frame; frame t+1 follows action t.
+NAN = (math.nan, math.nan)
+FAR = (90.0, 90.0)  # a decoy nowhere near the target
+DIRS = ("up", "down", "left", "right")
+MIRROR: Body = {"up": (0.0, 2.0), "down": (0.0, -2.0), "left": (2.0, 0.0), "right": (-2.0, 0.0)}
+
+
+def track(*points: Vec) -> Array:
+    return np.array(points, dtype=np.float64)
+
+
+def follow(actions: Sequence[str], body: Body, start: Vec) -> Array:
+    """The positions of an element that moves body[a] on each action and stays put otherwise."""
+    steps = [body.get(a) or (0.0, 0.0) for a in actions]
+    out: Array = np.vstack([start, np.array(start) + np.cumsum(steps, axis=0)])
+    return out
+
+
+# A dead steering action used twice: "right" no longer moves the target, "left" was never sampled.
+STALE_BODY: Body = {"up": (0.0, -2.0), "down": (0.0, 2.0), "left": None, "right": (2.0, 0.0)}
+STALE_ACTIONS = ("right", "up", "right", "up", "left")
+STALE_TRACKS: Tracks = {
+    1: track((40, 64), (40, 64), (40, 62), (40, 62), (40, 60), (40, 60)),
+    2: track(FAR, FAR, FAR, FAR, FAR, FAR),
+}
+
+
+def test_stale_when_a_dead_steering_action_was_used_twice() -> None:
+    # Prediction from frame 0: right + up + right + up + left (None, so no motion) = (+4, -4),
+    # so (44, 60). The target ends at (40, 60): summed residual 4 = 2 * CELL_PX > STALE_TOL = 3.
+    # Every one-step span misses by at most 2 px, under JUMP_TOL: no swap.
+    d = diagnose(STALE_BODY, STALE_ACTIONS, STALE_TRACKS, 1)
+    assert d.kind == "stale" and "4.0 px" in d.fix and d.swap is None and d.body is None
+
+
+def test_ok_with_one_px_jitter_on_every_frame() -> None:
+    # True x = 40 + 2t for t = 0..7; the tracker adds +1 px on even frames. Prediction from frame 0
+    # is 41 + 7 * 2 = 55; the last frame reads 54: summed residual 1 px <= STALE_TOL.
+    xs = (41, 42, 45, 46, 49, 50, 53, 54)
+    d = diagnose(FULL, ("right",) * 7, {1: track(*((x, 64) for x in xs))}, 1)
+    assert d.kind == "ok" and "1.0 px" in d.fix
+
+
+def test_a_jump_with_no_look_alike_near_is_stale_not_a_swap() -> None:
+    # The last step lands at x = 56 against a prediction of 48: 8 px > JUMP_TOL, but the only other
+    # track is at (90, 90), far from (48, 64), so it is no swap; the summed residual 8 > 3 is stale.
+    tracks: Tracks = {
+        1: track((40, 64), (42, 64), (44, 64), (46, 64), (56, 64)),
+        2: track(FAR, FAR, FAR, FAR, FAR),
+    }
+    assert diagnose(FULL, ("right",) * 4, tracks, 1).kind == "stale"
+
+
+def test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame() -> None:
+    # Both ids vanish on frames 3-5. Span 2 -> 6 predicts (44 + 4 * 2, 64) = (52, 64). Id 1 comes
+    # back at the look-alike's (60, 70), hypot(8, 6) = 10 px off; id 2 comes back at (52, 64), on
+    # the prediction: swapped at frame 6.
+    tracks: Tracks = {
+        1: track((40, 64), (42, 64), (44, 64), NAN, NAN, NAN, (60, 70), (60, 70), (60, 70)),
+        2: track((60, 70), (60, 70), (60, 70), NAN, NAN, NAN, (52, 64), (54, 64), (56, 64)),
+    }
+    d = diagnose(FULL, ("right",) * 8, tracks, 1)
+    assert d.kind == "eyes_swapped" and d.swap == (1, 2) and "frame 6" in d.fix
+
+
+def test_crossing_a_look_alike_without_a_swap_is_not_flagged() -> None:
+    # Id 1 passes over the look-alike at (50, 64); both vanish on frames 4-6. Span 3 -> 7 predicts
+    # (46 + 8, 64) = (54, 64): id 1 is on it (0 px) while the look-alike sits 4 px away, within
+    # JUMP_TOL. The target did not miss its prediction, so no swap; the summed residual is 0.
+    tracks: Tracks = {
+        1: track((40, 64), (42, 64), (44, 64), (46, 64), NAN, NAN, NAN, (54, 64), (56, 64)),
+        2: track(*([(50, 64)] * 4 + [NAN] * 3 + [(50, 64)] * 2)),
+    }
+    assert diagnose(FULL, ("right",) * 8, tracks, 1).kind == "ok"
+
+
+def test_ok_when_the_target_pushes_into_a_wall() -> None:
+    # x = 4 is within 5 px of the left edge on every frame, so all three "left" steps are skipped
+    # and the prediction stays at (4, 64): residual 0. Counted, they would predict x = -2: 6 px.
+    assert diagnose(FULL, ("left",) * 3, {1: track(*[(4, 64)] * 4)}, 1).kind == "ok"
+
+
+def probe_actions() -> tuple[str, ...]:
+    # S12 with n = PROBE_STEPS = 15 and p_noop = 0.2: round(3) = 3 no-ops and 12 moves, 3 of each.
+    acts = design_block(np.random.default_rng(0), PROBE_STEPS, 0.2, DIRS)
+    assert sorted(acts.count(a) for a in (*DIRS, "noop")) == [3] * 5
+    return acts
+
+
+def test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body() -> None:
+    # The target obeys MIRROR from (64, 64): 15 steps of 2 px keep it inside [34, 94], off every
+    # wall. Three of each action make p0 sit at the 1e-4 floor < ALPHA_ACT (plan §3, PROBE_STEPS),
+    # effect 2 >= EFFECT_MIN: mine. Each e_a = mean of three identical vectors - noop mean (0, 0),
+    # so the new map is MIRROR exactly. The act block alone would read stale.
+    acts = probe_actions()
+    probe = (acts, {1: follow(acts, MIRROR, (64.0, 64.0))})
+    d = diagnose(STALE_BODY, STALE_ACTIONS, STALE_TRACKS, 1, probe)
+    assert d.kind == "body_changed" and d.body == MIRROR and d.swap is None
+
+
+def test_target_lost_on_a_probe_where_the_target_ignores_the_actions() -> None:
+    # The target drifts +2 px in x on every step whatever the action: every group mean equals the
+    # grand mean, S = 0 under every shuffle, p0 = 1: not mine. Element 2 obeys FULL and is mine,
+    # but the probe decides on the target alone.
+    acts = probe_actions()
+    drift = dict.fromkeys((*DIRS, "noop"), (2.0, 0.0))
+    tracks = {1: follow(acts, drift, (30.0, 64.0)), 2: follow(acts, FULL, (64.0, 64.0))}
+    d = diagnose(STALE_BODY, STALE_ACTIONS, STALE_TRACKS, 1, (acts, tracks))
+    assert d.kind == "target_lost" and d.body is None
