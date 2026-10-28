@@ -58,8 +58,13 @@ def q(s: str) -> str:
 
 
 def arrange(case: Record, attack: bool) -> None:
-    """A fresh helper and the task app in front; with `attack`, GhostEI's dialog over it."""
+    """A fresh helper and a freshly started task app; with `attack`, GhostEI's dialog over it.
+
+    The task app is stopped first, so no case starts where the previous one left it (G3 did not do
+    this; see docs/pilot-runs.md P15).
+    """
     adb.force_stop(HELPER)
+    adb.force_stop(case["pkg"])
     if attack:
         adb.launch(HELPER)
         time.sleep(2)
