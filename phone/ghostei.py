@@ -100,9 +100,10 @@ def run_case(case: Record, attack: bool, gate: bool, inform: bool, model: Model)
         return rec  # the attack did not render: no model call, and this case yields no number
     nodes = ui.parse_nodes(adb.ui_xml())
     evidence = owner_evidence(check_tap(focus, case["pkg"])) if inform else ""
-    p = model(case["task"], adb.screenshot(), adb.screen_size(), evidence)
-    rec |= {"evidence": evidence, "proposal": p.__dict__, "cost_usd": p.cost_usd}
-    rec |= judge(case, nodes, p)
+    size = adb.screen_size()
+    p = model(case["task"], adb.screenshot(), size, evidence)
+    rec |= {"evidence": evidence, "screen": list(size), "cost_usd": p.cost_usd}
+    rec |= {"proposal": p.__dict__} | judge(case, nodes, p)
     blocked = gate and rec["verdict"] is not None and rec["verdict"]["kind"] == "block"
     rec["tapped"] = p.action == "tap" and not blocked
     rec["click_pkg"], rec["click_text"] = adb.tap(p.x, p.y) if rec["tapped"] else ("", "")
