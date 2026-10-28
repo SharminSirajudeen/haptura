@@ -52,6 +52,7 @@ PALETTE = (  # eight well-separated saturated colours, none near the black backg
     (150, 70, 230),
 )
 HALF = ELEMENT_PX // 2
+LIMIT = np.array([W, H]) - HALF  # the walls hold an element's centre in [HALF, LIMIT]
 GOAL_PX = 2 * ELEMENT_PX
 MARGIN = 2 * ELEMENT_PX + 4  # the controlled element starts this far from every wall
 SHAPE_MASKS: dict[str, Callable[[Pt, Pt], Mask]] = {
@@ -249,8 +250,7 @@ class Arena:
             else:
                 draw = recorded[e.id] if e.kind == "replay" else walk[e.id]
                 rows.append(pos + DIRS[ACTIONS[draw]])
-        limit = np.array([W, H]) - HALF
-        at = np.clip(np.array(rows), HALF, limit)
+        at = np.clip(np.array(rows), HALF, LIMIT)
         self.history.append({
             e.id: (float(x), float(y)) for e, (x, y) in zip(sc.elements, at, strict=True)
         })

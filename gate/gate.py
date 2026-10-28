@@ -10,8 +10,9 @@ from collections.abc import Mapping, Sequence
 
 import numpy as np
 
+from gate.arena import HALF, LIMIT
 from gate.constants import ALPHA_PROBE, EARLY_LOOKS, EFFECT_MIN, JUMP_TOL, MAX_LAG, STALE_TOL
-from gate.control import Floats, Ints, at_wall, control_scores
+from gate.control import Floats, Ints, control_scores
 from gate.types import Array, Decision, Diagnosis, Evidence, Tracks, Vec
 
 Goal = tuple[float, float, float, float]  # x0, y0, x1, y1, as Scenario.goal
@@ -92,8 +93,8 @@ def diagnose(
     probe: tuple[Sequence[str], Tracks] | None = None,
 ) -> Diagnosis:
     """S14, first rule that holds: eyes_swapped, stale, ok. With `probe` given, S10 on the probe
-    alone decides body_changed or target_lost. An action with no measured vector, and every step
-    at a wall, predicts no motion."""
+    alone decides body_changed or target_lost. An action with no measured vector predicts no
+    motion, and the walls hold every predicted step as they hold the element."""
     if probe is not None:
         return _reprobe(probe[0], probe[1], target_id)
     pos = tracks.get(target_id)
@@ -102,18 +103,15 @@ def diagnose(
         return Diagnosis(
             "stale", f"object {target_id} was not seen in this block; probe it", None, None
         )
-    steps = np.array([body[a] or (0.0, 0.0) for a in actions])
-    wall = at_wall(pos)
-    steps[wall[:-1] | wall[1:]] = 0.0
-    moved: Floats = np.vstack([np.zeros((1, 2)), np.cumsum(steps, axis=0)])
+    steps: Floats = np.array([body[a] or (0.0, 0.0) for a in actions])
     seen = np.flatnonzero(~np.isnan(pos).any(axis=1))
-    swap = _swap(tracks, target_id, moved, seen)
+    swap = _swap(tracks, target_id, steps, seen)
     if swap is not None:
         other, t2 = swap
         fix = f"tracker ids {target_id} and {other} swapped at frame {t2}; swap them back"
         return Diagnosis("eyes_swapped", fix, (target_id, other), None)
     first, last = seen[0], seen[-1]
-    residual = _dist(pos[last], _predict(pos, moved, first, last))
+    residual = _dist(pos[last], _predict(pos, steps, first, last))
     if residual > STALE_TOL:
         fix = f"object {target_id} ended {residual:.1f} px from its prediction; probe its body"
         return Diagnosis("stale", fix, None, None)
@@ -122,21 +120,24 @@ def diagnose(
     )
 
 
-def _swap(tracks: Tracks, target_id: int, moved: Floats, seen: Ints) -> tuple[int, int] | None:
+def _swap(tracks: Tracks, target_id: int, steps: Floats, seen: Ints) -> tuple[int, int] | None:
     """(other id, t2) for the first span between visible frames t1 and t2 where the target lands
     more than JUMP_TOL from its prediction and another track is within JUMP_TOL of it."""
     pos = tracks[target_id]
     for t1, t2 in zip(seen[:-1], seen[1:]):
-        guess = _predict(pos, moved, t1, t2)
+        guess = _predict(pos, steps, t1, t2)
         near = [o for o, p in tracks.items() if _dist(p[t2], guess) <= JUMP_TOL]
         if _dist(pos[t2], guess) > JUMP_TOL and near:
             return near[0], int(t2)
     return None
 
 
-def _predict(pos: Array, moved: Floats, t1: int, t2: int) -> Floats:
-    """The target at visible frame t1 plus the body's steps t1..t2-1, wall steps skipped."""
-    guess: Floats = pos[t1] + moved[t2] - moved[t1]
+def _predict(pos: Array, steps: Floats, t1: int, t2: int) -> Floats:
+    """The target at visible frame t1 moved by the body's steps t1..t2-1, each held by the walls
+    as the arena holds an element (plan §3, "Edges clamp"): a push into a wall moves nothing."""
+    guess: Floats = pos[t1]
+    for step in steps[t1:t2]:
+        guess = np.clip(guess + step, HALF, LIMIT)
     return guess
 
 
