@@ -120,27 +120,34 @@ def test_nan_gaps_are_dropped_not_zero_filled() -> None:
     assert ev.body == BODY
 
 
-def test_steps_at_a_wall_are_dropped_on_either_axis_and_either_frame() -> None:
-    # Two followers read by a tracker that puts a centroid clamped at a wall 1 px inside the arena's
-    # ELEMENT_PX/2 (the +1 of the margin). A sits at the left wall (x 5 for a true 4), B at the
-    # bottom wall (y 123 for a true 124). A step is dropped when either frame touches: for A that
-    # leaves steps 2 (right, 6->8), 3 (left, 8->6) and 4 (noop); for B steps 7 (up, 122->120), 8
-    # (down, 120->122), 9 and 12 (noop). Both bodies are then exact, and A never leaves its wall on
-    # `up` or `down`, so those have no sample. Kept wrongly, A's step 1 (5->6, from the wall) would
-    # make right (1.5, 0) and its step 5 (6->5, into the wall) left (-1.5, 0); B's steps 10, 13, 14
-    # (down at the wall: +1, +1, 0) would make down (0, 1).
+def test_an_element_pressed_to_a_wall_is_mine_through_its_moves_along_it() -> None:
+    # A follower held at the left wall, x = HALF = 4, as the arena clamps it (#24). Every step is
+    # kept: `left` from x 4 moves nothing (steps 0, 2, 7) and from x 6 moves -2 (steps 6, 12), so
+    # its mean is -4/5 = -0.8, below EFFECT_MIN = 1: dead at the wall, which is what it is there.
+    # right (5, 11), up (1, 8, 13) and down (3, 9, 14) are exact. The grand mean is (0, 0), so
+    # S = 5 * 0.64 + 2 * 4 + 3 * 4 + 3 * 4 = 35.2. A shuffle ties it only by permuting labels among
+    # equal displacements, the 3 lefts and 2 no-ops on the five (0, 0) steps: 5!/(3! 2!) = 10 of
+    # 15!/(5! 2! 3! 3! 2!) = 75,675,600 labellings, so p_0 = FLOOR, and the effect 2 makes it mine.
+    # The old rule (drop a step at a wall) dropped all fifteen: no sample, never mine.
     acts = (
-        *("left", "right", "right", "left", "noop", "left", "up", "up", "down", "noop"),
-        *("down", "up", "noop", "down", "down"),
+        *("left", "up", "left", "down", "noop", "right", "left", "left", "up", "down"),
+        *("noop", "right", "left", "up", "down"),
     )
-    ax = [5, 5, 6, 8, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-    ay = [64, 64, 64, 64, 64, 64, 64, 62, 60, 62, 62, 64, 62, 62, 64, 66]
-    bx = [64, 62, 64, 66, 64, 64, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62]
-    by = [123, 123, 123, 123, 123, 123, 123, 122, 120, 122, 122, 123, 122, 122, 123, 123]
-    a, b = np.array([ax, ay], float).T, np.array([bx, by], float).T
-    ev_a, ev_b = control_scores(acts, {1: a, 2: b}, c.MAX_LAG, 0)
-    assert ev_a.body == {"right": (2.0, 0.0), "left": (-2.0, 0.0), "up": None, "down": None}
-    assert ev_b.body == {"up": (0.0, -2.0), "down": (0.0, 2.0), "left": None, "right": None}
+    x = [4, 4, 4, 4, 4, 4, 6, 4, 4, 4, 4, 4, 6, 4, 4, 4]
+    y = [64, 64, 62, 62, 64, 64, 64, 64, 64, 62, 64, 64, 64, 64, 62, 64]
+    ev = score(acts, np.array([x, y], float).T)
+    assert (ev.p0, ev.label) == (FLOOR, "mine")
+    assert ev.body == {**BODY, "left": (-0.8, 0.0)}
+
+
+def test_an_action_whose_every_step_is_lost_has_no_body() -> None:
+    # The frame after every `down` is lost, so each `down` step (and the step after it) has a NaN
+    # and is dropped: `down` has no sample and its body is None, not (0, 0). The other actions
+    # keep pure groups, so their bodies stay exact.
+    acts = design(0)
+    track = walk(acts)
+    track[[t + 1 for t, a in enumerate(acts) if a == "down"]] = np.nan
+    assert score(acts, track).body == {**BODY, "down": None}
 
 
 def test_pooling_two_blocks_gives_a_noisy_follower_a_smaller_p() -> None:
@@ -158,18 +165,20 @@ def test_pooling_two_blocks_gives_a_noisy_follower_a_smaller_p() -> None:
 
 def test_no_evidence_gives_p_one_at_every_lag_and_the_smaller_lag_on_a_tie() -> None:
     # A still object: every group mean equals the grand mean, so S = 0 in the observed row and in
-    # every shuffle; all PERMS shuffles tie and p = (1 + PERMS) / (PERMS + 1) = 1 at every lag. An
-    # object parked in the corner has every step dropped and the same zero S. Lags 1..4 tie at 1,
-    # so best_lag is the smaller, 1. The still body is (0, 0) per action; the parked one has none.
+    # every shuffle; all PERMS shuffles tie and p = (1 + PERMS) / (PERMS + 1) = 1 at every lag.
+    # The second still object loses the frame after every `down`, so at lag 0 `down` is an empty
+    # group, which adds nothing to S: its p is 1 too. Lags 1..4 tie at 1, so best_lag is the
+    # smaller, 1. The body is (0, 0) per action, and None for the empty `down`.
     acts = design(0)
     still = np.tile(CENTRE, (len(acts) + 1, 1))
-    parked = np.tile((5.0, 5.0), (len(acts) + 1, 1))
-    ev_still, ev_parked = control_scores(acts, {3: still, 9: parked}, c.MAX_LAG, 0)
-    assert [ev_still.object_id, ev_parked.object_id] == [3, 9]
-    for ev in (ev_still, ev_parked):
+    gappy = still.copy()
+    gappy[[t + 1 for t, a in enumerate(acts) if a == "down"]] = np.nan
+    ev_still, ev_gappy = control_scores(acts, {3: still, 9: gappy}, c.MAX_LAG, 0)
+    assert [ev_still.object_id, ev_gappy.object_id] == [3, 9]
+    for ev in (ev_still, ev_gappy):
         assert (ev.p0, ev.best_lag, ev.p_best, ev.effect, ev.label) == (1.0, 1, 1.0, 0.0, "not_me")
     assert ev_still.body == {a: STILL for a in DIRS}
-    assert ev_parked.body == {a: None for a in DIRS}
+    assert ev_gappy.body == {**{a: STILL for a in DIRS}, "down": None}
 
 
 def test_design_block_has_the_noop_rate_the_floor_and_balanced_directions() -> None:

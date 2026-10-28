@@ -2,10 +2,9 @@
 real arena with truth tracking, seeds 0-19 x all six cases, no network. It proves the pipeline
 before money is spent: each episode is scored by EVAL.md's right-hand column (`gate.eval.right`).
 
-One test node per (case, seed), so a seed that falls is red at once. The seeds that miss today are
-pinned to their issue (measured 28 Oct): #24, S10 blind to the element control moved to once a
-one-way body has pressed it against a wall. A fix turns its seeds into unexpected passes, which are
-red until the pin is removed.
+One test node per (case, seed), so a seed that falls is red at once. All 120 end right since #24
+(S10 keeps the steps at a wall, measured 28 Oct); a miss found later is pinned to its issue as a
+strict expected failure.
 """
 
 import functools
@@ -22,7 +21,7 @@ from gate.types import EpisodeLog
 
 CASES = ("feasible", "blocked", "remap_feasible", "remap_blocked", "body_remap", "body_blocked")
 SEEDS = range(20)
-MISSES = {("remap_feasible", 0): 24, ("remap_feasible", 12): 24}
+NODES = [(c, s) for c in CASES for s in SEEDS]
 
 
 @functools.cache
@@ -40,14 +39,7 @@ def episode(seed: int, case: str) -> EpisodeLog:
     )
 
 
-def pinned(case: str, seed: int) -> object:
-    """The (case, seed) node, marked as its issue's known miss when it is one."""
-    issue = MISSES.get((case, seed))
-    why = pytest.mark.xfail(strict=True, raises=AssertionError, reason=f"#{issue}")
-    return pytest.param(case, seed, marks=[] if issue is None else [why], id=f"{case}-{seed}")
-
-
-@pytest.mark.parametrize(("case", "seed"), [pinned(c, s) for c in CASES for s in SEEDS])
+@pytest.mark.parametrize(("case", "seed"), NODES, ids=[f"{c}-{s}" for c, s in NODES])
 def test_the_episode_ends_right_by_evals_table(case: str, seed: int) -> None:
     assert right(episode(seed, case))
 

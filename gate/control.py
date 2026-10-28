@@ -14,23 +14,13 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
-from gate.constants import ALPHA_ACT, EFFECT_MIN, ELEMENT_PX, PERMS, H, W
+from gate.constants import ALPHA_ACT, EFFECT_MIN, PERMS
 from gate.types import Array, Evidence, Tracks, Vec
 
 NOOP = "noop"
 Floats = NDArray[np.float64]
 Bools = NDArray[np.bool_]
 Ints = NDArray[np.int64]
-
-
-def at_wall(pos: Array) -> Bools:
-    """Frames whose centroid is within ELEMENT_PX/2 + 1 px of an edge on either axis.
-
-    The one definition of "touches a wall" (plan §3, "Edges clamp"); S10 and S14 both drop a
-    step when either of its frames does.
-    """
-    near: Bools = np.minimum(pos, np.array([W, H]) - pos) <= ELEMENT_PX / 2 + 1
-    return near.any(axis=1)
 
 
 def control_scores(
@@ -46,10 +36,11 @@ def control_scores(
 def _evidence(
     oid: int, labels: Ints, names: list[str], pos: Array, max_lag: int, rng: np.random.Generator
 ) -> Evidence:
-    """Steps 1 and 5–6 of the plan: the kept steps, then the label from p_0, p_best and the body."""
+    """Steps 1 and 5–6 of the plan: the kept steps, then the label from p_0, p_best and the body.
+    A step at a wall is kept as the motion the clamp left (#24): an element pressed to a wall is
+    mine through its moves along it, and a push into the wall reads as the nothing it does."""
     d = pos[1:] - pos[:-1]
-    wall = at_wall(pos)
-    ok = ~np.isnan(d).any(axis=1) & ~wall[:-1] & ~wall[1:]
+    ok = ~np.isnan(d).any(axis=1)
     lags = [_lag(labels, d, ok, k, len(names), rng) for k in range(max_lag + 1)]
     p = [lag[0] for lag in lags]
     body = _body(names, lags[0][1])

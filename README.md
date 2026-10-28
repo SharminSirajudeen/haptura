@@ -123,13 +123,17 @@ here to proving control.
 - `rules-only+SAM` replaces Muse with the gate's own rule policy (S15).
 - `gated+truth` gives the gate perfect eyes: an upper bound.
 
-**Measured so far, at no cost** (`docs/pilot-runs.md`, P22 and P23):
-- **The offline floor (T11).** The rule policy with perfect tracking scores 118 of 120 right by EVAL.md's table, on
-  seeds 0–19 of all six cases. Its first run found an arena defect: a goal the agent's own probe could make
-  unreachable (#21, fixed in PR #26).
-- **A limit (#24).** S10 drops every step of an element pressed against a wall. Over seeds 0–199, still with perfect
-  tracking, the rule policy gets 42 of 200 remap_feasible and 19 of 200 body_remap episodes wrong. With that rule
-  switched off as an experiment, 4 and 2 stay wrong. Whether to change S10 is open before the final run.
+**Measured so far, at no cost** (`docs/pilot-runs.md`, P22, P23 and P26):
+- **The offline floor (T11).** The rule policy with perfect tracking scores 120 of 120 right by EVAL.md's table, on
+  seeds 0–19 of all six cases. Getting there found two defects. One was in the arena: a goal the agent's own probe
+  could make unreachable (#21, fixed in PR #26). One was in the gate (#24): the plan's first wall rule dropped every
+  step of an element pressed against a wall, so S10 could not see that the agent still controlled it.
+- **The wall rule, rewritten (#24).** S10 now keeps a step at a wall as the motion the clamp left, and S14 predicts
+  with the same clamp. Rules-only with perfect tracking, wrong of 200 per case: remap_feasible 42 → 4 and body_remap
+  19 → 2 on seeds 0–199; 29 → 3 and 23 → 0 on seeds 200–399; no other case got worse, and blocked made no false act
+  in 1,000 seeds. Every remap_feasible miss left is a scoring tie, two elements on one pixel at the end (#37). The
+  rule was chosen on seeds 200–399 and the colour tracker's error at a wall; 0–199, which hold the final run's
+  100–199, were measured for each candidate first, so they are not a clean hold-out.
 
 **Run it.** Every paid run prints its projected cost first and refuses above its budget:
 
@@ -143,14 +147,15 @@ uv run --locked python -m gate.eval results/logs results/table.md 0-19
 `gate.run` writes one EpisodeLog per episode to `results/logs/<condition>/` and resumes a stopped run. Every model
 response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
 `cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
-all. The runner's projection on 28 Oct is $5.85, $5.85 and $0.95 for the kill test's three conditions, $12.64 in all
-(`docs/pilot-runs.md`, P24). It is an estimate from the rule policy's block counts: Muse may use more blocks or fewer.
+all. The runner's projection on 28 Oct is $5.81, $5.81 and $0.94 for the kill test's three conditions, $12.56 in all
+(`docs/pilot-runs.md`, P26). It is an estimate from the rule policy's block counts: Muse may use more blocks or fewer.
 
 **Limits:**
 - A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside
   them is claimed.
 - No Muse Spark or SAM number exists for the arena until the kill test runs.
-- S10's wall rule (#24) is above.
+- S14's clamp expects a tracker to read an element at a wall within STALE_TOL (3 px) of where the arena holds it.
+  The colour tracker reads it 0.5 px off (P26); SAM's error at a wall is not measured.
 
 **Adjacent work:**
 - **Google ARTEMIS** (Apache-2.0) drives Android apps. Its LLM checker rules whether each plan item passed: an opinion

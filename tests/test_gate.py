@@ -1,8 +1,8 @@
 """S13, S14 and S15 on hand-written Evidence and tracks. Each expected value is derived by hand.
 
 Constants used: ALPHA_ACT = 0.01 / 48 = 2.083e-4, ALPHA_PROBE = 0.2, EFFECT_MIN = 0.5 * 2 = 1.0,
-STALE_TOL = 1.5 * 2 = 3.0, JUMP_TOL = 2.5 * 2 = 5.0; a wall frame is within 8/2 + 1 = 5 px of an
-edge.
+STALE_TOL = 1.5 * 2 = 3.0, JUMP_TOL = 2.5 * 2 = 5.0; the walls hold an element's centre in
+[HALF, 128 - HALF] = [4, 124] on each axis.
 """
 
 import math
@@ -192,9 +192,19 @@ def test_crossing_a_look_alike_without_a_swap_is_not_flagged() -> None:
 
 
 def test_ok_when_the_target_pushes_into_a_wall() -> None:
-    # x = 4 is within 5 px of the left edge on every frame, so all three "left" steps are skipped
-    # and the prediction stays at (4, 64): residual 0. Counted, they would predict x = -2: 6 px.
+    # The walls hold every predicted step as they hold the element: three "left" from x = 4 stay
+    # at 4, and three "down" from y = 124 stay at 124: residual 0 both times. Unheld, they would
+    # predict x = -2 and y = 130: 6 px > STALE_TOL = 3, stale.
     assert diagnose(FULL, ("left",) * 3, {1: track(*[(4, 64)] * 4)}, 1).kind == "ok"
+    assert diagnose(FULL, ("down",) * 3, {1: track(*[(64, 124)] * 4)}, 1).kind == "ok"
+
+
+def test_ok_when_the_target_slides_along_a_wall() -> None:
+    # x = 4 is at the left wall on every frame; each "up" still predicts y - 2, so (4, 64) goes to
+    # (4, 58) as seen: residual 0. With every step at a wall skipped, the old rule (#24), the
+    # prediction would stay at (4, 64): 6 px > STALE_TOL = 3, stale.
+    slide = track((4, 64), (4, 62), (4, 60), (4, 58))
+    assert diagnose(FULL, ("up",) * 3, {1: slide}, 1).kind == "ok"
 
 
 def probe_actions() -> tuple[str, ...]:
