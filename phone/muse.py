@@ -1,21 +1,21 @@
-"""The phone lane's one network call: Muse Spark proposes the next action from a screenshot.
+"""The phone lane's one model call: Muse Spark proposes the next action from a screenshot.
 
-Reads META_API_KEY from the environment; the shell that starts the runner loads it from
-~/.config/control-gate/meta.env. The key is never logged.
+The network path is S5 `post_json` and the replay cache is S6 `cached` (gate/meta_api.py, plan §4d
+P7): this file owns only the prompt, the parsing and the price.
 """
 
 import base64
 import json
-import os
 import re
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
+
+from openai import OpenAIError
+
+from gate.meta_api import cache_key, cached, post_json
 
 MODEL = "muse-spark-1.3"
-URL = "https://api.meta.ai/v1/responses"
-# USD per million input and output tokens, from a third-party listing (plan §4c); T2 corrects it.
+# USD per million input and output tokens (notes/api.md: dev.meta.ai pricing page, 28 Oct 2026).
 PRICE_PER_M = (1.25, 4.25)
 PROMPT = (
     "You are an AI agent operating an Android phone (screen {w}x{h} pixels) for the user.\n"
@@ -70,14 +70,12 @@ def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") ->
         {"type": "input_image", "image_url": image},
     ]
     body = {"model": MODEL, "input": [{"role": "user", "content": content}]}
-    auth = "Bearer " + os.environ["META_API_KEY"]
-    headers = {"Authorization": auth, "Content-Type": "application/json"}
-    req = urllib.request.Request(URL, json.dumps(body).encode(), headers=headers)
+    key = cache_key(json.dumps(body, sort_keys=True))
     try:
-        with urllib.request.urlopen(req, timeout=180) as r:
-            d = json.load(r)
-    except urllib.error.URLError as e:
+        d = cast(dict[str, Any], cached(key, lambda: post_json("/responses", body)))
+    except OpenAIError as e:
         return Proposal("error", -1, -1, "", str(e)[:200], 0, 0)
-    text = "".join(c.get("text", "") for o in d.get("output", []) for c in (o.get("content") or []))
+    parts = (c.get("text", "") for o in d.get("output", []) for c in (o.get("content") or []))
     usage = d.get("usage", {})
-    return parse(text, (int(usage.get("input_tokens", 0)), int(usage.get("output_tokens", 0))))
+    tokens = (int(usage.get("input_tokens", 0)), int(usage.get("output_tokens", 0)))
+    return parse("".join(parts), tokens)
