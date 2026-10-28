@@ -50,3 +50,14 @@ module.exports = [
   m('T10: the prompt stays within the 300-token proxy', '"soon as the evidence is clear. Call one tool per turn."', '"soon as the evidence is clear. Call one tool per turn." + " " * 400', REFUSE),
   m('T10: the shared frame is kept once', 't.get(i, g)[min(k, 1) :]', 't.get(i, g)', 'test_pool_joins_blocks_on_their_shared_frame'),
 ];
+const RULES = 'test_rules_turn_answers_the_latest_advice_line';
+module.exports.push(
+  m('rules: the latest advice line decides', '(ADVICE.findall(said) or [("probe", "", "")])[-1]', '(ADVICE.findall(said) or [("probe", "", "")])[0]', RULES),
+  m('rules: act advice becomes an act', '    if kind == "act":\n', '    if kind == "acts":\n', RULES),
+  m('rules: decline advice becomes a decline', '    elif kind == "decline":\n', '    elif kind == "declines":\n', RULES),
+  m('rules: the probe is a full block', 'RULES_PROBE = {"n": BLOCK_STEPS,', 'RULES_PROBE = {"n": PROBE_STEPS,', RULES),
+);
+module.exports.push(
+  m('rules: a decision carries S15\'s sentence', '    return MuseReply(reason or "no advice yet", (call,), "", {})', '    return MuseReply("rules", (call,), "", {})',
+    'test_rules_only_declines_when_nothing_obeys'),
+);
