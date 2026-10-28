@@ -4,5 +4,6 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 node_modules/
+cache/phone/
 *.pyc
 .DS_Store
