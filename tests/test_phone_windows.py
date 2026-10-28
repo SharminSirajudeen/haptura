@@ -44,10 +44,10 @@ def test_spy_and_untouchable_windows_are_skipped() -> None:
     assert uid_at("settings", 360, 600) == 1000
 
 
-def on_top(capture: str, title: str, config: str = "0x0", display: int = 0) -> str:
+def on_top(capture: str, title: str, config: str = "0x0") -> str:
     """The capture with one more window, first in its window list, whose title is `title`."""
     line = (
-        f"      0: name={title}, id=1, displayId={display}, inputConfig={config}, alpha=1,"
+        f"      0: name={title}, id=1, displayId=0, inputConfig={config}, alpha=1,"
         f" frame=[0,0][720,1280], touchableRegion=[0,0][720,1280], ownerPid=1, ownerUid={HELPER},"
         " dispatchingTimeout=5000ms"
     )
@@ -121,8 +121,27 @@ def test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything(
 
 
 def test_a_window_on_another_display_is_not_ours() -> None:
-    w = receiver(parse_windows(on_top("settings", "elsewhere", display=2)), 360, 600)
-    assert w is not None and w.uid == 1000
+    other = on_top("settings", "elsewhere").replace(
+        "displayId=0, inputConfig=0x0", "displayId=2, inputConfig=0x0", 1
+    )
+    block = other[other.index("  Display: 0") : other.index("      1: name=")].replace(
+        "Display: 0", "Display: 2"
+    )
+    text = TEXT["settings"].replace("  Display: 0\n", block + "  Display: 0\n", 1)
+    w = receiver(parse_windows(text), 360, 600)
+    assert w is not None and w.uid == 1000 and len(parse_windows(text)) == 22
+
+
+def test_a_title_that_forges_a_list_header_blocks_everything() -> None:
+    for header in ("    Windows:", "  Display: 1\n    Windows:", "  Display: 0\n    Windows:"):
+        title = FORGED.format("0x0") + f", ownerUid=1000\n{header}\n      0: name=y"
+        assert parse_windows(on_top("settings", title)) == []
+
+
+def test_a_window_list_under_no_display_is_unreadable() -> None:
+    head = "    Windows:\n      0: name=a, id=1, displayId=0, inputConfig=0x0,"
+    head += " touchableRegion=<empty>, ownerPid=1, ownerUid=1\n"
+    assert parse_windows(head + TEXT["settings"]) == []
 
 
 def test_a_region_includes_its_top_edge() -> None:

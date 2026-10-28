@@ -28,7 +28,7 @@ module.exports.push(
     '    return bool(NOT_A_WINDOW.match(line))\n', '    return True\n',
     'test_a_title_that_strands_the_real_fields_on_a_stray_line_blocks_everything'),
   m('windows: a list ends at the first line as shallow as its header',
-    '            depth = -1  # the list ended', '            pass  # the list ended', 'test_the_full_dump_parses_and_other_sections_are_ignored'),
+    '            r.in_list = False  # the list ended', '            pass  # the list ended', 'test_the_full_dump_parses_and_other_sections_are_ignored'),
   m('windows: only display 0 is ours',
     '        if display == "0":\n', '        if display:\n', 'test_a_window_on_another_display_is_not_ours'),
 );
@@ -36,6 +36,12 @@ module.exports.push(
   m('windows: a transform line is the whole line',
     '( \\([A-Z ]+\\))?$|', '( \\([A-Z ]+\\))?|', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
   m('windows: window indices run 0, 1, 2 with no repeat',
-    '            if n is None or int(n.group(1)) != index:\n', '            if n is None:\n',
-    'test_a_title_that_adds_a_window_line_blocks_everything'),
+    ' or int(n.group(1)) != self.index:', ':', 'test_a_title_that_adds_a_window_line_blocks_everything'),
+);
+module.exports.push(
+  m('windows: one window list per display',
+    '        if SECTION.match(line) and self.display in self.listed:\n',
+    '        if SECTION.match(line) and not self.display:\n', 'test_a_title_that_forges_a_list_header_blocks_everything'),
+  m('windows: a window line carries its list\'s display',
+    'or m.group(2) != self.display or', 'or', 'test_a_title_that_forges_a_list_header_blocks_everything'),
 );

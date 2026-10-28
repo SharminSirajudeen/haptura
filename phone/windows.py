@@ -12,7 +12,9 @@ from dataclasses import dataclass
 Rect = tuple[int, int, int, int]  # left, top, right, bottom; right and bottom exclusive
 SKIP = frozenset({"NOT_VISIBLE", "NOT_TOUCHABLE", "SPY"})  # windows that never consume a touch
 SINK = "NO_INPUT_CHANNEL"  # consumes the touch and delivers it to nobody
-SECTION = re.compile(r"^( +)Windows:$")
+DISPLAY = re.compile(r"^  Display: (\d+)$")
+SECTION = re.compile(r"^    Windows:$")
+LIST_DEPTH = 4  # the indent of a `Windows:` header; its windows sit deeper
 WINDOW = re.compile(
     r"^ +\d+: name=(.*?), id=\d+, displayId=(\d+), inputConfig=([^,]*), .*?"
     r"touchableRegion=(.*?), ownerPid=\d+, ownerUid=(\d+)"
@@ -50,27 +52,55 @@ def readable(line: str, in_list: bool) -> bool:
     return bool(NOT_A_WINDOW.match(line))
 
 
-def window_lines(text: str) -> list[str] | None:
-    """The window lines of every `Windows:` list, in order; None when a line breaks the grammar.
+@dataclass
+class Lists:
+    """Reading state: the display whose block we are in and the window list it opened.
 
-    Each list numbers its windows 0, 1, 2...: a title that adds a line must repeat the next real
-    index, which only the last (lowest) window could avoid, and an overlay is never last.
+    The dump prints `  Display: N`, then one `    Windows:` list whose lines all carry displayId=N.
+    A forged list header for a display already listed is rejected; a forged display header ends
+    the list, and the real fields the title strands (displayId=0) fit no list after it.
     """
-    out, depth, index = [], -1, 0
+
+    display: str = ""
+    listed: frozenset[str] = frozenset()  # displays whose window list began
+    in_list: bool = False
+    index: int = 0
+
+    def header(self, line: str) -> bool | None:
+        """True for a display or list header, False for any other line, None for a forged one."""
+        d = DISPLAY.match(line)
+        if d:
+            self.display = d.group(1)
+            return True
+        if SECTION.match(line) and self.display in self.listed:
+            return None  # a second list for one display
+        if SECTION.match(line):
+            self.listed, self.in_list, self.index = self.listed | {self.display}, True, 0
+            return True
+        return False
+
+    def window(self, line: str) -> bool:
+        """Whether a window line belongs where it stands: this display, the next index."""
+        m, n = WINDOW.match(line), INDEX.match(line)
+        if not (m and n) or m.group(2) != self.display or int(n.group(1)) != self.index:
+            return False
+        self.index += 1
+        return True
+
+
+def window_lines(text: str) -> list[str] | None:
+    """The window lines of every display's list, in order; None when a line breaks the grammar."""
+    r, out = Lists(), []
     for line in text.split("\n"):  # "\n" only: other separators stay inside a line
-        if line.strip() and len(line) - len(line.lstrip()) <= depth:
-            depth = -1  # the list ended at the first line as shallow as its header
-        m = SECTION.match(line)
-        if m:
-            depth, index = len(m.group(1)), 0
-        elif not readable(line, depth >= 0):
+        if r.in_list and line.strip() and len(line) - len(line.lstrip()) <= LIST_DEPTH:
+            r.in_list = False  # the list ended at the first line as shallow as its header
+        h = r.header(line)
+        if h is None or (h is False and not readable(line, r.in_list)):
             return None
-        elif depth >= 0 and WINDOW.match(line):
-            n = INDEX.match(line)
-            if n is None or int(n.group(1)) != index:
+        if h is False and r.in_list and WINDOW.match(line):
+            if not r.window(line):
                 return None
             out.append(line)
-            index += 1
     return out
 
 
