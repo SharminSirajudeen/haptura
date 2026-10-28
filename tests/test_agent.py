@@ -18,25 +18,31 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pytest
 
 from gate.agent import PROMPT, Body, Diagnose, RunBlock, _live, _pool, _steer, run_episode
 from gate.arena import BODIES, Arena
-from gate.constants import BLOCK_STEPS, MAX_FRAMES, MAX_MUSE_CALLS
+from gate.constants import BLOCK_STEPS, MAX_FRAMES, MAX_LAG, MAX_MUSE_CALLS
+from gate.control import control_scores
 from gate.episode import Tracker, run_block, truth_slice
+from gate.gate import PROBE_SEED
 from gate.meta_api import MuseReply, ToolCall
 from gate.trackers import truth_tracker
 from gate.types import Decision, Diagnosis, Element, EpisodeLog, Frames, Scenario, Tracks
 
 RED = (230, 40, 40)
 GOAL = (92.0, 56.0, 108.0, 72.0)
+NEAR = (32.0, 56.0, 48.0, 72.0)  # under DEAD_RIGHT: holds element 2's parking spot, not the subject
 IDENTITY = ((0, BODIES["identity"]),)
 DEAD_RIGHT = ((0, BODIES["dead_right"]),)
 ALL = ["up", "down", "left", "right"]
 EXPERIMENT = ("run_experiment", {"n": 30, "p_noop": 0.3, "dirs": ALL})
+HALF = ("run_experiment", {"n": 15, "p_noop": 0.3, "dirs": ALL})
+ACT = ("act", {"object_id": 0})
 USAGE = {
     "input_tokens": 100,
     "output_tokens": 10,
-    "input_tokens_details": {"cached_tokens": 0},
+    "input_tokens_details": {"cached_tokens": 5},
     "output_tokens_details": {"reasoning_tokens": 4},
 }
 LOST = "object 0 is not mine on the probe; re-probe every element"
@@ -143,12 +149,13 @@ def test_gated_refuses_an_unsupported_act_and_ungated_runs_it() -> None:
     assert log.blocks[0].decision == Decision("refused", 2, "object 2 is not mine; object 0 is")
     assert log.outcome == "decline"
     assert {s[0] for s in muse.sent} == {PROMPT}
+    assert len(PROMPT) <= 1200  # the 300-token cap, assuming about 4 characters per token
     assert [s[2] for s in muse.sent] == [None, "r0", "r1"]
     assert log.usage == {
         "muse_calls": 3,
         "input_tokens": 300,
         "output_tokens": 30,
-        "cached_tokens": 0,
+        "cached_tokens": 15,
         "reasoning_tokens": 12,
         "frames": BLOCK_STEPS + 1,
         "sam_calls": 1,
@@ -156,6 +163,7 @@ def test_gated_refuses_an_unsupported_act_and_ungated_runs_it() -> None:
     muse = Muse(too_long, ("act", {"object_id": 2}))
     log = play(world(), muse, gated=False)
     assert log.outcome == "false_act" and len(muse.sent) == 2
+    assert log.blocks[0].decision == Decision("act", 2, 'act {"object_id": 2}')
     assert not any(w in muse.heard(1) for w in ("mine", "p0", "advice"))
 
 
@@ -185,6 +193,9 @@ def test_a_body_remap_ends_in_body_changed_with_the_new_map_and_the_goal_reached
     assert stale is not None and stale.kind == "stale"
     assert probe is not None and probe.kind == "body_changed"
     target = log.blocks[2].evidence[0]
+    # the probe's table is S14's own S10 call, so it cannot disagree with S14's verdict
+    recomputed = control_scores(log.blocks[2].actions, log.blocks[2].tracks, MAX_LAG, PROBE_SEED)
+    assert log.blocks[2].evidence == tuple(recomputed)
     assert target.label == "mine" and target.body["right"] == (-2.0, 0.0)
     assert log.blocks[2].advice == Decision("act", 0, "new body")
     assert "body_changed: new body" in muse.heard(2)
@@ -204,6 +215,9 @@ def test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprobe() -> Non
     assert probe.decision is not None and probe.decision.kind == "probe"
     # the pool restarted at the diagnosis: the probe's 15 steps and the new 30, on look 3
     assert muse.heard(3).splitlines()[0] == "goal centre (100,64); look 3 of 6; 45 steps"
+    # its S10 seed: scenario seed 7 * SEED_STRIDE (= MAX_FRAMES) + block index 3
+    pooled = _pool([(b.actions, b.tracks) for b in log.blocks[2:4]])
+    assert log.blocks[3].evidence == tuple(control_scores(*pooled, MAX_LAG, 7 * MAX_FRAMES + 3))
     assert log.outcome == "decline"
     # the same world and the same S14 ungated: no S14 runs, so the next act block is a false act
     muse = Muse(EXPERIMENT, ("act", {"object_id": 0}))
@@ -239,13 +253,17 @@ def test_muse_turns_stop_at_max_muse_calls() -> None:
     assert len(muse.sent) == MAX_MUSE_CALLS and len(log.blocks) == MAX_MUSE_CALLS
 
 
-def test_frames_stop_at_max_frames() -> None:
-    # right is dead, so the goal is never reached; 31 + 9 * 31 = 310 = MAX_FRAMES, a 10th act
-    # block would need 341
-    muse = Muse(EXPERIMENT, ("act", {"object_id": 0}))
-    log = play(world(DEAD_RIGHT), muse, False)
+@pytest.mark.parametrize(
+    ("experiments", "frames"),
+    [((EXPERIMENT,), MAX_FRAMES), ((HALF, HALF), 280)],
+    ids=["fills_max_frames", "one_frame_short"],
+)
+def test_frames_stop_at_max_frames(experiments: tuple[Call, ...], frames: int) -> None:
+    # right is dead, so act blocks of 31 frames run until the next would not fit:
+    # 31 + 9 * 31 = 310 = MAX_FRAMES; 16 + 16 + 8 * 31 = 280, and a 9th act block needs 311
+    log = play(world(DEAD_RIGHT), Muse(*experiments, ACT), False)
     assert log.outcome == "timeout"
-    assert log.usage["frames"] == MAX_FRAMES and len(log.blocks) == 10
+    assert log.usage["frames"] == frames and len(log.blocks) == 10
 
 
 def test_steer_takes_the_live_action_nearest_the_goal_and_skips_a_dead_one() -> None:
@@ -254,6 +272,7 @@ def test_steer_takes_the_live_action_nearest_the_goal_and_skips_a_dead_one() -> 
     # right's 0.4 px is below EFFECT_MIN: dead; down and up tie (60.03 px), down comes first
     noisy = _steer(_live({**body, "right": (0.4, 0.0)}), (40.0, 64.0), (100.0, 64.0))
     assert "right" not in noisy and noisy[:3] == ("down", "up", "down")
+    assert _live({"right": (1.0, 0.0)}) == {"right": (1.0, 0.0)}  # exactly EFFECT_MIN is alive
 
 
 def test_pool_joins_blocks_on_their_shared_frame() -> None:
@@ -271,10 +290,19 @@ def test_a_success_the_tracker_fakes_is_scored_false_act() -> None:
     # right is dead, so the subject stays at x 28 while element 2 parks at (34, 64), inside the
     # goal box (32..48); the swap hands the subject's id to element 2, which the tracks put in
     # the goal; the truth read at the stop scores it false_act
-    goal = (32.0, 56.0, 48.0, 72.0)
-    muse = Muse(EXPERIMENT, ("act", {"object_id": 0}))
-    log = play(world(DEAD_RIGHT, goal=goal), muse, False, runner(swap_block=1))
+    log = play(world(DEAD_RIGHT, goal=NEAR), Muse(EXPERIMENT, ACT), False, runner(swap_block=1))
     assert [b.phase for b in log.blocks] == ["probe", "act"] and log.outcome == "false_act"
+
+
+def test_the_eyes_fix_comes_before_the_goal_check() -> None:
+    # S15 advises declining: from x 28, the centre's x 40 needs right, which is dead. Muse acts
+    # anyway. The swap puts id 0 on element 2, parked at (34, 64) inside the goal box; swapped
+    # back first, id 0 is the subject at x 28, outside it, so the act runs out of frames
+    muse = Muse(EXPERIMENT, ACT)
+    log = play(world(DEAD_RIGHT, goal=NEAR), muse, True, runner(1), scripted("eyes_swapped"))
+    reason = "object 0 is mine but no live action moves it along x to the goal"
+    assert muse.heard(1).endswith(f"advice: decline 0: {reason}")
+    assert log.outcome == "timeout"
 
 
 def test_bad_arguments_are_answered_and_run_nothing() -> None:

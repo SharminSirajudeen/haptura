@@ -2,10 +2,11 @@
 
 Muse Spark makes every act, probe or decline call through three tools; the executor runs the world
 and every number. One flag separates the conditions: `gated=True` puts S13 before `act`, S14 after
-each act block and the advice line under each table; `gated=False` (baseline a) removes exactly
-those three. The world (T9 `run_block`), the diagnosis (S14 `diagnose`) and the model (S8
-`muse_turn`) are arguments: production passes `gate.episode.run_block`, `gate.gate.diagnose` and
-`gate.meta_api.muse_turn`, and the tests pass fakes.
+each act block and the advice line under each table; `gated=False` (baseline a) removes those
+three and the table's p0 and label columns, as EVAL.md defines baseline a. The world (T9
+`run_block`), the diagnosis (S14 `diagnose`) and the model (S8 `muse_turn`) are arguments:
+production passes `gate.episode.run_block`, `gate.gate.diagnose` and `gate.meta_api.muse_turn`,
+and the tests pass fakes.
 
 The agent never sees ground truth: ids are carried across blocks from tracked positions (S9), and
 `_controls` is the only reader of the arena's binding and true positions; its answer sets the
@@ -35,9 +36,9 @@ from gate.constants import (
 )
 from gate.control import control_scores, design_block
 from gate.episode import Tracker
-from gate.gate import PROBE_SEED, _mine, check_act, rule_policy  # _mine: lane C makes it public
+from gate.gate import PROBE_SEED, _mine, centre, check_act, rule_policy  # _mine: public per #6
 from gate.meta_api import MuseReply, ToolCall
-from gate.trackers import _last, match_ids  # _last: lane B will make it public
+from gate.trackers import _last, match_ids  # _last: lane B makes it public (issue #6)
 from gate.types import (
     BlockRecord,
     Decision,
@@ -72,8 +73,9 @@ PROMPT = (
     "your body may change during the task. Goal: drive the element you control into the goal "
     "box, or decline when it cannot get there. Each run_experiment is one block of random "
     "actions; it returns one line per element with its position and the measured effect of each "
-    "action, and may also show p0 (the chance the element ignores your actions; small means it "
-    "follows them), a label (mine, echo, not_me) and an advice line from a rule policy. Follow "
+    "action, and may also show p0 (how likely an effect this large is by chance; small means it "
+    "follows your actions), a label (mine, echo, not_me) and an advice line from a rule policy. "
+    "Follow "
     "the advice unless the evidence says otherwise. Experiments cost money: act or decline as "
     "soon as the evidence is clear. Call one tool per turn."
 )
@@ -294,13 +296,13 @@ def _advice(run: _Run, evidence: list[Evidence]) -> Decision:
     goal = run.arena.scenario.goal
     mine = _mine(evidence)
     # S15 reads target_pos only when exactly one element is mine
-    pos = run.reference[mine[0].object_id] if len(mine) == 1 else _centre(goal)
+    pos = run.reference[mine[0].object_id] if len(mine) == 1 else centre(goal)
     return rule_policy(evidence, run.looks, BLOCK_BUDGET, pos, goal)
 
 
 def _table(run: _Run, advice: Decision | None) -> str:
     """The evidence table: one rounded line per element; ungated it has no p0, label or advice."""
-    cx, cy = _centre(run.arena.scenario.goal)
+    cx, cy = centre(run.arena.scenario.goal)
     steps = sum(len(acts) for acts, _ in run.pool)
     head = f"goal centre ({cx:.0f},{cy:.0f}); look {run.looks} of {BLOCK_BUDGET}; {steps} steps"
     cols = "id (x,y)" + (" p0 label" if run.gated else "") + " " + " ".join(DIRS)
@@ -355,7 +357,7 @@ def _act_block(run: _Run, target: int, body: Body, live: Mapping[str, Vec]) -> s
     """One act block, then S14 when gated; the eyes fix is applied here, without a Muse turn.
     Sets the outcome when the target ends in the goal; returns S14's kind ('' when ungated)."""
     goal = run.arena.scenario.goal
-    actions = _steer(live, run.reference[target], _centre(goal))
+    actions = _steer(live, run.reference[target], centre(goal))
     tracks = _block(run, actions, "act")
     if tracks is None:
         return ""
@@ -397,13 +399,13 @@ def _live(body: Body) -> dict[str, Vec]:
     return {a: v for a, v in body.items() if v is not None and math.hypot(*v) >= EFFECT_MIN}
 
 
-def _steer(live: Mapping[str, Vec], start: Vec, centre: Vec) -> tuple[str, ...]:
+def _steer(live: Mapping[str, Vec], start: Vec, aim: Vec) -> tuple[str, ...]:
     """BLOCK_STEPS actions, each the live one that takes the predicted position nearest the goal
     centre; ties go to the first in `live`'s order."""
     x, y = start
     out = []
     for _ in range(BLOCK_STEPS):
-        a = min(live, key=lambda k: math.dist((x + live[k][0], y + live[k][1]), centre))
+        a = min(live, key=lambda k: math.dist((x + live[k][0], y + live[k][1]), aim))
         x, y = x + live[a][0], y + live[a][1]
         out.append(a)
     return tuple(out)
@@ -414,12 +416,8 @@ def _controls(run: _Run, target: int) -> bool:
     to the nearest true element, which must be the element the arena binds now."""
     arena = run.arena
     true = match_ids({target: np.array([run.reference[target]])}, arena.history[-1])
-    return true[target] == arena._at(arena.scenario.binding_schedule)  # lane A will make _at public
+    return true[target] == arena._at(arena.scenario.binding_schedule)  # _at: public per issue #6
 
 
 def _in_goal(pos: Vec, goal: Goal) -> bool:
     return goal[0] <= pos[0] <= goal[2] and goal[1] <= pos[1] <= goal[3]
-
-
-def _centre(goal: Goal) -> Vec:
-    return ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)

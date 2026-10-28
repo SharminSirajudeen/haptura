@@ -49,14 +49,19 @@ def rule_policy(
     return Decision("probe", None, reason)
 
 
+def centre(goal: Goal) -> Vec:
+    """The goal box's centre: S15's reachability target and the executor's steering target."""
+    return ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)
+
+
 def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
     """Act on the mine element `e` when its live body reaches the goal's centre, else decline."""
-    centre = ((goal[0] + goal[2]) / 2, (goal[1] + goal[3]) / 2)
+    mid = centre(goal)
     live = [v for v in e.body.values() if v is not None]
     missing = [
         name
         for axis, name in enumerate("xy")
-        if not _reaches(live, axis, centre[axis] - target_pos[axis])
+        if not _reaches(live, axis, mid[axis] - target_pos[axis])
     ]
     if missing:
         axes = " and ".join(missing)

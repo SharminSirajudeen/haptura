@@ -6,6 +6,7 @@ const REFUSE = 'test_gated_refuses_an_unsupported_act_and_ungated_runs_it';
 const EYES = 'test_an_eyes_swap_is_corrected_without_a_muse_turn';
 const BODY = 'test_a_body_remap_ends_in_body_changed_with_the_new_map_and_the_goal_reached';
 const LOST = 'test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprobe';
+const EYES_FIRST = 'test_the_eyes_fix_comes_before_the_goal_check';
 module.exports = [
   m('T10: a gated act goes through S13', 'check_act(run.evidence, object_id) if run.gated else', 'Decision("act", object_id, said) if run.gated else', REFUSE),
   m('T10: an ungated act skips S13', 'if run.gated else Decision("act", object_id, said)', 'if True else Decision("act", object_id, said)', REFUSE),
@@ -35,5 +36,17 @@ module.exports = [
   m('T10: an id a block missed keeps its last position', '    for i, pos in tracks.items():\n        last = _last(pos)\n', '    run.reference.clear()\n    for i, pos in tracks.items():\n        last = _last(pos)\n', 'test_a_target_the_tracker_loses_is_probed_and_handed_back'),
   m('T10: block k\'s clip is clips/kk.mp4', 'f"{len(run.blocks):02d}.mp4"', 'f"{len(run.blocks)}.mp4"', 'test_each_block_saves_its_clip_under_the_name_the_episode_passed'),
   m('T10: no clips directory records no clip', 'path = "" if clip is None else str(clip)', 'path = str(clip)', REFUSE),
+  m('T10: the eyes fix comes before the goal check',
+    '    if found is not None:\n        if found.swap is not None:\n            a, b = found.swap\n            run.reference[a], run.reference[b] = run.reference[b], run.reference[a]\n        run.blocks[-1] = replace(run.blocks[-1], diagnosis=found)\n    if _in_goal(run.reference[target], goal):\n        run.outcome = "success" if _controls(run, target) else "false_act"\n',
+    '    if _in_goal(run.reference[target], goal):\n        run.outcome = "success" if _controls(run, target) else "false_act"\n    if found is not None:\n        if found.swap is not None:\n            a, b = found.swap\n            run.reference[a], run.reference[b] = run.reference[b], run.reference[a]\n        run.blocks[-1] = replace(run.blocks[-1], diagnosis=found)\n',
+    EYES_FIRST),
+  m('T10: S15 is given the mine element\'s tracked position', 'pos = run.reference[mine[0].object_id] if len(mine) == 1 else centre(goal)', 'pos = centre(goal)', EYES_FIRST),
+  m('T10: the probe table is S14\'s own S10 call', 'evidence = _look(run, actions, tracks, PROBE_SEED)', 'evidence = _look(run, actions, tracks, PROBE_SEED + 1)', BODY),
+  m('T10: each look is seeded by its block index', 'seed = run.arena.scenario.seed * SEED_STRIDE + len(run.blocks) - 1', 'seed = run.arena.scenario.seed * SEED_STRIDE', LOST),
+  m('T10: a block takes its N+1 frames from MAX_FRAMES', 'if run.frames + len(actions) + 1 > MAX_FRAMES:', 'if run.frames + len(actions) > MAX_FRAMES:', 'test_frames_stop_at_max_frames'),
+  m('T10: cached tokens come from input_tokens_details', '.get("input_tokens_details", {}).get("cached_tokens", 0)', '.get("cached_tokens", 0)', REFUSE),
+  m('T10: an effect of exactly EFFECT_MIN is alive', 'math.hypot(*v) >= EFFECT_MIN}', 'math.hypot(*v) > EFFECT_MIN}', 'test_steer_takes_the_live_action_nearest_the_goal_and_skips_a_dead_one'),
+  m('T10: an ungated act logs what Muse said', 'Decision("act", object_id, said)', 'Decision("act", object_id, "")', REFUSE),
+  m('T10: the prompt stays within the 300-token proxy', '"soon as the evidence is clear. Call one tool per turn."', '"soon as the evidence is clear. Call one tool per turn." + " " * 400', REFUSE),
   m('T10: the shared frame is kept once', 't.get(i, g)[min(k, 1) :]', 't.get(i, g)', 'test_pool_joins_blocks_on_their_shared_frame'),
 ];
