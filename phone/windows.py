@@ -21,7 +21,10 @@ WINDOW = re.compile(
 # them, or breaks the line, could forge a window. Each must appear exactly once on a window's line.
 TRUSTED = ("displayId=", "inputConfig=", "touchableRegion=", "ownerPid=", "ownerUid=")
 # The other lines a window list holds (measured on API 36): a window's transform, its matrix rows.
-NOT_A_WINDOW = re.compile(r"^ *$|^ +transform \(|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$")
+NOT_A_WINDOW = re.compile(
+    r"^ *$|^ +transform \([A-Z0-9_]+\)( \([A-Z ]+\))?$|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$"
+)
+INDEX = re.compile(r"^ +(\d+): name=")
 RECT = re.compile(r"\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]")
 FOCUSED = re.compile(r"FocusedWindows:\n +displayId=0, name='([^']*)'")
 UID_LINE = re.compile(r"^package:(\S+) uid:(\d+)$", re.M)
@@ -48,18 +51,26 @@ def readable(line: str, in_list: bool) -> bool:
 
 
 def window_lines(text: str) -> list[str] | None:
-    """The window lines of every `Windows:` list, in order; None when a line breaks the grammar."""
-    out, depth = [], -1
-    for line in text.splitlines():
+    """The window lines of every `Windows:` list, in order; None when a line breaks the grammar.
+
+    Each list numbers its windows 0, 1, 2...: a title that adds a line must repeat the next real
+    index, which only the last (lowest) window could avoid, and an overlay is never last.
+    """
+    out, depth, index = [], -1, 0
+    for line in text.split("\n"):  # "\n" only: other separators stay inside a line
         if line.strip() and len(line) - len(line.lstrip()) <= depth:
             depth = -1  # the list ended at the first line as shallow as its header
         m = SECTION.match(line)
         if m:
-            depth = len(m.group(1))
+            depth, index = len(m.group(1)), 0
         elif not readable(line, depth >= 0):
             return None
         elif depth >= 0 and WINDOW.match(line):
+            n = INDEX.match(line)
+            if n is None or int(n.group(1)) != index:
+                return None
             out.append(line)
+            index += 1
     return out
 
 

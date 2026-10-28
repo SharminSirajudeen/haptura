@@ -33,6 +33,12 @@ review found that the first owner lookup (the accessibility dump) misses windows
 replacement reads the input dispatcher's window list, keyed by uid (`phone/windows.py`, `docs/pilot-runs.md` P16): built
 and tested, not yet wired into the runner, so the numbers above come from the dump.
 
+**How the owner is read, and its limit:** the window list comes from `dumpsys input`, text in which every app chooses
+its own window title. The parser accepts only the dump's exact grammar (each owner field once per window line,
+windows numbered without gaps, nothing else inside a list) and blocks every tap when any line breaks it. That stops
+every forged title the security review built (`tests/test_phone_windows.py`); reading the windows from a structured
+source, such as an accessibility service's window list, would remove the text parsing altogether.
+
 **What it does not cover:** a hostile dialog drawn inside the task app itself shares the app's owner and passes this
 check; deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**
 WindowGuard (NDSS 2017) gated Android windows by owner for people; PUSV (arXiv 2604.18860) re-checks the window list
