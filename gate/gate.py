@@ -8,11 +8,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from gate.constants import ALPHA_PROBE, EFFECT_MIN
+from gate.constants import ALPHA_PROBE, EARLY_LOOKS, EFFECT_MIN
 from gate.types import Decision, Evidence, Vec
 
 Goal = tuple[float, float, float, float]  # x0, y0, x1, y1, as Scenario.goal
-EARLY_LOOKS = 3  # looks before S15 declines on every p0 > ALPHA_PROBE (plan §3, S15)
 
 
 def check_act(evidence: Sequence[Evidence], object_id: int) -> Decision:
