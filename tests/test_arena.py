@@ -280,10 +280,11 @@ def one_way(m: Mapping[str, Vec]) -> list[Vec]:
 
 def test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall() -> None:
     # issue 21: the agent's own probe drifts an element the one way it can go; a goal in mid-frame
-    # on that axis can be passed for good, a goal on the wall cannot.
+    # on that axis can be passed for good. The goal is the strip the clamp holds an element in, its
+    # centre the clamp, so every position on the axis can still reach that centre.
     hand = make_scenario(0, "feasible")
     assert hand.action_maps[0][1]["up"] == (0.0, 0.0)  # hand: seed 0 draws `up` dead, so...
-    assert hand.goal[1::2] == (112.0, 128.0)  # ...the 16 px goal sits on the bottom wall of 128
+    assert hand.goal[1::2] == (120.0, 128.0)  # ...the goal is the bottom 8 px, centre 124 = 128 - 4
     for sc in scenarios():
         pos = np.array(sc.elements[0].pos)
         lo, hi = np.array(sc.goal[:2]), np.array(sc.goal[2:])
@@ -291,7 +292,8 @@ def test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall() -> Non
         steps = [v for _, m in sc.action_maps for v in one_way(m)]
         for v in steps if sc.case != "body_blocked" else []:
             k = 0 if v[0] else 1
-            assert way[k] == np.sign(v[k]) and (hi[k] == W if v[k] > 0 else lo[k] == 0)
+            strip = (W - 8.0, float(W)) if v[k] > 0 else (0.0, 8.0)  # hand: an 8 px element
+            assert way[k] == np.sign(v[k]) and (lo[k], hi[k]) == strip
 
 
 def toward_goal(sc: Scenario) -> list[list[str]]:
@@ -392,9 +394,11 @@ def test_steering_to_the_goal_runs_into_the_look_alike_on_the_route(seed: int) -
     want = tuple(2.0 * np.sign(centre - pos))
     (steer,) = [a for a, v in sc.action_maps[0][1].items() if tuple(v) == want]
     shown, _ = visible_fractions(sc, [steer] * BLOCK_STEPS, 2)
-    # hand: halfway is 34 px = 17 steps along the route; passing it at 2 px a step the centres are
-    # 2, 0 and 2 px apart for three frames, and the one on top hides over half of the other in at
-    # least 2 of them (the same count as the crossing, for every pair of shapes)
+    # hand: halfway is 34 px = 17 steps along the route, or at most 52 px = 26 steps when a one-way
+    # axis puts the goal on a wall (the subject starts at least 20 px from the other wall, the
+    # strip's centre is 4 px from this one: 104 px at most), so 30 steps pass it; at 2 px a step the
+    # centres are 2, 0 and 2 px apart for three frames, and the one on top hides over half of the
+    # other in at least 2 of them (the same count as the crossing, for every pair of shapes)
     assert sum(share < 0.5 for share in shown) >= 2
 
 

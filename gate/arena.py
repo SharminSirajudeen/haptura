@@ -95,9 +95,11 @@ def _pool(case: str, bodies: list[str]) -> list[tuple[int, int]]:
     return sorted(u for u in moved_apart if ways <= {u})
 
 
-def _layout(rng: np.random.Generator, case: str, bodies: list[str]) -> tuple[Pt, Pt]:
-    """The subject's position and the goal centre, a straight run apart in a direction from
-    `_pool`; on a one-way axis the goal is pushed on to the wall, so drift cannot pass it."""
+def _layout(rng: np.random.Generator, case: str, bodies: list[str]) -> tuple[Pt, Pt, Pt]:
+    """The subject's position, the goal centre a straight run away in a direction from `_pool`, and
+    the goal's half size per axis. On a one-way axis the goal is the strip against the live wall
+    that the clamp holds an element in, its centre the clamp itself: no drift passes it, and every
+    position on the axis can still reach that centre."""
     pool = _pool(case, bodies)
     d = pool[int(rng.integers(len(pool)))]
     axis, sign = (0, d[0]) if d[0] else (1, d[1])
@@ -106,10 +108,10 @@ def _layout(rng: np.random.Generator, case: str, bodies: list[str]) -> tuple[Pt,
     hi = min(W - MARGIN, W - GOAL_PX // 2 - sign * reach)
     x = np.zeros(2)
     x[axis], x[1 - axis] = _cell(rng, lo, hi), _cell(rng, MARGIN, W - MARGIN)
-    g = x + reach * np.array(d)
+    g, half = x + reach * np.array(d), np.full(2, GOAL_PX / 2)
     if d in _one_way(bodies):  # never in body_blocked, where d is the dead action's direction
-        g[axis] = W - GOAL_PX // 2 if sign > 0 else GOAL_PX // 2
-    return x, g
+        g[axis], half[axis] = (W - HALF if sign > 0 else HALF), HALF
+    return x, g, half
 
 
 def _halfway(x: Pt, g: Pt) -> Pt:
@@ -159,7 +161,7 @@ def make_scenario(seed: int, case: str) -> Scenario:
     swap = None
     if case == "body_remap":
         swap = str(rng.choice([k for k in BODIES if _pool(case, [body, k])]))
-    x, g = _layout(rng, case, [b for b in (body, swap) if b is not None])
+    x, g, half = _layout(rng, case, [b for b in (body, swap) if b is not None])
     mid = _halfway(x, g)
     far = _scatter(rng, [x, g, mid], n - 2)
     shape0 = SHAPES[int(rng.integers(len(SHAPES)))]
@@ -174,10 +176,8 @@ def make_scenario(seed: int, case: str) -> Scenario:
         for i, p in enumerate(pts)
     )
     binding, maps, events = _schedules(case, step, body, swap)
-    gx, gy, half = float(g[0]), float(g[1]), GOAL_PX / 2
-    return Scenario(
-        seed, elements, binding, maps, events, (gx - half, gy - half, gx + half, gy + half), case
-    )
+    (x0, y0), (x1, y1) = (g - half).tolist(), (g + half).tolist()
+    return Scenario(seed, elements, binding, maps, events, (x0, y0, x1, y1), case)
 
 
 class Arena:

@@ -82,8 +82,9 @@ module.exports = [
 ];
 // #21: a feasible-type case stays reachable whatever the agent's own probe does, and a body remap shows in the steering.
 module.exports.push(
-  m('S1: on a one-way axis the goal sits on the wall', '        g[axis] = W - GOAL_PX // 2 if sign > 0 else GOAL_PX // 2\n', '        g[axis] = g[axis]\n', WALL),
-  m('S1: the live side\'s wall, not the dead side\'s', 'W - GOAL_PX // 2 if sign > 0 else', 'W - GOAL_PX // 2 if sign < 0 else', WALL),
+  m('S1: on a one-way axis the goal sits on the wall', 'g[axis], half[axis] = (W - HALF if sign > 0 else HALF), HALF', 'half[axis] = HALF', WALL),
+  m('S1: the live side\'s wall, not the dead side\'s', '(W - HALF if sign > 0 else HALF)', '(W - HALF if sign < 0 else HALF)', WALL),
+  m('S1: the one-way goal is the strip the clamp holds an element in', 'else HALF), HALF', 'else HALF), GOAL_PX / 2', WALL),
   m('S1: a one-way axis must be the goal\'s', ' if ways <= {u})', ')', WALL),
   m('S1: a body remap changes the action toward the goal', 'u for u in moved_apart if ways', 'u for u in UNITS if ways', TOWARD),
 );
