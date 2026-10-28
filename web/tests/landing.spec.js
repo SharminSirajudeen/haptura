@@ -1,5 +1,5 @@
-// The landing page's claims are copies, so each is checked against the file it was copied from: a number changed in the
-// README and not on the page, or the other way round, turns this red.
+// The site's claims are copies, so each is checked against the file it was copied from: a number changed in the README
+// and not on the page, or the other way round, turns this red.
 const fs = require('node:fs');
 const path = require('node:path');
 const { test, expect, panes, ready } = require('./site');
@@ -10,9 +10,12 @@ const read = (file) => fs.readFileSync(path.join(REPO, file), 'utf8');
 // sides are lower-cased, and a full stop the page adds at the end of a quoted clause is dropped.
 const plain = (s) => s.replace(/\*\*|`/g, '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/\s+/g, ' ').trim().toLowerCase();
 
-test('every passage marked with a source is in that file word for word', async ({ page, site }) => {
-  await page.goto(site);
-  const marked = await page.locator('[data-source]').evaluateAll((els) => els.map((e) => [e.dataset.source, e.textContent]));
+test('every passage marked with a source is in that file word for word', async ({ page, site, viewer }) => {
+  const marked = [];
+  for (const url of [site, viewer]) {
+    await page.goto(url);
+    marked.push(...(await page.locator('[data-source]').evaluateAll((els) => els.map((e) => [e.dataset.source, e.textContent]))));
+  }
   expect(marked.length).toBeGreaterThan(0);
   const missing = marked.filter(([file, text]) => !plain(read(file)).includes(plain(text).replace(/[.:]$/, '')));
   expect(missing).toEqual([]);
@@ -27,11 +30,13 @@ test('the results table is the README table, its runs shown as columns', async (
   expect(shown[0].map((_, c) => shown.map((row) => plain(row[c])))).toEqual(runs);
 });
 
-test('the arena section and each of its panes say the data is a placeholder', async ({ page, site }) => {
+test('the viewer stays off the landing page, and says it plays a placeholder on its link, its page and each pane', async ({ page, site, viewer }) => {
   await page.goto(site);
+  await expect(page.locator('.pane, .stage')).toHaveCount(0);
+  await expect(page.locator('a[href="arena.html"]')).toContainText('placeholder');
+  await page.goto(viewer);
   await ready(page);
-  await expect(page.locator('#arena .placeholder')).toContainText('Placeholder data');
-  await expect(page.locator('#arena .pane')).toHaveCount(2);
+  await expect(page.locator('header .placeholder')).toContainText('Placeholder data');
   for (const pane of await panes(page).all()) await expect(pane.locator('.tag')).toHaveText('Placeholder data');
 });
 

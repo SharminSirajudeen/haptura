@@ -108,8 +108,8 @@ function controls(pane, video) {
 async function mount({ title, log: logUrl, clip }) {
   const pane = document.getElementById('pane').content.firstElementChild.cloneNode(true);
   const video = pane.querySelector('video');
-  pane.querySelector('h3').textContent = title;
-  document.querySelector('.panes').append(pane);
+  pane.querySelector('h2').textContent = title;
+  document.querySelector('main').append(pane);
   video.src = clip;
   controls(pane, video);
   const log = await (await fetch(logUrl)).json();

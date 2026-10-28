@@ -50,6 +50,7 @@ const test = base.extend({
     },
     { scope: 'worker' },
   ],
+  viewer: [async ({ site }, use) => use(`${site}arena.html`), { scope: 'worker' }], // the arena viewer's page
 });
 
 const panes = (page) => page.locator('.pane');

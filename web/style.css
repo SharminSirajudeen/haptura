@@ -75,26 +75,28 @@ code { font: 0.88em/1.4 var(--mono); overflow-wrap: anywhere; }
   border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
   font-size: 0.875rem;
 }
-.topnav ul { display: flex; margin: 0 0 0 auto; padding: 0; list-style: none; }
+.topnav ul { display: flex; margin: 0; padding: 0; list-style: none; }
 .topnav a { display: inline-flex; align-items: center; min-height: var(--nav); padding: 0 12px; color: var(--fg-2); }
 .topnav a:hover { color: var(--fg); text-decoration: none; }
-.topnav .brand { padding-left: 0; color: var(--fg); font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; }
+.topnav .brand { margin-right: auto; padding-left: 0; color: var(--fg); font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.01em; }
 .topnav .repo { padding-right: 0; color: var(--link); }
 @media (max-width: 599px) {
   .topnav ul { display: none; }
-  .topnav .repo { margin-left: auto; }
 }
 @media (prefers-reduced-transparency: reduce) {
   .topnav { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
+/* A band is full width with the gutter inside; web/tests/look.spec.js measures it on every page. */
+.band { padding: clamp(64px, 9vw, 144px) var(--gutter); }
+
 /* The first viewport: the claim and its number on the left, the recording on the right. */
-header {
+.hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(32px, 5vw, 96px);
-  padding: clamp(32px, 5vw, 80px) var(--gutter) clamp(56px, 7vw, 112px);
+  padding-block: clamp(32px, 5vw, 80px) clamp(56px, 7vw, 112px);
 }
 header p { max-width: 70ch; } /* only text gets a reading width; the layout fills the screen */
 .kicker { color: var(--fg-2); font-weight: 600; }
@@ -136,7 +138,7 @@ h1 { margin-top: 8px; font-size: clamp(3rem, 2rem + 4vw, 6rem); font-weight: 700
 }
 .clip figcaption { width: 0; min-width: 100%; margin-top: 12px; color: var(--fg-2); font-size: 0.875rem; } /* as wide as the clip */
 @media (max-width: 999px) {
-  header { grid-template-columns: minmax(0, 1fr); }
+  .hero { grid-template-columns: minmax(0, 1fr); }
   .clip { justify-self: stretch; display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items: end; gap: 24px; }
   .clip video { width: 100%; height: auto; }
   .clip figcaption { width: auto; min-width: 0; max-width: 70ch; margin: 0; }
@@ -145,8 +147,7 @@ h1 { margin-top: 8px; font-size: clamp(3rem, 2rem + 4vw, 6rem); font-weight: 700
   .clip { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }
 
-/* Bands. */
-main > section { padding: clamp(64px, 9vw, 144px) var(--gutter); }
+/* Sections. */
 .alt { background: var(--band); }
 h2 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem); font-weight: 700; line-height: 1.07; letter-spacing: -0.028em; }
 .intro-p { max-width: 70ch; margin-top: 20px; font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.3125rem); }
@@ -189,7 +190,9 @@ tbody td { font-weight: 600; }
   .flow { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* The arena viewer: placeholder until real episodes exist, and it says so on the section and on every pane. */
+/* The arena viewer (arena.html): placeholder until real episodes exist, and it says so on the page and on every pane. */
+.page-head { padding-block: clamp(32px, 5vw, 64px); }
+.page-head h1 { margin: 0; font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem); line-height: 1.07; letter-spacing: -0.028em; }
 .placeholder { width: fit-content; max-width: 100%; margin-top: 24px; padding: 14px 18px; border-radius: 14px; background: var(--caution-bg); }
 .placeholder .tag { margin-right: 6px; }
 .tag { color: var(--caution); font-weight: 600; }
@@ -197,11 +200,11 @@ tbody td { font-weight: 600; }
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: clamp(16px, 2vw, 32px);
-  margin-top: clamp(32px, 4vw, 56px);
+  padding-block: clamp(32px, 4vw, 56px) clamp(64px, 8vw, 128px);
 }
 .pane { min-width: 0; padding: clamp(16px, 2vw, 24px); border-radius: 18px; background: var(--card); }
 .pane-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 16px; }
-.pane h3 { font-size: 1.3125rem; font-weight: 600; text-transform: capitalize; }
+.pane h2 { font-size: 1.3125rem; font-weight: 600; text-transform: capitalize; }
 .pane .tag { font-size: 0.875rem; }
 .stage { position: relative; width: min(100%, 75vh); margin: 0 auto; background: #000; } /* the square clip fits the viewport's height */
 .stage video, .stage canvas { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; }

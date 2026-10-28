@@ -1,24 +1,10 @@
-// How the page looks, measured: every band reaches the gutter on both edges, and every piece of text meets WCAG AA
+// How each page looks, measured: every band keeps the gutter on both edges, and every piece of text meets WCAG AA
 // contrast in both colour schemes.
 const { test, expect, ready } = require('./site');
 
 const gutter = (width) => Math.min(96, Math.max(16, width / 20)); // style.css --gutter: clamp(16px, 5vw, 96px)
-
-for (const width of [390, 1440, 1920, 2560]) {
-  test(`every band reaches the gutter on both edges at ${width} px`, async ({ page, site }) => {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(site);
-    await ready(page);
-    const bands = await page.locator('body > nav, header, main > section').evaluateAll((els) =>
-      els.map((band) => {
-        const boxes = [...band.children].map((c) => c.getBoundingClientRect()).filter((b) => b.width > 0);
-        return { band: band.id || band.tagName, left: Math.min(...boxes.map((b) => b.left)), right: Math.max(...boxes.map((b) => b.right)) };
-      }));
-    expect(bands.length).toBeGreaterThan(0);
-    const off = bands.filter(({ left, right }) => Math.abs(left - gutter(width)) > 0.5 || Math.abs(right - width + gutter(width)) > 0.5);
-    expect(off).toEqual([]);
-  });
-}
+// The two pages, by the fixture that holds each URL, and what each must finish drawing before it is measured.
+const PAGES = { site: ['the landing page', () => {}], viewer: ['the arena viewer', ready] };
 
 // Runs in the page. Each element that holds text: its colour over the backgrounds under it, against those backgrounds.
 // A canvas reads any CSS colour syntax back as RGBA.
@@ -53,13 +39,34 @@ function contrast() {
   return { checked: texts.length, low };
 }
 
-for (const scheme of ['light', 'dark']) {
-  test(`every piece of text meets WCAG AA contrast in the ${scheme} scheme`, async ({ page, site }) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await page.goto(site);
-    await ready(page);
-    const { checked, low } = await page.evaluate(contrast);
-    expect(checked).toBeGreaterThan(0);
-    expect(low).toEqual([]);
+// Runs in the page. Each band's content box: where its own gutter leaves its content on the left and on the right.
+const contentEdges = (bands) =>
+  bands.map((band) => {
+    const box = band.getBoundingClientRect();
+    const style = getComputedStyle(band);
+    return { band: band.id || band.className, left: box.left + parseFloat(style.paddingLeft), right: box.right - parseFloat(style.paddingRight) };
   });
+
+for (const [fixture, [name, drawn]] of Object.entries(PAGES)) {
+  for (const width of [390, 1440, 1920, 2560]) {
+    test(`every band on ${name} keeps the gutter on both edges at ${width} px`, async ({ page, site, viewer }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto({ site, viewer }[fixture]);
+      await drawn(page);
+      const bands = await page.locator('.topnav, .band').evaluateAll(contentEdges);
+      expect(bands.length).toBeGreaterThan(1);
+      const off = bands.filter(({ left, right }) => Math.abs(left - gutter(width)) > 0.5 || Math.abs(right - width + gutter(width)) > 0.5);
+      expect(off).toEqual([]);
+    });
+  }
+  for (const scheme of ['light', 'dark']) {
+    test(`every piece of text on ${name} meets WCAG AA contrast in the ${scheme} scheme`, async ({ page, site, viewer }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto({ site, viewer }[fixture]);
+      await drawn(page);
+      const { checked, low } = await page.evaluate(contrast);
+      expect(checked).toBeGreaterThan(0);
+      expect(low).toEqual([]);
+    });
+  }
 }
