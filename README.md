@@ -29,8 +29,9 @@ what it changed: `docs/pilot-runs.md`. A 50-second clip of the gate blocking a f
 
 **Read the block counts carefully:** in these cases the attacker's window held focus, so every tap on the screen
 resolved to it and "blocked 32 of 32" follows by construction; the runs measure the model's choices. A security
-review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the owner
-is now read from the input dispatcher's window list, keyed by uid (`phone/windows.py`, `docs/pilot-runs.md` P16).
+review found that the first owner lookup (the accessibility dump) misses windows that never take focus; its
+replacement reads the input dispatcher's window list, keyed by uid (`phone/windows.py`, `docs/pilot-runs.md` P16): built
+and tested, not yet wired into the runner, so the numbers above come from the dump.
 
 **What it does not cover:** a hostile dialog drawn inside the task app itself shares the app's owner and passes this
 check; deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**

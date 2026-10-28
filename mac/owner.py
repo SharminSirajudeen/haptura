@@ -21,6 +21,7 @@ HERE = Path(__file__).parent
 # and buttons in their dialogs (security review, 28 Oct), so a click there asks a person.
 MAC_SYSTEM_ALLOW = frozenset({"com.apple.dock", "com.apple.systemuiserver"})
 SYSTEM_DIR = "/System/"  # sealed by System Integrity Protection, so its bundle ids are real
+DATA_DIR = "/System/Volumes/"  # except the data volume mounted under it, which users can write
 PANEL = (600, 400, 300, 120)  # x, y, w, h of the proof's fake panel, top-left screen points
 OUTSIDE_PX = 50  # the plan's distance outside the panel for the allowed points
 
@@ -39,7 +40,7 @@ class Owner:
 
         Any other app declares its own bundle id, so it could claim the task app's or a system id.
         """
-        if self.bundle and self.path.startswith(SYSTEM_DIR):
+        if self.bundle and self.path.startswith(SYSTEM_DIR) and not self.path.startswith(DATA_DIR):
             return self.bundle
         return f"pid:{self.pid}" if self.pid else ""
 

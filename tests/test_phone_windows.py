@@ -4,6 +4,7 @@ settings: Settings in front. keyboard: Settings search with the keyboard up (the
 window never takes focus). overlay: GhostEI's dialog over Settings.
 """
 
+import re
 from pathlib import Path
 
 from phone.windows import (
@@ -43,13 +44,58 @@ def test_spy_and_untouchable_windows_are_skipped() -> None:
     assert uid_at("settings", 360, 600) == 1000
 
 
-def test_a_visible_input_sink_swallows_the_touch() -> None:
-    sink = (
-        "      0: name=s ActivityRecordInputSink x/.A, id=1, displayId=0,"
-        " inputConfig=NO_INPUT_CHANNEL | NOT_FOCUSABLE, alpha=1, frame=[0,0][0,0],"
-        " touchableRegion=[0,0][720,1280], ownerPid=1, ownerUid=10217, dispatchingTimeout=5000ms\n"
+def on_top(capture: str, title: str, config: str = "0x0", display: int = 0) -> str:
+    """The capture with one more window, first in its window list, whose title is `title`."""
+    line = (
+        f"      0: name={title}, id=1, displayId={display}, inputConfig={config}, alpha=1,"
+        f" frame=[0,0][720,1280], touchableRegion=[0,0][720,1280], ownerPid=1, ownerUid={HELPER},"
+        " dispatchingTimeout=5000ms"
     )
-    assert receiver(parse_windows(sink + TEXT["settings"]), 360, 600) is None
+    m = re.search(r"^ +Windows:\n", TEXT[capture], re.M)  # the list, not "FocusedWindows:"
+    assert m is not None
+    return TEXT[capture][: m.end()] + line + "\n" + TEXT[capture][m.end() :]
+
+
+def test_a_visible_input_sink_swallows_the_touch() -> None:
+    sink = on_top("settings", "s ActivityRecordInputSink x/.A", "NO_INPUT_CHANNEL | NOT_FOCUSABLE")
+    assert receiver(parse_windows(sink), 360, 600) is None
+
+
+def test_the_full_dump_parses_and_other_sections_are_ignored() -> None:
+    assert "inputChannelToken" in TEXT["settings"]  # the monitors' "N: name=" lines elsewhere
+    assert len(WINS["settings"]) == 22
+
+
+def test_a_plain_overlay_on_top_takes_the_touch() -> None:
+    w = receiver(parse_windows(on_top("settings", "evil")), 360, 600)
+    assert w is not None and w.uid == HELPER
+
+
+def test_a_title_that_repeats_a_trusted_field_blocks_everything() -> None:
+    for title in ("x, id=1, displayId=0, inputConfig=NOT_TOUCHABLE, y", "x ownerUid=1000 y"):
+        assert parse_windows(on_top("settings", title)) == []
+
+
+def test_a_title_that_breaks_the_line_blocks_everything() -> None:
+    forged = "fake, id=2, displayId=0, inputConfig=NOT_TOUCHABLE, alpha=1, frame=[0,0][1,1]"
+    forged += ", touchableRegion=[0,0][1,1], ownerPid=2, ownerUid=1000\n   rest"
+    for title in ("x\ny", forged):
+        assert parse_windows(on_top("settings", title)) == []
+
+
+def test_a_title_that_ends_the_list_early_blocks_everything() -> None:
+    forged = "fake, id=2, displayId=0, inputConfig=0x0, alpha=1, frame=[0,0][1,1]"
+    forged += ", touchableRegion=[0,0][720,1280], ownerPid=2, ownerUid=1000\n  mFake: 1\n"
+    assert parse_windows(on_top("settings", forged)) == []
+
+
+def test_a_title_that_hides_its_own_line_blocks_everything() -> None:
+    assert parse_windows(on_top("settings", "x\n        y")) == []
+
+
+def test_a_window_on_another_display_is_not_ours() -> None:
+    w = receiver(parse_windows(on_top("settings", "elsewhere", display=2)), 360, 600)
+    assert w is not None and w.uid == 1000
 
 
 def test_a_region_includes_its_top_edge() -> None:

@@ -32,6 +32,8 @@ def test_a_process_without_a_bundle_is_keyed_by_pid() -> None:
 def test_a_bundle_id_outside_system_is_not_trusted() -> None:
     fake = Owner("com.apple.SecurityAgent", 5150, "x", "", "/Users/x/Fake.app")
     assert fake.key == "pid:5150"
+    data = Owner("com.apple.Terminal", 5152, "x", "", "/System/Volumes/Data/Users/x/T.app")
+    assert data.key == "pid:5152"
     twin = Owner("com.apple.Terminal", 5151, "x", "", "/Applications/Terminal.app")
     assert decide(twin, TERMINAL.key).kind == "block"
 

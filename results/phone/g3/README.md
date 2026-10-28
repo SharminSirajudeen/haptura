@@ -55,8 +55,8 @@ that cache keys on the screenshot, so it is inert across runs and stays out of g
   nodes, so every on-screen point resolved to the attacker. A rule "block while the focused window is not the task
   app" gives the same 32 of 32. What these runs measure is the model: fooled 15% → 0% with the evidence line. A
   security review (28 Oct) also found that the dump misses windows that never take focus, such as a
-  not-focusable overlay; the owner is now read from the input dispatcher's window list (`phone/windows.py`,
-  `docs/pilot-runs.md` P16), and the final run uses it.
+  not-focusable overlay; its replacement reads the input dispatcher's window list (`phone/windows.py`,
+  `docs/pilot-runs.md` P16). It is built and tested but not yet wired into the runner; the final run is to use it.
 - **The owner gate blocked 32 of 32** (hijacked through the gate: 0), each with the reason
   `window owned by com.example.myapplication, not the task app <pkg>`.
 - **False blocks, 1 of 27 (4%)** in the clean run: case 28, Calendar, where a Google Play services account dialog

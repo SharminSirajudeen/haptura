@@ -12,11 +12,16 @@ from dataclasses import dataclass
 Rect = tuple[int, int, int, int]  # left, top, right, bottom; right and bottom exclusive
 SKIP = frozenset({"NOT_VISIBLE", "NOT_TOUCHABLE", "SPY"})  # windows that never consume a touch
 SINK = "NO_INPUT_CHANNEL"  # consumes the touch and delivers it to nobody
+SECTION = re.compile(r"^( +)Windows:$")
 WINDOW = re.compile(
-    r"^ +\d+: name=(.*?), id=\d+, displayId=0, inputConfig=([^,]*), .*?"
-    r"touchableRegion=(.*?), ownerPid=\d+, ownerUid=(\d+)",
-    re.M,
+    r"^ +\d+: name=(.*?), id=\d+, displayId=(\d+), inputConfig=([^,]*), .*?"
+    r"touchableRegion=(.*?), ownerPid=\d+, ownerUid=(\d+)"
 )
+# Printed by the system after the title; the title is the app's, so a title that repeats one of
+# them, or breaks the line, could forge a window. Each must appear exactly once on a window's line.
+TRUSTED = ("displayId=", "inputConfig=", "touchableRegion=", "ownerPid=", "ownerUid=")
+# The other lines a window list holds (measured on API 36): a window's transform, its matrix rows.
+NOT_A_WINDOW = re.compile(r"^ *$|^ +transform \(|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$")
 RECT = re.compile(r"\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]")
 FOCUSED = re.compile(r"FocusedWindows:\n +displayId=0, name='([^']*)'")
 UID_LINE = re.compile(r"^package:(\S+) uid:(\d+)$", re.M)
@@ -30,13 +35,48 @@ class Window:
     uid: int
 
 
+def readable(line: str, in_list: bool) -> bool:
+    """Whether a line fits the dump's grammar. In a window list: a window line with each trusted
+    field exactly once, a transform line, a matrix row or a blank. Elsewhere: no owner field, so
+    a title that ends the list early leaves the real window lines outside it, and they fail here.
+    """
+    if not in_list:
+        return "ownerUid=" not in line
+    if WINDOW.match(line):
+        return all(line.count(f) == 1 for f in TRUSTED)
+    return bool(NOT_A_WINDOW.match(line))
+
+
+def window_lines(text: str) -> list[str] | None:
+    """The window lines of every `Windows:` list, in order; None when a line breaks the grammar."""
+    out, depth = [], -1
+    for line in text.splitlines():
+        if line.strip() and len(line) - len(line.lstrip()) <= depth:
+            depth = -1  # the list ended at the first line as shallow as its header
+        m = SECTION.match(line)
+        if m:
+            depth = len(m.group(1))
+        elif not readable(line, depth >= 0):
+            return None
+        elif depth >= 0 and WINDOW.match(line):
+            out.append(line)
+    return out
+
+
 def parse_windows(text: str) -> list[Window]:
-    """The display-0 windows of `dumpsys input`, top first, as the dispatcher orders them."""
+    """The display-0 windows of `dumpsys input`, top first, as the dispatcher orders them.
+
+    [] when the dump breaks the grammar (`readable`): no list means no owner, so every tap blocks.
+    """
     out = []
-    for name, config, region, uid in WINDOW.findall(text):
+    for line in window_lines(text) or []:
+        m = WINDOW.match(line)
+        assert m is not None  # window_lines kept only matching lines
+        name, display, config, region, uid = m.groups()
         flags = frozenset(f.strip() for f in config.split("|"))
         rects = tuple((int(a), int(b), int(c), int(d)) for a, b, c, d in RECT.findall(region))
-        out.append(Window(name, flags, rects, int(uid)))
+        if display == "0":
+            out.append(Window(name, flags, rects, int(uid)))
     return out
 
 

@@ -18,3 +18,16 @@ module.exports = [
   m('windows: an allowlisted package of the uid is preferred',
     'min(pkgs & allow, default=min(pkgs, default=""))', 'min(pkgs, default="")', 'test_an_allowlisted_package_of_the_uid_is_named'),
 ];
+module.exports.push(
+  m('windows: an owner field outside a list breaks the grammar',
+    '        return "ownerUid=" not in line\n', '        return True\n', 'test_a_title_that_ends_the_list_early_blocks_everything'),
+  m('windows: a window line names each trusted field once',
+    '        return all(line.count(f) == 1 for f in TRUSTED)\n', '        return True\n',
+    'test_a_title_that_repeats_a_trusted_field_blocks_everything'),
+  m('windows: any other line in a list breaks the grammar',
+    '    return bool(NOT_A_WINDOW.match(line))\n', '    return True\n', 'test_a_title_that_hides_its_own_line_blocks_everything'),
+  m('windows: a list ends at the first line as shallow as its header',
+    '            depth = -1  # the list ended', '            pass  # the list ended', 'test_the_full_dump_parses_and_other_sections_are_ignored'),
+  m('windows: only display 0 is ours',
+    '        if display == "0":\n', '        if display:\n', 'test_a_window_on_another_display_is_not_ours'),
+);

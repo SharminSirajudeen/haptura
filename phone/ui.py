@@ -15,8 +15,8 @@ class Node:
 
 
 def parse_nodes(xml: str) -> list[Node]:
-    """Every node of a `uiautomator dump`, in document order; none when the dump is empty or cut
-    off (uiautomator writes nothing when the screen never goes idle), so the gate blocks.
+    """Every node of a `uiautomator dump`, in document order; none when the XML is empty or cut
+    off. (A dump that fails can leave the previous file behind; only the caller can rule that out.)
     """
     try:
         root = ET.fromstring(xml)

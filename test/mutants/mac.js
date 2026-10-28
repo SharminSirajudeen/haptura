@@ -18,10 +18,16 @@ module.exports = [
 ];
 module.exports.push(
   { from:'mac: a bundle id counts only under /System/', file:'mac/owner.py',
-    find:'        if self.bundle and self.path.startswith(SYSTEM_DIR):\n', replace:'        if self.bundle:\n',
+    find:'        if self.bundle and self.path.startswith(SYSTEM_DIR) and not self.path.startswith(DATA_DIR):\n',
+    replace:'        if self.bundle:\n',
     mustFail:T, cmd:`${PY} ${T}`, expect:`FAILED ${T}::test_a_bundle_id_outside_system_is_not_trusted` },
   { from:'mac: notification and authorisation dialogs are not allowlisted', file:'mac/owner.py',
     find:'MAC_SYSTEM_ALLOW = frozenset({"com.apple.dock", "com.apple.systemuiserver"})',
     replace:'MAC_SYSTEM_ALLOW = frozenset({"com.apple.dock", "com.apple.systemuiserver", "com.apple.UserNotificationCenter"})',
     mustFail:T, cmd:`${PY} ${T}`, expect:`FAILED ${T}::test_the_dock_is_allowlisted` },
+);
+module.exports.push(
+  { from:'mac: the writable data volume under /System/ is not trusted', file:'mac/owner.py',
+    find:' and not self.path.startswith(DATA_DIR):\n', replace:':\n',
+    mustFail:T, cmd:`${PY} ${T}`, expect:`FAILED ${T}::test_a_bundle_id_outside_system_is_not_trusted` },
 );

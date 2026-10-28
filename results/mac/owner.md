@@ -34,7 +34,7 @@ Runs 2 and 3: `10 of 10 classified correctly` each (`owner-proof-repeats.txt`).
 - With the screen locked (an earlier session) the hit-test returned -25200; unlocked it returned 0 at every point.
 
 **Hardened after the 28 Oct security review, then rerun: 10 of 10 in each of 3 runs again**
-(`owner-proof-hardened.txt`). Two changes. An app's bundle id counts only when the app lives under `/System/`
+(`owner-proof-hardened.txt`, `-2.txt`, `-3.txt`). Two changes. An app's bundle id counts only when the app lives under `/System/`
 (sealed by System Integrity Protection); every other process is keyed by its pid, so a fake app cannot claim the
 task app's or a system app's id. And the allowlist is now only the Dock and SystemUIServer: UserNotificationCenter
 and SecurityAgent were dropped, because any process can put its own text in their dialogs.
