@@ -4,7 +4,8 @@ Muse Spark makes every act, probe or decline call through three tools; the execu
 and every number. One flag separates the conditions: `gated=True` puts S13 before `act`, S14 after
 each act block and the advice line under each table; `gated=False` (baseline a) removes exactly
 those three. The world (T9 `run_block`), the diagnosis (S14 `diagnose`) and the model (S8
-`muse_turn`) are arguments, so production passes the real functions and the tests pass fakes.
+`muse_turn`) are arguments: production passes `gate.episode.run_block`, `gate.gate.diagnose` and
+`gate.meta_api.muse_turn`, and the tests pass fakes.
 
 The agent never sees ground truth: ids are carried across blocks from tracked positions (S9), and
 `_controls` is the only reader of the arena's binding and true positions; its answer sets the
@@ -17,6 +18,7 @@ import json
 import math
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -32,6 +34,7 @@ from gate.constants import (
     PROBE_STEPS,
 )
 from gate.control import control_scores, design_block
+from gate.episode import Tracker
 from gate.gate import PROBE_SEED, _mine, check_act, rule_policy  # _mine: lane C makes it public
 from gate.meta_api import MuseReply, ToolCall
 from gate.trackers import _last, match_ids  # _last: lane B will make it public
@@ -49,8 +52,7 @@ from gate.types import (
 
 Body = Mapping[str, Vec | None]
 Goal = tuple[float, float, float, float]
-Tracker = Callable[..., Tracks]  # frames for SAM and colour, the arena history for truth (T9)
-RunBlock = Callable[[Arena, Sequence[str], Tracker, bool], tuple[Frames, Tracks, str]]
+RunBlock = Callable[[Arena, Sequence[str], Tracker, bool, Path | None], tuple[Frames, Tracks]]
 Diagnose = Callable[
     [Body, Sequence[str], Tracks, int, tuple[Sequence[str], Tracks] | None], Diagnosis
 ]
@@ -123,6 +125,7 @@ class _Run:
     arena: Arena
     tracker: Tracker
     gated: bool
+    clips: Path | None
     run_block: RunBlock
     diagnose: Diagnose
     rng: np.random.Generator
@@ -142,15 +145,17 @@ def run_episode(
     condition: str,
     gated: bool,
     *,
+    clips: Path | None,
     run_block: RunBlock,
     diagnose: Diagnose,
     muse_turn: MuseTurn,
 ) -> EpisodeLog:
     """S8 turns until an act reaches the goal, a decline, a false act, MAX_MUSE_CALLS or
-    MAX_FRAMES; the conversation is carried by `previous_response_id`."""
+    MAX_FRAMES; the conversation is carried by `previous_response_id`. Block k's clip is saved as
+    `clips/kk.mp4` when `clips` is set."""
     scenario: Scenario = arena.scenario
     rng = np.random.default_rng([scenario.seed, DESIGN_STREAM])
-    run = _Run(arena, tracker, gated, run_block, diagnose, rng)
+    run = _Run(arena, tracker, gated, clips, run_block, diagnose, rng)
     usage = dict.fromkeys(USAGE, 0)
     given: str | list[dict[str, Any]] = _task(scenario.goal)
     previous: str | None = None
@@ -249,14 +254,16 @@ def _block(run: _Run, actions: tuple[str, ...], phase: str) -> Tracks | None:
     if run.frames + len(actions) + 1 > MAX_FRAMES:
         run.outcome = "timeout"
         return None
-    _, raw, clip = run.run_block(run.arena, actions, run.tracker, phase == "act")
+    clip = None if run.clips is None else run.clips / f"{len(run.blocks):02d}.mp4"
+    _, raw = run.run_block(run.arena, actions, run.tracker, phase == "act", clip)
     ids = match_ids(raw, run.reference)
     tracks = {ids[i]: pos for i, pos in raw.items()}
     for i, pos in tracks.items():
         last = _last(pos)
         if last is not None:
             run.reference[i] = last
-    run.blocks.append(BlockRecord(run.steps, phase, actions, clip, tracks, (), None, None, None))
+    path = "" if clip is None else str(clip)
+    run.blocks.append(BlockRecord(run.steps, phase, actions, path, tracks, (), None, None, None))
     run.frames += len(actions) + 1
     run.steps += len(actions)
     return tracks

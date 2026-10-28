@@ -8,11 +8,13 @@ at step 0, which no lag-0 grouping can make significant; element 2 never moves w
 experiment draws its 30 actions from the agent's own stream; on it the subject ends at (38, 64)
 under the identity body and at (28, 64) with `right` dead. The goal box (92..108, 56..72) has its
 centre (100, 64) 31 cells right of (38, 64), so 30 steps of `right` end at x = 98, inside the box.
-S14 is scripted here (its own tests are lane C's); S9, S10, S12, S13 and S15 are the real ones.
+S14 is scripted here (its own tests are lane C's); T9, S9, S10, S12, S13 and S15 are the real
+ones, T9 wrapped where a test needs the tracker to err.
 """
 
 from collections import Counter
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -20,6 +22,7 @@ import numpy as np
 from gate.agent import PROMPT, Body, Diagnose, RunBlock, _live, _pool, _steer, run_episode
 from gate.arena import BODIES, Arena
 from gate.constants import BLOCK_STEPS, MAX_FRAMES, MAX_MUSE_CALLS
+from gate.episode import Tracker, run_block, truth_slice
 from gate.meta_api import MuseReply, ToolCall
 from gate.trackers import truth_tracker
 from gate.types import Decision, Diagnosis, Element, EpisodeLog, Frames, Scenario, Tracks
@@ -71,25 +74,22 @@ class Muse:
 
 
 def runner(swap_block: int = -1, hide_block: int = -1) -> RunBlock:
-    """T9's role: the arena steps, truth tracks; in block `swap_block` ids 0 and 2 trade places
-    from frame 25 on, the way a tracker swaps two look-alikes; in `hide_block` id 0 is not seen."""
+    """T9's run_block with a tracker that errs: in block `swap_block` ids 0 and 2 trade places from
+    frame 25 on, the way a tracker swaps two look-alikes; in `hide_block` id 0 is not seen."""
     done = [0]
 
-    def run_block(
-        arena: Arena, actions: Sequence[str], tracker: Any, acting: bool
-    ) -> tuple[Frames, Tracks, str]:
-        arena.start_block()
-        for a in actions:
-            arena.step(a, acting)
-        tracks = tracker(arena.history[-len(actions) - 1 :])
+    def erring(
+        arena: Arena, actions: Sequence[str], tracker: Tracker, acting: bool, clip: Path | None
+    ) -> tuple[Frames, Tracks]:
+        frames, tracks = run_block(arena, actions, tracker, acting, clip)
         if done[0] == swap_block:
             tracks[0][25:], tracks[2][25:] = tracks[2][25:].copy(), tracks[0][25:].copy()
         if done[0] == hide_block:
             del tracks[0]
         done[0] += 1
-        return np.zeros((len(actions) + 1, 1, 1, 3), np.uint8), tracks, f"clips/{done[0]}.mp4"
+        return frames, tracks
 
-    return run_block
+    return erring
 
 
 def scripted(*after_acts: str, probe: str = "body_changed", fix: str = "fix") -> Diagnose:
@@ -111,14 +111,20 @@ def scripted(*after_acts: str, probe: str = "body_changed", fix: str = "fix") ->
 
 
 def play(
-    arena: Arena, muse: Muse, gated: bool, run_block: RunBlock | None = None, diagnose: Any = None
+    arena: Arena,
+    muse: Muse,
+    gated: bool,
+    blocks: RunBlock = run_block,
+    diagnose: Diagnose | None = None,
+    clips: Path | None = None,
 ) -> EpisodeLog:
     return run_episode(
         arena,
-        truth_tracker,
+        truth_slice(arena, truth_tracker),
         "gated+truth" if gated else "no-gate+truth",
         gated,
-        run_block=run_block or runner(),
+        clips=clips,
+        run_block=blocks,
         diagnose=diagnose or scripted(),
         muse_turn=muse,
     )
@@ -133,6 +139,7 @@ def test_gated_refuses_an_unsupported_act_and_ungated_runs_it() -> None:
     assert table.endswith("advice: act 0: object 0 is the single mine and reaches the goal")
     assert muse.heard(2) == "refused: object 2 is not mine; object 0 is"
     assert [b.phase for b in log.blocks] == ["probe"] and len(log.blocks[0].actions) == BLOCK_STEPS
+    assert log.blocks[0].clip_path == ""  # no clips directory, no clip
     assert log.blocks[0].decision == Decision("refused", 2, "object 2 is not mine; object 0 is")
     assert log.outcome == "decline"
     assert {s[0] for s in muse.sent} == {PROMPT}
@@ -215,6 +222,14 @@ def test_a_target_the_tracker_loses_is_probed_and_handed_back() -> None:
     assert [b.phase for b in log.blocks] == ["probe", "act", "probe"]
     assert stale is not None and stale.kind == "stale" and 0 in log.blocks[2].tracks
     assert log.outcome == "decline"
+
+
+def test_each_block_saves_its_clip_under_the_name_the_episode_passed(tmp_path: Path) -> None:
+    muse = Muse(EXPERIMENT, ("act", {"object_id": 0}))
+    log = play(world(), muse, True, clips=tmp_path)
+    assert log.outcome == "success"
+    assert [b.clip_path for b in log.blocks] == [str(tmp_path / "00.mp4"), str(tmp_path / "01.mp4")]
+    assert all(Path(b.clip_path).stat().st_size > 0 for b in log.blocks)
 
 
 def test_muse_turns_stop_at_max_muse_calls() -> None:

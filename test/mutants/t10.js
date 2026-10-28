@@ -19,7 +19,7 @@ module.exports = [
   m('T10: usage adds every turn', 'total["input_tokens"] += usage.get("input_tokens", 0)', 'total["input_tokens"] = usage.get("input_tokens", 0)', REFUSE),
   m('T10: MAX_MUSE_CALLS turns, not one more', 'for _ in range(MAX_MUSE_CALLS):', 'for _ in range(MAX_MUSE_CALLS + 1):', 'test_muse_turns_stop_at_max_muse_calls'),
   m('T10: MAX_FRAMES is reachable, not a bar below it', 'if run.frames + len(actions) + 1 > MAX_FRAMES:', 'if run.frames + len(actions) + 1 >= MAX_FRAMES:', 'test_frames_stop_at_max_frames'),
-  m('T10: act blocks run on the acting clock', 'run.tracker, phase == "act")', 'run.tracker, False)', BODY),
+  m('T10: act blocks run on the acting clock', 'run.tracker, phase == "act", clip)', 'run.tracker, False, clip)', BODY),
   m('T10: the eyes fix swaps the ids back', '            run.reference[a], run.reference[b] = run.reference[b], run.reference[a]\n', '', EYES),
   m('T10: the eyes fix takes no Muse turn', 'if run.outcome is None and kind == "stale":', 'if run.outcome is None and kind in ("stale", "eyes_swapped"):', EYES),
   m('T10: a stale block runs the diagnostic probe', '            return _probe(run, target, body)\n', '            return "stale"\n', BODY),
@@ -33,5 +33,7 @@ module.exports = [
   m('T10: steering takes the nearest predicted position', 'a = min(live, key=', 'a = max(live, key=', 'test_steer_takes_the_live_action_nearest_the_goal_and_skips_a_dead_one'),
   m('T10: a dead action is not steered with', 'if v is not None and math.hypot(*v) >= EFFECT_MIN}', 'if v is not None}', 'test_steer_takes_the_live_action_nearest_the_goal_and_skips_a_dead_one'),
   m('T10: an id a block missed keeps its last position', '    for i, pos in tracks.items():\n        last = _last(pos)\n', '    run.reference.clear()\n    for i, pos in tracks.items():\n        last = _last(pos)\n', 'test_a_target_the_tracker_loses_is_probed_and_handed_back'),
+  m('T10: block k\'s clip is clips/kk.mp4', 'f"{len(run.blocks):02d}.mp4"', 'f"{len(run.blocks)}.mp4"', 'test_each_block_saves_its_clip_under_the_name_the_episode_passed'),
+  m('T10: no clips directory records no clip', 'path = "" if clip is None else str(clip)', 'path = str(clip)', REFUSE),
   m('T10: the shared frame is kept once', 't.get(i, g)[min(k, 1) :]', 't.get(i, g)', 'test_pool_joins_blocks_on_their_shared_frame'),
 ];
