@@ -279,8 +279,8 @@ def one_way(m: Mapping[str, Vec]) -> list[Vec]:
 
 
 def test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall() -> None:
-    # 21: the agent's own probe drifts an element the one way it can go; a goal in mid-frame on
-    # that axis can be passed for good, a goal on the wall cannot.
+    # issue 21: the agent's own probe drifts an element the one way it can go; a goal in mid-frame
+    # on that axis can be passed for good, a goal on the wall cannot.
     hand = make_scenario(0, "feasible")
     assert hand.action_maps[0][1]["up"] == (0.0, 0.0)  # hand: seed 0 draws `up` dead, so...
     assert hand.goal[1::2] == (112.0, 128.0)  # ...the 16 px goal sits on the bottom wall of 128
@@ -302,7 +302,7 @@ def toward_goal(sc: Scenario) -> list[list[str]]:
 
 
 def test_a_body_remap_changes_the_action_that_moves_toward_the_goal() -> None:
-    # 21: a remap that leaves this action alone never shows in the steering, so S14 cannot see it
+    # issue 21: a remap that leaves this action alone never shows in the steering, so S14 misses it
     hand = make_scenario(2, "body_remap")
     assert [m for _, m in hand.action_maps] == [IDENTITY, MIRROR_X]
     # hand: the goal (34, 60) is left of the subject (102, 60): `left` under identity, then `right`
