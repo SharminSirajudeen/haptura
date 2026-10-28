@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -32,6 +33,7 @@ from gate.constants import (
     MAX_FRAMES,
     MAX_LAG,
     MAX_MUSE_CALLS,
+    P_NOOP,
     PROBE_STEPS,
 )
 from gate.control import control_scores, design_block
@@ -322,6 +324,31 @@ def _row(e: Evidence, pos: Vec, gated: bool) -> str:
 def _say(advice: Decision) -> str:
     target = "" if advice.object_id is None else f" {advice.object_id}"
     return f"advice: {advice.kind}{target}: {advice.reason}"
+
+
+ADVICE = re.compile(
+    r"^advice: (act|probe|decline)(?: (\d+))?: (.*)$", re.M | re.ASCII
+)  # what _say writes
+RULES_PROBE = {"n": BLOCK_STEPS, "p_noop": P_NOOP, "dirs": list(DIRS)}  # EVAL.md's rules-only row
+
+
+def rules_turn(
+    instructions: str, given: str | list[dict[str, Any]], tools: Any, previous: str | None
+) -> MuseReply:
+    """The rules-only condition: S15 decides, through the same loop and tools as Muse (a MuseTurn).
+
+    Each turn answers with the tool call the latest advice line names; with no advice yet, after
+    a refusal, or on advice to probe, it runs one full block over every direction.
+    """
+    said = given if isinstance(given, str) else "\n".join(str(o.get("output", "")) for o in given)
+    kind, target, reason = (ADVICE.findall(said) or [("probe", "", "")])[-1]
+    if kind == "act":
+        call = ToolCall("act", {"object_id": int(target)}, "rules")
+    elif kind == "decline":
+        call = ToolCall("decline", {"reason": reason}, "rules")
+    else:
+        call = ToolCall("run_experiment", dict(RULES_PROBE), "rules")
+    return MuseReply(f"rules: {kind}", (call,), "", {})
 
 
 def _act(run: _Run, object_id: Any, said: str) -> str:

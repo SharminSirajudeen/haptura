@@ -20,12 +20,22 @@ from typing import Any
 import numpy as np
 import pytest
 
-from gate.agent import PROMPT, Body, Diagnose, RunBlock, _live, _pool, _steer, run_episode
+from gate.agent import (
+    PROMPT,
+    Body,
+    Diagnose,
+    RunBlock,
+    _live,
+    _pool,
+    _steer,
+    rules_turn,
+    run_episode,
+)
 from gate.arena import BODIES, Arena
-from gate.constants import BLOCK_STEPS, MAX_FRAMES, MAX_LAG, MAX_MUSE_CALLS
+from gate.constants import BLOCK_STEPS, MAX_FRAMES, MAX_LAG, MAX_MUSE_CALLS, P_NOOP
 from gate.control import control_scores
 from gate.episode import Tracker, run_block, truth_slice
-from gate.gate import PROBE_SEED
+from gate.gate import PROBE_SEED, diagnose
 from gate.meta_api import MuseReply, ToolCall
 from gate.trackers import truth_tracker
 from gate.types import Decision, Diagnosis, Element, EpisodeLog, Frames, Scenario, Tracks
@@ -313,3 +323,42 @@ def test_bad_arguments_are_answered_and_run_nothing() -> None:
     assert muse.heard(2).startswith("unknown object 9")
     assert muse.heard(3).startswith("unknown tool fly")
     assert log.blocks == () and log.outcome == "decline"
+
+
+def test_rules_turn_answers_the_latest_advice_line() -> None:
+    later = [{"output": "t\nadvice: probe: 2 mine"}, {"output": "t\nadvice: act 3: 3 is mine"}]
+    act = rules_turn(PROMPT, later, None, None).tool_calls[0]
+    assert (act.name, act.arguments) == ("act", {"object_id": 3})
+    out = [{"output": "advice: decline: every p0 is above 0.2"}]
+    decline = rules_turn(PROMPT, out, None, None).tool_calls[0]
+    assert (decline.name, decline.arguments) == ("decline", {"reason": "every p0 is above 0.2"})
+    first = rules_turn(PROMPT, "The goal box spans x 92 to 108.", None, None).tool_calls[0]
+    probe = {"n": BLOCK_STEPS, "p_noop": P_NOOP, "dirs": ALL}
+    assert (first.name, first.arguments) == ("run_experiment", probe)
+
+
+def rules_only(arena: Arena) -> EpisodeLog:
+    tracker = truth_slice(arena, truth_tracker)
+    return run_episode(
+        arena,
+        tracker,
+        "rules-only+truth",
+        True,
+        clips=None,
+        run_block=run_block,
+        diagnose=diagnose,
+        muse_turn=rules_turn,
+    )
+
+
+def test_rules_only_acts_on_the_single_mine_and_reaches_the_goal() -> None:
+    log = rules_only(world())
+    decisions = [b.decision.kind for b in log.blocks if b.decision]
+    assert log.outcome == "success" and decisions[0] == "act"
+    assert log.blocks[0].advice is not None and log.blocks[0].advice.kind == "act"
+
+
+def test_rules_only_declines_when_nothing_obeys() -> None:
+    log = rules_only(world(binding=((0, None),)))
+    assert log.outcome == "decline"
+    assert all(b.decision is None or b.decision.kind != "act" for b in log.blocks)
