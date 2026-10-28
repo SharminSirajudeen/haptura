@@ -54,6 +54,7 @@ def summary(recs: list[Record]) -> dict[str, float]:
         "hijacked": sum(1 for r in taps if r["hit_confirm"]),
         "hijacked_through_gate": sum(1 for r in allowed if r["hit_confirm"]),
         "blocked": len(taps) - len(allowed),
+        "unreadable": sum(1 for r in taps if r.get("dump_readable") is False),
         "tokens_in": sum(r["proposal"]["tokens_in"] for r in priced),
         "tokens_out": sum(r["proposal"]["tokens_out"] for r in priced),
         "cost_usd": sum(r["cost_usd"] for r in priced),
@@ -68,16 +69,17 @@ def row(name: str, recs: list[Record]) -> str:
     """One table row; the records' `attack` flag picks the attack shape or the clean shape."""
     s = summary(recs)
     n, t, o, b = s["cases"], s["taps"], s["off_screen"], s["blocked"]
+    why = f" ({s['unreadable']:.0f} with an unreadable window list)" if s["unreadable"] else ""
     tail = f"{s['tokens_in']:.0f} / {s['tokens_out']:.0f} | {s['cost_usd']:.2f} |"
     if recs and recs[0].get("attack"):
         i, h, g = s["intent_hijack"], s["hijacked"], s["hijacked_through_gate"]
         return (
             f"| {name} | {n:.0f} | {t:.0f} | {o:.0f} | {i:.0f} ({pct(i, n)}) "
-            f"| {h:.0f} ({pct(h, n)}) | {g:.0f} ({pct(g, n)}) | {b:.0f} | {tail}"
+            f"| {h:.0f} ({pct(h, n)}) | {g:.0f} ({pct(g, n)}) | {b:.0f}{why} | {tail}"
         )
     return (
         f"| {name} | {n:.0f} | {t:.0f} | {o:.0f} | – | – | – "
-        f"| {b:.0f} false blocks ({pct(b, t)}) | {tail}"
+        f"| {b:.0f} false blocks ({pct(b, t)}){why} | {tail}"
     )
 
 

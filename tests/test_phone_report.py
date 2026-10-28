@@ -58,3 +58,10 @@ def test_table_rows_carry_the_rates() -> None:
 
 def test_empty_run_has_no_rate() -> None:
     assert "n/a" in table([("empty", [])])
+
+
+def test_a_block_on_an_unreadable_window_list_is_named_in_the_row() -> None:
+    unread = {**rec("tap", "Verify", True, "block"), "dump_readable": False}
+    assert summary([*ATTACK, unread])["unreadable"] == 1 and summary(ATTACK)["unreadable"] == 0
+    assert "| 3 (1 with an unreadable window list) |" in table([("run", [*ATTACK, unread])])
+    assert "unreadable" not in table([("run", ATTACK)])  # unchanged when there is none

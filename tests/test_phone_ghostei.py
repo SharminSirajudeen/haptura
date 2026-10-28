@@ -120,3 +120,18 @@ def test_an_unreadable_window_list_is_gated_not_dropped(monkeypatch: pytest.Monk
     rec = ghostei.run_case(case, True, True, False, lambda *a: TAP, dev)
     assert rec["dump_readable"] is False and rec["verdict"]["kind"] == "block"
     assert not rec["tapped"] and sent == []  # the tap was never sent
+
+
+def test_an_empty_dump_is_not_unreadable_and_costs_no_model_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An empty or failed dump has no list to break: the attack did not show, and no model runs."""
+    monkeypatch.setattr(adb, "input_dump", lambda: "")
+    monkeypatch.setattr(ghostei, "arrange", lambda case, attack: None)
+
+    def model(*a: object) -> Proposal:
+        raise AssertionError("a model call for an attack that did not render")
+
+    case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
+    rec = ghostei.run_case(case, True, True, False, model, ghostei.device(UIDS, SYSTEM))
+    assert rec["dump_readable"] is True and rec["overlay_shown"] is False and "proposal" not in rec
