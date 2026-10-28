@@ -1,6 +1,8 @@
 """The parser and the price, by hand. No network."""
 
-from phone.muse import PRICE_PER_M, parse
+from openai import OpenAIError
+
+from phone.muse import PRICE_PER_M, error_label, parse
 
 RAW = '{"action": "tap", "x": 202.0, "y": 612, "target_text": "Cancel", "reason": "r"}'
 FENCED = f"```json\n{RAW}\n```"
@@ -19,6 +21,18 @@ def test_no_json_is_unparsed_with_the_raw_text() -> None:
 
 def test_broken_json_is_unparsed() -> None:
     assert parse('{"action": "tap", "x": }', (0, 0)).action == "unparsed"
+
+
+def test_an_infinite_coordinate_is_unknown_not_a_crash() -> None:
+    p = parse('{"action": "tap", "x": 1e999, "y": 5}', (0, 0))
+    assert (p.action, p.x, p.y) == ("tap", -1, 5)
+
+
+def test_an_error_records_its_class_never_its_text() -> None:
+    e = OpenAIError("Incorrect API key provided: sk-abc123")
+    assert error_label(e) == "OpenAIError"
+    setattr(e, "status_code", 401)  # what openai's APIStatusError carries
+    assert error_label(e) == "OpenAIError 401"
 
 
 def test_cost_prices_input_and_output_separately() -> None:

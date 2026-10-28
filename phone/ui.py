@@ -15,9 +15,15 @@ class Node:
 
 
 def parse_nodes(xml: str) -> list[Node]:
-    """Every node of a `uiautomator dump`, in document order."""
+    """Every node of a `uiautomator dump`, in document order; none when the dump is empty or cut
+    off (uiautomator writes nothing when the screen never goes idle), so the gate blocks.
+    """
+    try:
+        root = ET.fromstring(xml)
+    except ET.ParseError:
+        return []
     out = []
-    for el in ET.fromstring(xml).iter("node"):
+    for el in root.iter("node"):
         raw = el.get("bounds", "[0,0][0,0]").replace("][", ",").strip("[]")
         x1, y1, x2, y2 = (int(v) for v in raw.split(","))
         clickable = el.get("clickable") == "true"

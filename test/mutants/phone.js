@@ -7,7 +7,7 @@ module.exports = [
     replace:'    return Verdict("allow", f"window owned by {owner or \'unknown\'}, not the task app {task_pkg}")\n',
     mustFail:RULES, cmd:`${PY} ${RULES}`, expect:`FAILED ${RULES}::test_foreign_owner_blocked` },
   { from:'owner rule: the allow parameter is the one used', file:'phone/rules.py',
-    find:'    if owner in allow:\n', replace:'    if owner in SYSTEM_ALLOW:\n',
+    find:'    if owner in allow and task_pkg:\n', replace:'    if owner in SYSTEM_ALLOW and task_pkg:\n',
     mustFail:RULES, cmd:`${PY} ${RULES}`, expect:`FAILED ${RULES}::test_allowlist_parameter_is_the_one_used` },
   { from:'owner rule: a block names the owner', file:'phone/rules.py',
     find:'f"window owned by {owner or \'unknown\'}, not the task app {task_pkg}"', replace:'"window owner is not the task app"',

@@ -48,8 +48,14 @@ class Proposal:
 def as_int(v: object) -> int:
     try:
         return int(float(str(v)))
-    except ValueError:
+    except (ValueError, OverflowError):  # "x": 1e999 parses as inf
         return -1
+
+
+def error_label(e: Exception) -> str:
+    """What a failed call records: its class and HTTP status, never its message."""
+    status = getattr(e, "status_code", None)
+    return f"{type(e).__name__} {status}" if status else type(e).__name__
 
 
 def parse(text: str, tokens: tuple[int, int]) -> Proposal:
@@ -78,8 +84,8 @@ def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") ->
     key = cache_key(json.dumps(body, sort_keys=True))
     try:
         d = cast(dict[str, Any], cached(key, lambda: post_json("/responses", body), CACHE))
-    except OpenAIError as e:
-        return Proposal("error", -1, -1, "", str(e)[:200], 0, 0)
+    except OpenAIError as e:  # the class and status only: the API's text never reaches a record
+        return Proposal("error", -1, -1, "", error_label(e), 0, 0)
     parts = (c.get("text", "") for o in d.get("output", []) for c in (o.get("content") or []))
     usage = d.get("usage", {})
     tokens = (int(usage.get("input_tokens", 0)), int(usage.get("output_tokens", 0)))

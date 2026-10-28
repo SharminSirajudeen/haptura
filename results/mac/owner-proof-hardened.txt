@@ -1,0 +1,12 @@
+task app: com.apple.Terminal Terminal | panel frame: 600,400,300,120
+(750,460) inside  owner=pid:22138 'swift-frontend' -> block OK
+(550,460) outside owner=com.apple.Terminal 'Terminal' -> allow OK
+(610,410) inside  owner=pid:22138 'swift-frontend' -> block OK
+(950,460) outside owner=com.apple.Terminal 'Terminal' -> allow OK
+(890,410) inside  owner=pid:22138 'swift-frontend' -> block OK
+(750,350) outside owner=com.apple.Terminal 'Terminal' -> allow OK
+(610,510) inside  owner=pid:22138 'swift-frontend' -> block OK
+(750,570) outside owner=com.apple.Terminal 'Terminal' -> allow OK
+(890,510) inside  owner=pid:22138 'swift-frontend' -> block OK
+(550,350) outside owner=com.apple.Terminal 'Terminal' -> allow OK
+10 of 10 classified correctly

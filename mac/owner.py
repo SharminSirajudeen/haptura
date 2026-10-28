@@ -16,13 +16,11 @@ from phone.rules import Verdict, check_tap
 
 HERE = Path(__file__).parent
 # System apps a desktop task legitimately clicks; bundle ids read from the system on 28 Oct.
-# WindowServer is not listed: the hit-test never returns it (the menu bar resolves to the front app)
-MAC_SYSTEM_ALLOW = frozenset({
-    "com.apple.dock",
-    "com.apple.systemuiserver",
-    "com.apple.UserNotificationCenter",  # permission and notification dialogs
-    "com.apple.SecurityAgent",  # password and authorisation dialogs
-})
+# WindowServer is not listed: the hit-test never returns it (the menu bar is the front app's).
+# UserNotificationCenter and SecurityAgent are not listed either: any process can put its own text
+# and buttons in their dialogs (security review, 28 Oct), so a click there asks a person.
+MAC_SYSTEM_ALLOW = frozenset({"com.apple.dock", "com.apple.systemuiserver"})
+SYSTEM_DIR = "/System/"  # sealed by System Integrity Protection, so its bundle ids are real
 PANEL = (600, 400, 300, 120)  # x, y, w, h of the proof's fake panel, top-left screen points
 OUTSIDE_PX = 50  # the plan's distance outside the panel for the allowed points
 
@@ -33,19 +31,25 @@ class Owner:
     pid: int
     name: str
     title: str
+    path: str  # where the app's bundle lives
 
     @property
     def key(self) -> str:
-        """What the gate compares: the bundle id, or the pid when the process has none."""
-        return self.bundle or (f"pid:{self.pid}" if self.pid else "")
+        """What the gate compares: the bundle id of an app under /System/, else the pid.
+
+        Any other app declares its own bundle id, so it could claim the task app's or a system id.
+        """
+        if self.bundle and self.path.startswith(SYSTEM_DIR):
+            return self.bundle
+        return f"pid:{self.pid}" if self.pid else ""
 
 
 def parse(line: str) -> Owner:
     """One line of mac/hit.swift; a failed hit-test is an owner nobody can name."""
     d = json.loads(line)
     if d["err"] != 0:
-        return Owner("", 0, "", "")
-    return Owner(d["bundle"], d["pid"], d["name"], d["title"])
+        return Owner("", 0, "", "", "")
+    return Owner(d["bundle"], d["pid"], d["name"], d["title"], d.get("path", ""))
 
 
 def owner_at(points: list[tuple[int, int]]) -> list[Owner]:

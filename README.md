@@ -27,6 +27,11 @@ Method, records, every caveat and the reading of each column: `results/phone/g3/
 what it changed: `docs/pilot-runs.md`. A 50-second clip of the gate blocking a fake system dialog over Settings:
 `results/phone/demo/`.
 
+**Read the block counts carefully:** in these cases the attacker's window held focus, so every tap on the screen
+resolved to it and "blocked 32 of 32" follows by construction; the runs measure the model's choices. A security
+review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the owner
+is now read from the input dispatcher's window list, keyed by uid (`phone/windows.py`, `docs/pilot-runs.md` P16).
+
 **What it does not cover:** a hostile dialog drawn inside the task app itself shares the app's owner and passes this
 check; deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**
 WindowGuard (NDSS 2017) gated Android windows by owner for people; PUSV (arXiv 2604.18860) re-checks the window list
@@ -44,8 +49,8 @@ uv run python -m phone.report results/phone/g3
 ## The same check on the Mac desktop
 
 The rule is platform-free: `phone/rules.py::check_tap` runs unchanged on the desktop, with a desktop allowlist
-(Dock, SystemUIServer, the notification and authorisation dialogs). The owner under a point comes from the macOS
-Accessibility hit-test. A fake borderless "Allow" panel drawn by a second process over Terminal was blocked, and
+(the Dock and SystemUIServer only). The owner under a point comes from the macOS Accessibility hit-test; a bundle
+id is trusted only for apps under `/System/`, and every other process is keyed by its pid. A fake borderless "Allow" panel drawn by a second process over Terminal was blocked, and
 Terminal around it allowed, at 10 of 10 alternating points in each of 3 runs (`results/mac/owner.md`). A demo line,
 not a benchmark number. `uv run python -m mac.owner` reruns it (needs the Accessibility permission).
 

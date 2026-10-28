@@ -43,5 +43,10 @@ def test_point_off_screen_reaches_nothing() -> None:
     assert node_at(NODES, 800, 10) is None
 
 
+def test_an_empty_or_cut_dump_has_no_nodes() -> None:
+    assert parse_nodes("") == []
+    assert parse_nodes(XML[: len(XML) // 2]) == []
+
+
 def test_bottom_edge_is_exclusive() -> None:
     assert node_at(NODES, 500, 789) is NODES[0]

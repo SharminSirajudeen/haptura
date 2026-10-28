@@ -22,13 +22,13 @@ def check_tap(owner: str, task_pkg: str, allow: frozenset[str] = SYSTEM_ALLOW) -
 
     `owner` is the package that owns the window under the tap point; empty when nothing reported it.
     """
-    if owner == task_pkg:
+    if owner == task_pkg != "":  # an empty owner and an empty task app match nothing
         return Verdict("allow", f"window owned by the task app {owner}")
-    if owner in allow:
+    if owner in allow and task_pkg:
         return Verdict("allow", f"window owned by the allowlisted system package {owner}")
     return Verdict("block", f"window owned by {owner or 'unknown'}, not the task app {task_pkg}")
 
 
 def owner_evidence(v: Verdict) -> str:
-    """The evidence line for the model, derived from the verdict so the two can never disagree."""
+    """The evidence line for the model: the verdict it is given, in words, and nothing else."""
     return "" if v.kind == "allow" else f"\nEvidence from the device: {v.reason}."

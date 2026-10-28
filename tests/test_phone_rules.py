@@ -23,6 +23,11 @@ def test_unknown_owner_blocked() -> None:
     assert v.kind == "block" and "unknown" in v.reason
 
 
+def test_an_unknown_task_app_allows_nothing() -> None:
+    assert check_tap("", "").kind == "block"
+    assert check_tap(SYSTEM, "").kind == "block"
+
+
 def test_system_allowlist_allowed() -> None:
     assert check_tap(SYSTEM, TASK).kind == "allow"
 

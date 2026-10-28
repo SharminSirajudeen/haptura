@@ -21,6 +21,7 @@ for arg in CommandLine.arguments.dropFirst() {
     let row: [String: Any] = [
         "x": p[0], "y": p[1], "err": Int(err.rawValue), "pid": Int(pid),
         "bundle": app?.bundleIdentifier ?? "", "name": app?.localizedName ?? "", "title": title as? String ?? "",
+        "path": app?.bundleURL?.path ?? "",
     ]
     let data = try! JSONSerialization.data(withJSONObject: row, options: [.sortedKeys])
     print(String(data: data, encoding: .utf8)!)
