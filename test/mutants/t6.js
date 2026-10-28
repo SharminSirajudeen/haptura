@@ -13,6 +13,12 @@ const BOOT = 'a pane draws with no frame callback or resize notice when the ', L
 const JS = 'web/app.js', HTML = 'web/index.html';
 const LINK = '<link rel="stylesheet" href="style.css">\n';
 module.exports = [
+  m('web: the layout fills the screen', 'web/style.css', 'header p { max-width: 70ch; }', 'header, main { max-width: 64rem; margin: 0 auto; } header p { max-width: 70ch; }',
+    'fill.spec.js', '6:3', 'the layout fills a 1440 px screen minus the gutter'),
+  m('web: no native controls over the clip', 'web/index.html', '<video muted playsinline preload="auto">', '<video muted playsinline controls preload="auto">',
+    'fill.spec.js', '15:1', 'nothing the browser draws covers the clip, and the scrubber moves the video'),
+  m('web: the scrubber moves the video', 'web/app.js', "  scrub.addEventListener('input', () => { video.currentTime = Number(scrub.value); });\n", '',
+    'fill.spec.js', '15:1', 'nothing the browser draws covers the clip, and the scrubber moves the video'),
   m('origin: an outside stylesheet (a fonts host)', HTML, LINK, LINK + '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter&display=swap">\n', 'origin.spec.js', '5:1', ORIGIN),
   m('origin: an outside script', HTML, LINK, LINK + '<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>\n', 'origin.spec.js', '5:1', ORIGIN),
   m('origin: an outside image', HTML, LINK, LINK + '<img src="https://example.com/pixel.gif" alt="">\n', 'origin.spec.js', '5:1', ORIGIN),

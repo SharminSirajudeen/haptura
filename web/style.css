@@ -24,7 +24,7 @@ body {
   color: var(--fg);
   font: 1rem/1.45 system-ui, sans-serif;
 }
-header, main { max-width: 64rem; margin: 0 auto; }
+header p { max-width: 70ch; } /* only text gets a reading width; the layout fills the screen */
 h1 { margin: 0 0 0.25rem; font-size: 1.5rem; }
 h2 { margin: 0 0 0.5rem; font-size: 1.1rem; text-transform: capitalize; }
 header p { margin: 0.25rem 0; }
@@ -36,7 +36,9 @@ main {
   margin-top: 1rem;
 }
 .pane { background: var(--card); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.75rem; min-width: 0; }
-.stage { position: relative; background: #000; }
+.stage { position: relative; background: #000; width: min(100%, 75vh); margin: 0 auto; } /* the square clip fits the viewport's height */
+.bar { display: flex; gap: 0.5rem; align-items: center; width: min(100%, 75vh); margin: 0.5rem auto 0; }
+.bar input { flex: 1; min-width: 0; }
 video, canvas { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; }
 canvas { position: absolute; inset: 0; pointer-events: none; }
 .caption p { margin: 0.35rem 0 0; font-size: 0.95rem; overflow-wrap: anywhere; }
