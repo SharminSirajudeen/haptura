@@ -125,9 +125,11 @@ def test_an_element_pressed_to_a_wall_is_mine_through_its_moves_along_it() -> No
     # kept: `left` from x 4 moves nothing (steps 0, 2, 7) and from x 6 moves -2 (steps 6, 12), so
     # its mean is -4/5 = -0.8, below EFFECT_MIN = 1: dead at the wall, which is what it is there.
     # right (5, 11), up (1, 8, 13) and down (3, 9, 14) are exact. The grand mean is (0, 0), so
-    # S = 5 * 0.64 + 2 * 4 + 3 * 4 + 3 * 4 = 35.2. A shuffle ties it only by permuting labels among
-    # equal displacements, the 3 lefts and 2 no-ops on the five (0, 0) steps: 5!/(3! 2!) = 10 of
-    # 15!/(5! 2! 3! 3! 2!) = 75,675,600 labellings, so p_0 = FLOOR, and the effect 2 makes it mine.
+    # S = 5 * 0.64 + 2 * 4 + 3 * 4 + 3 * 4 = 35.2. Counted exactly over the class-by-group tables,
+    # 164 of the 15!/(5! 2! 3! 3! 2!) = 75,675,600 labellings reach S >= 35.2 (permutations among
+    # equal displacements, swaps of equal-sized groups such as up and down, and 4 at S = 40), so
+    # PERMS shuffles are expected to reach it 9,999 * 164 / 75,675,600 = 0.02 times: p_0 = FLOOR
+    # (measured under seed 0), and the effect 2 makes it mine.
     # The old rule (drop a step at a wall) dropped all fifteen: no sample, never mine.
     acts = (
         *("left", "up", "left", "down", "noop", "right", "left", "left", "up", "down"),

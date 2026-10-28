@@ -4,6 +4,7 @@ const T = 'tests/test_control.py', F = 'gate/control.py';
 const m = (from, find, replace, test) => ({ from, file:F, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
 const FOLLOWER = 'test_perfect_follower_is_mine_at_the_floor_on_20_designs';
 const LOST = 'test_an_action_whose_every_step_is_lost_has_no_body';
+const WALL = 'test_an_element_pressed_to_a_wall_is_mine_through_its_moves_along_it';
 const NO_EVIDENCE = 'test_no_evidence_gives_p_one_at_every_lag_and_the_smaller_lag_on_a_tie';
 const ECHO = 'test_pure_echo_at_lag_2_is_echo_with_best_lag_2';
 const DESIGN = 'test_design_block_has_the_noop_rate_the_floor_and_balanced_directions';
@@ -16,6 +17,7 @@ module.exports = [
   m('S10: ties go to the smaller lag', 'best = 1 + int(np.argmin(p[1:]))', 'best = max_lag - int(np.argmin(p[:0:-1]))', NO_EVIDENCE),
   m('S10: lag k pairs a_t with d_{t+k}', 'lab, disp = labels[: len(labels) - k][keep], d[k:][keep]', 'lab, disp = labels[k:][keep], d[k:][keep]', ECHO),
   m('S10: a lost frame is dropped, not zero-filled', 'd = pos[1:] - pos[:-1]', 'd = np.diff(np.nan_to_num(pos), axis=0)', 'test_nan_gaps_are_dropped_not_zero_filled'),
+  m('S10: a step at a wall is kept (#24): the old rule, back', '    ok = ~np.isnan(d).any(axis=1)\n', '    far = (np.minimum(pos, 128 - pos) > 5).all(axis=1)\n    ok = ~np.isnan(d).any(axis=1) & far[:-1] & far[1:]\n', WALL),
   m('S10: a step with a NaN is dropped', 'ok = ~np.isnan(d).any(axis=1)\n', 'ok = np.ones(len(d), dtype=bool)\n', 'test_nan_gaps_are_dropped_not_zero_filled'),
   m('S10: the body is referenced to the no-op mean', 'e = means - means[names.index(NOOP)]', 'e = means', 'test_mirrored_follower_on_a_drift_is_mine_and_a_dead_action_has_no_effect'),
   m('S10: an action with no sample is None, not zero', 'a: None if np.isnan(e[i]).any() else', 'a: (0.0, 0.0) if np.isnan(e[i]).any() else', LOST),
