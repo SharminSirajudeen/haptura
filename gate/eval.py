@@ -163,16 +163,21 @@ def _overlapping(arena: Arena) -> Pairs:
 
 def occlusion(log: EpisodeLog, history: History, overlap: Sequence[Pairs]) -> dict[str, list[int]]:
     """Per block phase: [kept, scored, unscored] frames of overlap, counted per overlapping pair.
-    A pair's run of overlap frames is kept when each of its two elements is held by the same
-    tracker id on the frame before the run and on the frame after it; an element with no id on
-    either frame is not kept. A run touching the episode's first or last frame is unscored."""
+    A pair's run of overlap frames is kept when its two elements are held by the same tracker ids
+    on the nearest frame before the run and the nearest frame after it on which both are held
+    apart, searched only back to the pair's previous run and on to its next. Never held apart again
+    before the next run is not kept; no such frame before the run, or a run reaching the episode's
+    end, is unscored."""
     owner = _frame_owner(log)
     out = {"probe": [0, 0, 0], "act": [0, 0, 0]}
     for pair in sorted(set().union(*overlap)):
-        for lo, hi in _runs([pair in f for f in overlap]):
-            scored = lo > 0 and hi < len(overlap)
-            before = _holders(log, owner, history, lo - 1, pair) if scored else None
-            kept = before is not None and before == _holders(log, owner, history, hi, pair)
+        runs = _runs([pair in f for f in overlap])
+        for k, (lo, hi) in enumerate(runs):
+            start = runs[k - 1][1] if k else 0
+            stop = runs[k + 1][0] if k + 1 < len(runs) else len(overlap)
+            before = _held(log, owner, history, pair, range(lo - 1, start - 1, -1))
+            scored = before is not None and hi < len(overlap)
+            kept = scored and before == _held(log, owner, history, pair, range(hi, stop))
             for f in range(lo, hi):
                 tally = out[log.blocks[owner[f]].phase]
                 tally[0] += kept
@@ -181,13 +186,17 @@ def occlusion(log: EpisodeLog, history: History, overlap: Sequence[Pairs]) -> di
     return out
 
 
-def _holders(
-    log: EpisodeLog, owner: list[int], history: History, f: int, pair: tuple[int, int]
-) -> tuple[int, ...] | None:
-    """The tracker ids holding the pair's two true elements at frame f; None if one has none."""
-    b = log.blocks[owner[f]]
-    held = {true: tid for tid, true in true_ids(b.tracks, history[f], f - b.step0).items()}
-    return (held[pair[0]], held[pair[1]]) if pair[0] in held and pair[1] in held else None
+def _held(
+    log: EpisodeLog, owner: list[int], history: History, pair: tuple[int, int], frames: range
+) -> tuple[int, int] | None:
+    """The tracker ids holding the pair's two true elements on the first of `frames` where both
+    are held, by S9 at that frame; None if no frame has both."""
+    for f in frames:
+        b = log.blocks[owner[f]]
+        held = {true: tid for tid, true in true_ids(b.tracks, history[f], f - b.step0).items()}
+        if pair[0] in held and pair[1] in held:
+            return held[pair[0]], held[pair[1]]
+    return None
 
 
 def _frame_owner(log: EpisodeLog) -> list[int]:

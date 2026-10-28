@@ -48,11 +48,12 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
   did; `eyes_swapped` iff the tracker→true map (S9 per frame against `truth_tracker`) changed in that block;
 - the correct-decline rate on body_blocked;
 - identities kept through occlusion frames, per tracker: over frames where two elements' masks overlap by more than
-  half of one element's pixels (from S3's masks on the replayed arena), the fraction where each of the two overlapping
-  elements is held by the same tracker id (S9 per frame against the truth) on the frame before the overlap and on the
-  frame after it. An element held by no id on either frame is not kept; frames are counted per overlapping pair; a
-  run touching the episode's first or last frame has no frame on one side and is counted as unscored. Reported with
-  the count of such frames per block phase;
+  half of one element's pixels (from S3's masks on the replayed arena), the fraction where the two overlapping
+  elements are held by the same tracker ids (S9 per frame against the truth) on the nearest frame before the overlap
+  and the nearest frame after it on which both are held apart, searched only back to the pair's previous overlap and
+  on to its next. This scores swaps, not two touching look-alikes read as one blob. Never held apart again before the
+  next overlap is not kept; no such frame before it, or an overlap reaching the episode's end, is unscored. Frames are
+  counted per overlapping pair and reported, unscored ones too, per block phase;
 - how often Muse overruled S15's advice, and how often the overrule was right against this table; blocks used and
   false acts, rules-only against Muse;
 - input tokens, output tokens and SAM frames per episode, and **dollars per correct decision** (all Muse and SAM

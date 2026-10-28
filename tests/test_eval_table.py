@@ -245,9 +245,14 @@ def test_occlusion_is_kept_when_each_of_the_pair_keeps_its_id() -> None:
         10: np.array([NAN] * 3 + [[70.0, 10.0]] * 2),
     }
     assert ev.occlusion(one_block(renamed), third, pairs)["act"] == [2, 2, 0]
-    # element 1 held by no id on the frames either side: not kept
-    lost = {7: HELD[7], 8: np.array([NAN, [40.0, 10.0], [40.0, 10.0], NAN, [40.0, 10.0]])}
+    # element 1 is never held apart again after the run: not kept
+    lost = {7: HELD[7], 8: np.array([[40.0, 10.0]] * 3 + [NAN] * 2)}
     assert ev.occlusion(one_block(lost), STILL, pairs)["act"] == [0, 2, 0]
+    # element 1 merges with its neighbour on frame 3, then is held again by 8 on frame 4: kept
+    merged = {7: HELD[7], 8: np.array([[40.0, 10.0]] * 3 + [NAN, [40.0, 10.0]])}
+    assert ev.occlusion(one_block(merged), STILL, pairs)["act"] == [2, 2, 0]
+    # hand: a run reaching the episode's last frame has no frame after it: unscored
+    assert ev.occlusion(one_block(HELD), STILL, [E, E, E, P, P])["act"] == [0, 0, 2]
 
 
 def test_the_replay_rebuilds_the_runs_own_world() -> None:
