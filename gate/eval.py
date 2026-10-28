@@ -33,6 +33,8 @@ CONDITIONS = ("gated+SAM", "no-gate+SAM", "gated+colour", "rules-only+SAM", "gat
 KILL_CONDITIONS = CONDITIONS[:3]
 KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's suggested numbers; Sharmin confirms before T13
 History = Sequence[dict[int, Vec]]
+Pairs = frozenset[tuple[int, int]]
+KILL_SEEDS = range(20)  # EVAL.md: the kill rule is judged on seeds 0-19
 
 
 def acted_before(log: EpisodeLog, i: int) -> int:
@@ -68,12 +70,13 @@ def wilson(k: int, n: int) -> tuple[float, float]:
     return (mid - half, mid + half)
 
 
-def paired_difference(a: Iterable[EpisodeLog], b: Iterable[EpisodeLog]) -> float:
-    """The mean, over the (seed, case) pairs both conditions ran, of right(a) - right(b)."""
+def paired_difference(a: Iterable[EpisodeLog], b: Iterable[EpisodeLog]) -> tuple[float, int]:
+    """The mean, over the (seed, case) pairs both conditions ran, of right(a) - right(b), and the
+    number of pairs."""
     ra = {(x.scenario.seed, x.scenario.case): right(x) for x in a}
     rb = {(x.scenario.seed, x.scenario.case): right(x) for x in b}
     keys = ra.keys() & rb.keys()
-    return sum(ra[k] - rb[k] for k in keys) / len(keys) if keys else math.nan
+    return (sum(ra[k] - rb[k] for k in keys) / len(keys) if keys else math.nan), len(keys)
 
 
 def recovery_steps(log: EpisodeLog, kind: str) -> int | None:
@@ -129,22 +132,22 @@ def diagnosis_right(log: EpisodeLog, i: int, history: History) -> bool | None:
     )
 
 
-def replay(log: EpisodeLog) -> tuple[list[dict[int, Vec]], list[bool]]:
-    """The run's arena again: true positions per frame, and per frame whether two elements' masks
-    overlap by more than half of one element's pixels."""
+def replay(log: EpisodeLog) -> tuple[list[dict[int, Vec]], list[Pairs]]:
+    """The run's arena again: true positions per frame, and per frame the pairs of elements whose
+    masks overlap by more than half of one element's pixels."""
     arena = Arena(log.scenario)
-    overlap = [_overlaps(arena)]
+    overlap = [_overlapping(arena)]
     for b in log.blocks:
         arena.start_block()
         for a in b.actions:
             arena.step(a, b.phase == "act")
-            overlap.append(_overlaps(arena))
+            overlap.append(_overlapping(arena))
     return arena.history, overlap
 
 
-def _overlaps(arena: Arena) -> bool:
-    """Two masks share more than half of the smaller one's pixels; pairs ELEMENT_PX apart on an
-    axis cannot touch, so only nearer pairs are drawn."""
+def _overlapping(arena: Arena) -> Pairs:
+    """The pairs whose masks share more than half of the smaller one's pixels; pairs ELEMENT_PX
+    apart on an axis cannot touch, so only nearer pairs are drawn."""
     pos = arena.positions()
     near = [
         (i, j)
@@ -152,27 +155,39 @@ def _overlaps(arena: Arena) -> bool:
         for j in range(i + 1, len(pos))
         if np.abs(pos[i] - pos[j]).max() < ELEMENT_PX
     ]
-    if not near:
-        return False
-    m = masks(arena)
-    return any((m[i] & m[j]).sum() > min(m[i].sum(), m[j].sum()) / 2 for i, j in near)
+    m = masks(arena) if near else {}
+    return frozenset(
+        p for p in near if (m[p[0]] & m[p[1]]).sum() > min(m[p[0]].sum(), m[p[1]].sum()) / 2
+    )
 
 
-def occlusion(log: EpisodeLog, history: History, overlap: Sequence[bool]) -> dict[str, list[int]]:
-    """Per block phase: [kept, scored, unscored] overlap frames. A run of overlap frames is kept
-    when every tracked id maps to the same true id on the frame before it and the frame after it;
-    a run touching the episode's first or last frame has no such pair and is unscored."""
+def occlusion(log: EpisodeLog, history: History, overlap: Sequence[Pairs]) -> dict[str, list[int]]:
+    """Per block phase: [kept, scored, unscored] frames of overlap, counted per overlapping pair.
+    A pair's run of overlap frames is kept when each of its two elements is held by the same
+    tracker id on the frame before the run and on the frame after it; an element with no id on
+    either frame is not kept. A run touching the episode's first or last frame is unscored."""
     owner = _frame_owner(log)
     out = {"probe": [0, 0, 0], "act": [0, 0, 0]}
-    for lo, hi in _runs(overlap):
-        scored = lo > 0 and hi < len(overlap)
-        kept = scored and _ids_at(log, owner, history, lo - 1) == _ids_at(log, owner, history, hi)
-        for f in range(lo, hi):
-            tally = out[log.blocks[owner[f]].phase]
-            tally[0] += kept
-            tally[1] += scored
-            tally[2] += not scored
+    for pair in sorted(set().union(*overlap)):
+        for lo, hi in _runs([pair in f for f in overlap]):
+            scored = lo > 0 and hi < len(overlap)
+            before = _holders(log, owner, history, lo - 1, pair) if scored else None
+            kept = before is not None and before == _holders(log, owner, history, hi, pair)
+            for f in range(lo, hi):
+                tally = out[log.blocks[owner[f]].phase]
+                tally[0] += kept
+                tally[1] += scored
+                tally[2] += not scored
     return out
+
+
+def _holders(
+    log: EpisodeLog, owner: list[int], history: History, f: int, pair: tuple[int, int]
+) -> tuple[int, ...] | None:
+    """The tracker ids holding the pair's two true elements at frame f; None if one has none."""
+    b = log.blocks[owner[f]]
+    held = {true: tid for tid, true in true_ids(b.tracks, history[f], f - b.step0).items()}
+    return (held[pair[0]], held[pair[1]]) if pair[0] in held and pair[1] in held else None
 
 
 def _frame_owner(log: EpisodeLog) -> list[int]:
@@ -181,11 +196,6 @@ def _frame_owner(log: EpisodeLog) -> list[int]:
     for i, b in enumerate(log.blocks):
         owner[b.step0 :] = [i] * (len(b.actions) + 1)
     return owner
-
-
-def _ids_at(log: EpisodeLog, owner: list[int], history: History, f: int) -> dict[int, int]:
-    b = log.blocks[owner[f]]
-    return true_ids(b.tracks, history[f], f - b.step0)
 
 
 def _runs(flags: Sequence[bool]) -> list[tuple[int, int]]:
@@ -309,47 +319,70 @@ def column(
         "advice overruled (in right episodes)": f"{sum(map(overrules, logs))} "
         f"({sum(overrules(x) for x in logs if right(x))})",
         "blocks per episode": f"{sum(len(x.blocks) for x in logs) / n:.2f}",
+        "input / output tokens per episode": " / ".join(
+            f"{sum(x.usage.get(t, 0) for x in logs) / n:.0f}"
+            for t in ("input_tokens", "output_tokens")
+        ),
         "billed SAM frames per episode": f"{sum(map(billed_frames, logs)) / n:.0f}",
         "dollars per correct decision": usd,
         "input / output tokens per correct decision": tokens,
     }
 
 
-def kill_rule(by: dict[str, list[EpisodeLog]], kept: dict[str, float]) -> str:
-    """EVAL.md's numeric kill rule on the kill test's three conditions."""
+def kill_rule(logs: Sequence[EpisodeLog]) -> str:
+    """EVAL.md's numeric kill rule on seeds 0-19 of the kill test's three conditions. It says
+    rethink unless both arms clearly pass, so a number that could not be computed is a rethink."""
+    by = _by_condition([x for x in logs if x.scenario.seed in KILL_SEEDS])
     if not all(c in by for c in KILL_CONDITIONS):
-        return "Kill rule: not computed; it needs " + ", ".join(KILL_CONDITIONS) + "."
-    diff = paired_difference(by["gated+SAM"], by["no-gate+SAM"])
-    margin = kept["gated+SAM"] - kept["gated+colour"]
-    rethink = diff <= KILL_DIFF or margin < KILL_OCCLUSION
+        return "Kill rule: not computed; it needs seeds 0-19 of " + ", ".join(KILL_CONDITIONS) + "."
+    diff, pairs = paired_difference(by["gated+SAM"], by["no-gate+SAM"])
+    sam, colour = (kept_rate(replayed(by[c])[1]) for c in ("gated+SAM", "gated+colour"))
+    passes = kill_passes(diff, sam - colour)
     return (
-        f"Kill rule: paired difference (gated+SAM - no-gate+SAM) = {diff:.3f} "
-        f"(rethink at <= {KILL_DIFF}); "
-        f"SAM's kept rate - colour's = {margin:.3f} (rethink below {KILL_OCCLUSION}). "
-        + ("**Rethink.**" if rethink else "Passes.")
+        f"Kill rule, seeds 0-19: paired difference (gated+SAM - no-gate+SAM) = {diff:.3f} over "
+        f"{pairs} pairs (rethink at <= {KILL_DIFF}); identities kept through occlusion, SAM "
+        f"{sam:.3f} - colour {colour:.3f} = {sam - colour:.3f} (rethink below {KILL_OCCLUSION}). "
+        + ("Passes." if passes else "**Rethink.**")
     )
 
 
-def table(logs: Sequence[EpisodeLog]) -> str:
-    """results/table.md: a column per condition, EVAL.md's conditions first; then the kill rule."""
+def kill_passes(diff: float, margin: float) -> bool:
+    """Both arms clear: the paired difference above KILL_DIFF and SAM's lead in identities kept at
+    least KILL_OCCLUSION. Written as the passing condition, so NaN in either fails."""
+    return diff > KILL_DIFF and margin >= KILL_OCCLUSION
+
+
+def _by_condition(logs: Sequence[EpisodeLog]) -> dict[str, list[EpisodeLog]]:
     by: dict[str, list[EpisodeLog]] = {}
     for log in logs:
         by.setdefault(log.condition, []).append(log)
+    return by
+
+
+def table(logs: Sequence[EpisodeLog]) -> str:
+    """results/table.md: a column per condition, EVAL.md's conditions first; then the kill rule.
+    Two logs of one (condition, seed, case) are an error, never a silent double count."""
+    keys = [(x.condition, x.scenario.seed, x.scenario.case) for x in logs]
+    if len(set(keys)) != len(keys):
+        raise ValueError("two logs for one (condition, seed, case)")
+    by = _by_condition(logs)
     names = [c for c in CONDITIONS if c in by] + sorted(set(by) - set(CONDITIONS))
-    cols, kept = {}, {}
-    for c in names:
-        diag, occ = replayed(by[c])
-        cols[c], kept[c] = column(by[c], diag, occ), kept_rate(occ)
+    cols = {c: column(by[c], *replayed(by[c])) for c in names}
     rows = list(cols[names[0]]) if names else []
     lines = ["| | " + " | ".join(names) + " |", "|---|" + "---|" * len(names)]
     lines += [f"| {r} | " + " | ".join(cols[c][r] for c in names) + " |" for r in rows]
-    return "\n".join(["# Results (EVAL.md)", "", *lines, "", kill_rule(by, kept), ""])
+    seeds = sorted({x.scenario.seed for x in logs})
+    head = f"# Results (EVAL.md), seeds {seeds[0]}-{seeds[-1]}" if seeds else "# Results (EVAL.md)"
+    return "\n".join([head, "", *lines, "", kill_rule(logs), ""])
 
 
 def main(argv: Sequence[str]) -> None:
+    """[logs dir] [table] [first-last seeds]; every seed in the directory when no range is given."""
     logs_dir = Path(argv[0]) if argv else Path("results/logs")
     out = Path(argv[1]) if len(argv) > 1 else Path("results/table.md")
+    lo, hi = (int(x) for x in argv[2].split("-")) if len(argv) > 2 else (0, math.inf)
     logs = [from_json(p.read_text(), EpisodeLog) for p in sorted(logs_dir.rglob("*.json"))]
+    logs = [x for x in logs if lo <= x.scenario.seed <= hi]
     out.write_text(table(logs))
     print(f"{len(logs)} episodes from {logs_dir} -> {out}")
 

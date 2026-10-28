@@ -4,6 +4,11 @@ the replay. Prices are notes/api.md's: SAM $0.20 per 1k frames (50 at least per 
 $1.25 / $4.25 per million input / output tokens.
 """
 
+import functools
+import math
+from collections.abc import Sequence
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -125,6 +130,12 @@ def test_the_column_of_the_three_logs_by_hand() -> None:
     # $0.000425 + $0.02; all $0.09005 over 2 right = $0.0450
     assert cells["dollars per correct decision"] == "$0.0450"
     assert cells["input / output tokens per correct decision"] == "3000 / 300"  # 6000/2, 600/2
+    assert cells["input / output tokens per episode"] == "2000 / 200"  # hand: 6000/3, 600/3
+
+
+def test_two_logs_of_one_episode_are_an_error() -> None:
+    with pytest.raises(ValueError, match="two logs"):
+        ev.table([L1, L1])
 
 
 def test_a_diagnosis_is_scored_against_the_block_the_remap_fired_in() -> None:
@@ -136,20 +147,62 @@ def test_a_diagnosis_is_scored_against_the_block_the_remap_fired_in() -> None:
     assert ev.diagnosis_right(L2, 1, []) is None  # stale is neither eyes, body nor control
 
 
-def test_the_paired_difference_and_the_kill_rule() -> None:
-    gated = {"gated+SAM": LOGS}
-    worse = [
-        log(x.scenario.case, "timeout", list(x.blocks), (0, 0), x.scenario.events) for x in LOGS
-    ]
-    # hand: right 1, 1, 0 against 0, 0, 0 on the same three (seed, case) pairs: 2 / 3
-    assert ev.paired_difference(LOGS, worse) == pytest.approx(2 / 3)
-    by = gated | {"no-gate+SAM": worse, "gated+colour": LOGS}
-    line = ev.kill_rule(by, {"gated+SAM": 0.9, "no-gate+SAM": 0.9, "gated+colour": 0.6})
-    assert "= 0.667" in line and "= 0.300" in line and line.endswith("Passes.")
-    # hand: 0.9 - 0.75 = 0.15 < 0.20, so the occlusion arm says rethink
-    assert ev.kill_rule(by, {"gated+SAM": 0.9, "no-gate+SAM": 0.9, "gated+colour": 0.75}).endswith(
-        "**Rethink.**"
-    )
+def test_the_kill_decision_at_its_boundaries() -> None:
+    assert ev.kill_passes(0.15, 0.25)
+    assert not ev.kill_passes(0.10, 0.5)  # hand: EVAL.md rethinks at a difference <= 0.10
+    assert ev.kill_passes(0.11, 0.20)  # hand: and at an occlusion lead below 0.20, so 0.20 passes
+    assert not ev.kill_passes(0.5, 0.19)
+    assert not ev.kill_passes(math.nan, 0.5) and not ev.kill_passes(0.5, math.nan)
+
+
+@functools.cache
+def truth_logs(seed: int) -> tuple[EpisodeLog, ...]:
+    """Seed `seed`'s six cases, rules-only with the truth tracker."""
+    out = []
+    for case in (
+        "feasible",
+        "blocked",
+        "remap_feasible",
+        "remap_blocked",
+        "body_remap",
+        "body_blocked",
+    ):
+        arena = Arena(make_scenario(seed, case))
+        out.append(
+            run_episode(
+                arena,
+                truth_slice(arena, truth_tracker),
+                "gated+SAM",
+                True,
+                clips=None,
+                run_block=run_block,
+                diagnose=diagnose,
+                muse_turn=rules_turn,
+            )
+        )
+    return tuple(out)
+
+
+def relabel(logs: Sequence[EpisodeLog], condition: str, outcome: str = "") -> list[EpisodeLog]:
+    return [replace(x, condition=condition, outcome=outcome or x.outcome) for x in logs]
+
+
+def test_the_kill_line_on_real_logs() -> None:
+    gated = list(truth_logs(1))
+    assert ev.paired_difference(gated, relabel(gated, "x", "timeout")) == (1.0, 6)  # hand: 6 - 0
+    logs = gated + relabel(gated, "no-gate+SAM", "timeout") + relabel(gated, "gated+colour")
+    # hand: all six right against none, so 1.000 over 6 pairs; the truth tracker keeps every
+    # identity under both labels, so the lead is 0, below 0.20: rethink
+    line = ev.kill_rule(logs)
+    assert "= 1.000 over 6 pairs" in line and "SAM 1.000 - colour 1.000 = 0.000" in line
+    assert line.endswith("**Rethink.**")
+    # with no block run, no overlap is ever scored: NaN, which is a rethink, never a pass
+    empty = [replace(x, blocks=()) for x in gated]
+    blank = empty + relabel(empty, "no-gate+SAM", "timeout") + relabel(empty, "gated+colour")
+    assert "SAM nan" in ev.kill_rule(blank) and ev.kill_rule(blank).endswith("**Rethink.**")
+    # the rule is judged on seeds 0-19 only
+    late = [replace(x, scenario=replace(x.scenario, seed=100)) for x in logs]
+    assert ev.kill_rule(late).startswith("Kill rule: not computed")
 
 
 # Two true elements that never move, at x = 10 and x = 40; the block has 4 steps, 5 frames.
@@ -172,17 +225,29 @@ def test_the_eyes_truth_is_a_change_of_the_tracker_to_true_map() -> None:
     assert not ev.eyes_changed(one_block(HELD).blocks[0], STILL)
 
 
-def test_occlusion_is_kept_when_the_map_is_the_same_on_either_side_of_the_overlap() -> None:
-    flags = [False, True, True, False, False]  # hand: one overlap run, frames 1 and 2
-    # hand: before (frame 0) 7->0, 8->1; after (frame 3) 7->1, 8->0: 2 scored frames, none kept
-    assert ev.occlusion(one_block(SWAPPED), STILL, flags)["act"] == [0, 2, 0]
-    assert ev.occlusion(one_block(HELD), STILL, flags)["act"] == [2, 2, 0]
+P: ev.Pairs = frozenset({(0, 1)})
+E: ev.Pairs = frozenset()
+NAN = [math.nan, math.nan]
+
+
+def test_occlusion_is_kept_when_each_of_the_pair_keeps_its_id() -> None:
+    pairs = [E, P, P, E, E]  # hand: elements 0 and 1 overlap on frames 1 and 2
+    # hand: before (frame 0) 0 is held by 7 and 1 by 8; after (frame 3) by 8 and 7: none kept
+    assert ev.occlusion(one_block(SWAPPED), STILL, pairs)["act"] == [0, 2, 0]
+    assert ev.occlusion(one_block(HELD), STILL, pairs)["act"] == [2, 2, 0]
     # hand: a run on the first frame has no frame before it: unscored
-    assert ev.occlusion(one_block(HELD), STILL, [True, False, False, False, False])["act"] == [
-        0,
-        0,
-        1,
-    ]
+    assert ev.occlusion(one_block(HELD), STILL, [P, E, E, E, E])["act"] == [0, 0, 1]
+    # an id changing on element 2, outside the pair, does not count against the pair
+    third = [{**f, 2: (70.0, 10.0)} for f in STILL]
+    renamed = {
+        **HELD,
+        9: np.array([[70.0, 10.0]] * 3 + [NAN] * 2),
+        10: np.array([NAN] * 3 + [[70.0, 10.0]] * 2),
+    }
+    assert ev.occlusion(one_block(renamed), third, pairs)["act"] == [2, 2, 0]
+    # element 1 held by no id on the frames either side: not kept
+    lost = {7: HELD[7], 8: np.array([NAN, [40.0, 10.0], [40.0, 10.0], NAN, [40.0, 10.0]])}
+    assert ev.occlusion(one_block(lost), STILL, pairs)["act"] == [0, 2, 0]
 
 
 def test_the_replay_rebuilds_the_runs_own_world() -> None:
@@ -208,4 +273,4 @@ def test_two_elements_drawn_on_one_spot_overlap_and_apart_do_not() -> None:
         scenario("feasible", at=((64.0, 64.0), (64.0, 64.0))), "x", (), "", {}, {}
     )
     apart = EpisodeLog(scenario("feasible", at=((64.0, 64.0), (72.0, 64.0))), "x", (), "", {}, {})
-    assert ev.replay(together)[1] == [True] and ev.replay(apart)[1] == [False]
+    assert ev.replay(together)[1] == [frozenset({(0, 1)})] and ev.replay(apart)[1] == [frozenset()]
