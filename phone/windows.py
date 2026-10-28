@@ -16,7 +16,7 @@ DISPLAY = re.compile(r"^  Display: (\d+)$", re.ASCII)
 SECTION = re.compile(r"^    Windows:$")
 LIST_DEPTH = 4  # the indent of a `Windows:` header; its windows sit deeper
 WINDOW = re.compile(
-    r"^ +\d+: name=(.*?), id=\d+, displayId=(\d+), inputConfig=([^,]*), .*?"
+    r"^ +\d+: name=(.*?), id=-?\d+, displayId=(\d+), inputConfig=([^,]*), .*?"
     r"touchableRegion=(.*?), ownerPid=\d+, ownerUid=(\d+)",
     re.ASCII,
 )

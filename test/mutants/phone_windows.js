@@ -56,3 +56,7 @@ module.exports.push(
     '    return any(w.uid in mine and not w.flags & SKIP for w in windows)\n', '    return any(w.uid in mine for w in windows)\n',
     'test_the_overlay_is_shown_whether_or_not_it_has_focus'),
 );
+module.exports.push(
+  m('windows: a mirrored window may have a negative id', ', id=-?\\d+, displayId=', ', id=\\d+, displayId=',
+    'test_a_screen_recording_mirror_display_is_read_not_rejected'),
+);
