@@ -41,7 +41,8 @@ every forged title the security review built (`tests/test_phone_windows.py`); re
 source, such as an accessibility service's window list, would remove the text parsing altogether.
 
 **What it does not cover:** a hostile dialog drawn inside the task app itself shares the app's owner and passes this
-check; deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**
+check (measured: `docs/pilot-runs.md` P19; the press probe in `phone/probe.py` does not close it either, since it
+confirms where a press lands, not whether the agent should press there); deceptive text (a spoofed SMS, a misleading instruction) is out of scope. **Prior work it builds on:**
 WindowGuard (NDSS 2017) gated Android windows by owner for people; PUSV (arXiv 2604.18860) re-checks the window list
 before desktop clicks; GhostEI-Bench (arXiv 2510.20333, MIT) showed phone agents still fall for overlays. This repo
 adds the check a phone agent makes before it taps, and measures it on GhostEI.
