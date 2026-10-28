@@ -74,7 +74,9 @@ class Decision:
 @dataclass(frozen=True)
 class Diagnosis:
     kind: str  # ok | eyes_swapped | stale | body_changed | target_lost
-    fix: str
+    fix: str  # the reason, as shown to Muse
+    swap: tuple[int, int] | None  # the two tracker ids to swap back, for eyes_swapped
+    body: Mapping[str, Vec | None] | None  # the re-learned body map, for body_changed
 
 
 @dataclass(frozen=True)

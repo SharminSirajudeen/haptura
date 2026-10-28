@@ -58,7 +58,7 @@ def make_log() -> EpisodeLog:
         evidence=(evidence,),
         advice=Decision("act", 3, "single mine"),
         decision=Decision("act", 3, "followed the advice"),
-        diagnosis=Diagnosis("ok", ""),
+        diagnosis=Diagnosis("eyes_swapped", "ids 3 and 5 swapped at frame 14", (3, 5), None),
     )
     return EpisodeLog(
         scenario=scenario,
@@ -100,6 +100,9 @@ def test_mirrored_body_and_unsampled_action_survive() -> None:
     back = from_json(to_json(make_log()), EpisodeLog)
     assert back.scenario.action_maps[0][1]["right"] == (-2.0, 0.0)
     assert back.blocks[0].evidence[0].body["left"] is None
+    assert back.blocks[0].diagnosis is not None
+    assert back.blocks[0].diagnosis.swap == (3, 5)
+    assert back.blocks[0].diagnosis.body is None
 
 
 def test_alpha_act_is_computed_and_sits_above_the_permutation_floor() -> None:
