@@ -127,6 +127,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--gate", action="store_true", help="a blocked tap is not performed (the demo)")
     ap.add_argument("--inform", action="store_true", help="tell the model the window owner first")
     ap.add_argument("--limit", type=int, default=999)
+    ap.add_argument("--ids", default="", help="comma-separated case ids to run; default all")
     ap.add_argument("--budget", type=float, default=0.5, help="refuse above this spend, USD")
     a = ap.parse_args(argv)
     packages = adb.shell("pm list packages").splitlines()
@@ -135,7 +136,9 @@ def main(argv: list[str]) -> int:
         print(f"{HELPER} not installed: see notes/mac-lane.md (install the APK, allow the overlay)")
         return 1
     done = {r["id"] for r in (json.loads(ln) for ln in a.out.open())} if a.out.exists() else set()
+    wanted = {int(i) for i in a.ids.split(",") if i}
     todo = [c for c in cases(a.repo, installed, a.limit) if c["id"] not in done]
+    todo = [c for c in todo if not wanted or c["id"] in wanted]
     cost = len(todo) * EST_PER_CALL_USD
     msg = f"{len(todo)} cases: projected {cost:.2f} USD at {EST_PER_CALL_USD} each"
     print(f"{msg}; budget {a.budget}")

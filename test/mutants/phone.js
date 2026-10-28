@@ -52,3 +52,8 @@ module.exports.push(
     find:'    if recs and recs[0].get("attack"):\n', replace:'    if recs:\n',
     mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_table_rows_carry_the_rates` },
 );
+module.exports.push(
+  { from:'report: off-screen checks x as well as y', file:'phone/report.py',
+    find:'    return not (0 <= x < s[0] and 0 <= y < s[1])\n', replace:'    return not (0 <= y < s[1])\n',
+    mustFail:REPORT, cmd:`${PY} ${REPORT}`, expect:`FAILED ${REPORT}::test_clean_counts_by_hand` },
+);

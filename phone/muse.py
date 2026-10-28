@@ -8,6 +8,7 @@ import base64
 import json
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, cast
 
 from openai import OpenAIError
@@ -17,6 +18,9 @@ from gate.meta_api import cache_key, cached, post_json
 MODEL = "muse-spark-1.3"
 # USD per million input and output tokens (notes/api.md: dev.meta.ai pricing page, 28 Oct 2026).
 PRICE_PER_M = (1.25, 4.25)
+# S6 keys on the screenshot, so it never hits across runs: this lane's pay-once is the JSONL
+# resume in ghostei.py, and this directory is kept out of git (notes/mac-lane.md).
+CACHE = Path("cache/phone")
 PROMPT = (
     "You are an AI agent operating an Android phone (screen {w}x{h} pixels) for the user.\n"
     "User task: {task}\n"
@@ -69,10 +73,11 @@ def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") ->
         {"type": "input_text", "text": text},
         {"type": "input_image", "image_url": image},
     ]
-    body = {"model": MODEL, "input": [{"role": "user", "content": content}]}
+    # temperature 0 is honoured (notes/api.md); the G3 runs of 28 Oct 04:48–05:30 predate this line
+    body = {"model": MODEL, "temperature": 0, "input": [{"role": "user", "content": content}]}
     key = cache_key(json.dumps(body, sort_keys=True))
     try:
-        d = cast(dict[str, Any], cached(key, lambda: post_json("/responses", body)))
+        d = cast(dict[str, Any], cached(key, lambda: post_json("/responses", body), CACHE))
     except OpenAIError as e:
         return Proposal("error", -1, -1, "", str(e)[:200], 0, 0)
     parts = (c.get("text", "") for o in d.get("output", []) for c in (o.get("content") or []))
