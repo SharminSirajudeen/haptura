@@ -7,7 +7,13 @@ const EYES = 'test_an_eyes_swap_is_corrected_without_a_muse_turn';
 const BODY = 'test_a_body_remap_ends_in_body_changed_with_the_new_map_and_the_goal_reached';
 const LOST = 'test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprobe';
 const EYES_FIRST = 'test_the_eyes_fix_comes_before_the_goal_check';
+const TIE = 'test_a_tie_on_the_last_frame_is_told_apart_along_the_targets_own_track';
+const HELD = 'test_a_tie_held_through_the_whole_block_is_not_control';
 module.exports = [
+  m('#37: a tie is walked back one frame at a time', '        if len(near) == 1:\n            break\n', '        break\n', TIE),
+  m('#37: the walk follows the track that ends on the target', 'if _last(t) == pos]', 'if False]', TIE),
+  m('#37: the target\'s own track first when two end on its pixel', 'sorted(tracks.items(), key=lambda it: it[0] != target)', 'tracks.items()', TIE),
+  m('#37: a tie that lasts the block is not control', 'return near == {arena._at(arena.scenario.binding_schedule)}', 'return arena._at(arena.scenario.binding_schedule) in near', HELD),
   m('T10: a gated act goes through S13', 'check_act(run.evidence, object_id) if run.gated else', 'Decision("act", object_id, said) if run.gated else', REFUSE),
   m('T10: an ungated act skips S13', 'if run.gated else Decision("act", object_id, said)', 'if True else Decision("act", object_id, said)', REFUSE),
   m('T10: an ungated act runs no S14', 'found = run.diagnose(body, actions, tracks, target, None) if run.gated else None', 'found = run.diagnose(body, actions, tracks, target, None)', LOST),

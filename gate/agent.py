@@ -439,11 +439,22 @@ def _steer(live: Mapping[str, Vec], start: Vec, aim: Vec) -> tuple[str, ...]:
 
 
 def _controls(run: _Run, target: int) -> bool:
-    """The one read of ground truth, for the outcome only: S9 matches the target's tracked position
-    to the nearest true element, which must be the element the arena binds now."""
-    arena = run.arena
-    true = match_ids({target: np.array([run.reference[target]])}, arena.history[-1])
-    return true[target] == arena._at(arena.scenario.binding_schedule)  # _at: public per issue #6
+    """The one read of ground truth, for the outcome only: the true element nearest the target's
+    tracked position must be the element the arena binds now. Two on one pixel, which a wall's
+    clamp can hold there, are told apart along the track that ends there, the target's own first,
+    one frame back at a time (#37); a pair that shared every frame of the block is a tie, and a
+    tie is not control."""
+    arena, pos = run.arena, run.reference[target]
+    tracks = run.blocks[-1].tracks if run.blocks else {}
+    ends = [t for i, t in sorted(tracks.items(), key=lambda it: it[0] != target) if _last(t) == pos]
+    near = set(arena.history[-1])
+    for seen, frame in zip((ends[0] if ends else np.array([pos]))[::-1], reversed(arena.history)):
+        if not np.isnan(seen).any():
+            gap = {e: math.dist(seen, frame[e]) for e in near}
+            near = {e for e in near if gap[e] == min(gap.values())}
+        if len(near) == 1:
+            break
+    return near == {arena._at(arena.scenario.binding_schedule)}  # _at: public per issue #6
 
 
 def _in_goal(pos: Vec, goal: Goal) -> bool:
