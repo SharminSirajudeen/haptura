@@ -2,7 +2,7 @@
 # before the first paid run (T13), and never edited afterwards.
 
 ## What is measured, exactly
-Every condition runs the same episodes: each **seed** runs **all six cases**, one episode per (seed, case).
+Each condition that runs uses the same episodes: each **seed** runs **all six cases**, one episode per (seed, case).
 - **Kill test (T13):** seeds 0–19 → 120 episodes per condition.
 - **Final run (T14):** seeds 100–199 → 600 episodes per condition, or the longest prefix of that range the credit
   allows; the n is written here before the run and reported with every number.
@@ -17,25 +17,27 @@ Every condition runs the same episodes: each **seed** runs **all six cases**, on
 | gated+truth (upper bound) | Muse Spark | on | `truth_tracker` |
 
 ### Correct outcome per case (the eval scores against this table)
-| Case | Correct outcome |
-|---|---|
-| feasible | `success` |
-| blocked | `decline` |
-| remap_feasible | `success`, after a re-probe once the control moved |
-| remap_blocked | `decline`, after the remap |
-| body_remap | `success`, after relearning the body |
-| body_blocked | `decline` citing the body |
+| Case | Correct outcome | Checked in the log as |
+|---|---|---|
+| feasible | `success` | `outcome == success` |
+| blocked | `decline` | `outcome == decline` |
+| remap_feasible | `success`, after a re-probe once the control moved | `success`, and a probe block or a `target_lost` diagnosis at or after the remap step |
+| remap_blocked | `decline`, after the remap | `decline`, issued at or after the remap step |
+| body_remap | `success`, after relearning the body | `success`, and a `body_changed` diagnosis at or after the remap step |
+| body_blocked | `decline` citing the body | `decline`, issued after some block labelled an element `mine` (control found, goal out of reach), not "nothing obeys" |
 
-**The six-case score** of a condition = the fraction of its episodes whose `EpisodeLog.outcome` matches this table.
+The qualifier is part of correctness: an episode that ends right for the wrong reason scores as wrong.
+
+**The six-case score** of a condition = the fraction of its episodes that pass the right-hand column.
 **Check-in** = a `probe` or `decline` Decision after acting began. `false_act` = an `act` ran (S13 passed, or
 ungated) on an element the arena's binding did not control at that step; the executor sets it from the arena it
 owns. `timeout` = `MAX_FRAMES` or `MAX_MUSE_CALLS` reached.
 
 ### Headline
-1. The correct act / check-in / decline rate on the blocked and remap cases (blocked, remap_feasible, remap_blocked,
-   body_blocked), together with
-2. the success rate on the feasible cases (feasible, remap_feasible, body_remap).
-Both per condition, with a 95% Wilson interval at the run's n.
+Two disjoint numbers, per condition, each with a 95% Wilson interval at the run's n:
+1. the correct rate on the **five blocked and remap cases** (blocked, remap_feasible, remap_blocked, body_remap,
+   body_blocked), scored by the right-hand column above: the act / check-in / decline calls;
+2. the success rate on the **feasible case**: the cost side, so a gate that declines everything shows it here.
 
 ### Supporting, per condition
 - false-action rate under decoys and echoes: episodes with outcome `false_act` / all episodes;
@@ -50,11 +52,14 @@ Both per condition, with a 95% Wilson interval at the run's n.
   id maps to the same true id before and after the overlap; reported with the count of such frames per block phase;
 - how often Muse overruled S15's advice, and how often the overrule was right against this table; blocks used and
   false acts, rules-only against Muse;
-- tokens and SAM frames per episode, and **tokens per correct decision** (Muse output tokens / episodes with the
-  correct outcome). SAM frames are billed at a 50-frame minimum per call; the eval reports billed frames.
+- input tokens, output tokens and SAM frames per episode, and **dollars per correct decision** (all Muse and SAM
+  spend of the condition / its episodes that pass the table), with input and output tokens per correct decision
+  beside it (T2 measured about 6 input tokens per output token, so output alone would understate it). SAM frames
+  are billed at a 50-frame minimum per call; the eval reports billed frames.
 
 ### Kill rule (T13), numeric. Suggested 28 Oct; Sharmin confirms before the run
-Rethink if either holds on seeds 0–19:
+The kill test runs three conditions only: gated+SAM, no-gate+SAM and gated+colour. Rethink if either holds on seeds
+0–19:
 1. the mean paired difference (gated+SAM − no-gate+SAM) on the six-case score is ≤ 0.10;
 2. SAM's identities-kept-through-occlusion rate beats the colour tracker's by less than 0.20.
 
