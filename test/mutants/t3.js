@@ -80,3 +80,12 @@ module.exports = [
   m('S3: the circle has radius ELEMENT_PX / 2', 'dx * dx + dy * dy < HALF * HALF', 'dx * dx + dy * dy < HALF', MASKS),
   m('S3: the triangle fills its box', '(dy + HALF + 0.5) / 2', '(dy + HALF) / 2', MASKS),
 ];
+// #21: a feasible-type case stays reachable whatever the agent's own probe does, and a body remap shows in the steering.
+const WALL = 'test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall';
+const TOWARD = 'test_a_body_remap_changes_the_action_that_moves_toward_the_goal';
+module.exports.push(
+  m('S1: on a one-way axis the goal sits on the wall', '        g[axis] = W - GOAL_PX // 2 if sign > 0 else GOAL_PX // 2\n', '        g[axis] = g[axis]\n', WALL),
+  m('S1: the live side\'s wall, not the dead side\'s', 'W - GOAL_PX // 2 if sign > 0 else', 'W - GOAL_PX // 2 if sign < 0 else', WALL),
+  m('S1: a one-way axis must be the goal\'s', ' if ways <= {u})', ')', WALL),
+  m('S1: a body remap changes the action toward the goal', ' & changed if ', ' if ', TOWARD),
+);

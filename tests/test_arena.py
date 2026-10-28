@@ -272,6 +272,46 @@ def test_the_goal_lies_along_a_live_action_unless_the_body_is_blocked() -> None:
             assert all(np.dot(IDENTITY[dead], c - pos) > 0 for c in corners)
 
 
+def one_way(m: Mapping[str, Vec]) -> list[Vec]:
+    """The live steps of a map whose opposite step is dead: the axis it leaves one-way."""
+    live = {v for v in m.values() if v != (0.0, 0.0)}
+    return [v for v in live if (-v[0], -v[1]) not in live]
+
+
+def test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall() -> None:
+    # 21: the agent's own probe drifts an element the one way it can go; a goal in mid-frame on
+    # that axis can be passed for good, a goal on the wall cannot.
+    hand = make_scenario(0, "feasible")
+    assert hand.action_maps[0][1]["up"] == (0.0, 0.0)  # hand: seed 0 draws `up` dead, so...
+    assert hand.goal[1::2] == (112.0, 128.0)  # ...the 16 px goal sits on the bottom wall of 128
+    for sc in scenarios():
+        pos = np.array(sc.elements[0].pos)
+        lo, hi = np.array(sc.goal[:2]), np.array(sc.goal[2:])
+        way = np.sign((lo + hi) / 2 - pos)
+        steps = [v for _, m in sc.action_maps for v in one_way(m)]
+        for v in steps if sc.case != "body_blocked" else []:
+            k = 0 if v[0] else 1
+            assert way[k] == np.sign(v[k]) and (hi[k] == W if v[k] > 0 else lo[k] == 0)
+
+
+def toward_goal(sc: Scenario) -> list[list[str]]:
+    """Per map of the body schedule, the actions that step the subject straight at the goal."""
+    centre = np.array([sc.goal[0] + sc.goal[2], sc.goal[1] + sc.goal[3]]) / 2
+    want = tuple(2.0 * np.sign(centre - np.array(sc.elements[0].pos)))
+    return [[a for a, v in m.items() if v == want] for _, m in sc.action_maps]
+
+
+def test_a_body_remap_changes_the_action_that_moves_toward_the_goal() -> None:
+    # 21: a remap that leaves this action alone never shows in the steering, so S14 cannot see it
+    hand = make_scenario(2, "body_remap")
+    assert [m for _, m in hand.action_maps] == [IDENTITY, MIRROR_X]
+    # hand: the goal (34, 60) is left of the subject (102, 60): `left` under identity, then `right`
+    assert toward_goal(hand) == [["left"], ["right"]]
+    for sc in scenarios("body_remap"):
+        first, then = toward_goal(sc)
+        assert first != then, sc.seed
+
+
 def test_same_seed_same_scenario_and_same_world() -> None:
     assert make_scenario(7, "remap_feasible") == make_scenario(7, "remap_feasible")
     assert make_scenario(7, "feasible") != make_scenario(8, "feasible")
