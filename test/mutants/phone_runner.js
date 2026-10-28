@@ -19,3 +19,8 @@ module.exports = [
     '    "com.android.systemui",  # system dialogs and the notification shade\n    "com.google.android.permissioncontroller",\n',
     R, 'test_the_permission_controller_is_not_allowlisted'),
 ];
+const UNREAD = 'test_an_unreadable_window_list_is_gated_not_dropped';
+module.exports.push(
+  m('runner: an unreadable window list is gated, not dropped (#19)', 'phone/ghostei.py', 'if attack and wins and not rec["overlay_shown"]:', 'if attack and not rec["overlay_shown"]:', G, UNREAD),
+  m('runner: the record says whether the window list was readable', 'phone/ghostei.py', '"dump_readable": bool(wins)', '"dump_readable": True', G, UNREAD),
+);

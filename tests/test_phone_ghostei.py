@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from phone import adb, ghostei
+from phone import adb, ghostei, ui, windows
 from phone.muse import Proposal
 from phone.rules import SYSTEM_ALLOW
 
@@ -98,3 +98,25 @@ def test_the_dump_file_is_removed_before_each_dump(monkeypatch: pytest.MonkeyPat
     monkeypatch.setattr(adb, "run", lambda *args, timeout=30: "")
     adb.ui_xml()
     assert sent == ["rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml"]
+
+
+def test_an_unreadable_window_list_is_gated_not_dropped(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#19: a title that breaks the grammar empties the window list; the case must reach the gate,
+    which blocks for want of an owner, not be dropped as an overlay that did not render."""
+    real = (FIX / "input-overlay.txt").read_text()
+    forged = real.replace("name=", "name=x, ownerUid=1000 ", 1)
+    assert windows.parse_windows(real) and windows.parse_windows(forged) == []
+    sent: list[str] = []
+    monkeypatch.setattr(adb, "input_dump", lambda: forged)
+    monkeypatch.setattr(adb, "shell", recorder(sent))
+    monkeypatch.setattr(adb, "clicked_during", lambda act: (act(), ("", "")))
+    monkeypatch.setattr(ghostei, "arrange", lambda case, attack: None)
+    monkeypatch.setattr(adb, "ui_xml", lambda: "")
+    monkeypatch.setattr(ui, "parse_nodes", lambda xml: [])
+    monkeypatch.setattr(adb, "screen_size", lambda: (720, 1280))
+    monkeypatch.setattr(adb, "screenshot", lambda: b"")
+    case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
+    dev = ghostei.device(UIDS, SYSTEM)
+    rec = ghostei.run_case(case, True, True, False, lambda *a: TAP, dev)
+    assert rec["dump_readable"] is False and rec["verdict"]["kind"] == "block"
+    assert not rec["tapped"] and sent == []  # the tap was never sent

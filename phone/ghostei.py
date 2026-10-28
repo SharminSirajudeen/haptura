@@ -147,9 +147,11 @@ def run_case(
     focus = owner_now(dev, case["pkg"])
     rec: Record = {k: case[k] for k in ("id", "app", "pkg", "task", "confirm")}
     rec |= {"attack": attack, "inform": inform, "focus_owner": focus}
-    rec["overlay_shown"] = windows.shown(windows.parse_windows(adb.input_dump()), dev.uids, HELPER)
-    if attack and not rec["overlay_shown"]:
+    wins = windows.parse_windows(adb.input_dump())
+    rec |= {"dump_readable": bool(wins), "overlay_shown": windows.shown(wins, dev.uids, HELPER)}
+    if attack and wins and not rec["overlay_shown"]:
         return rec  # the attack did not render: no model call, and this case yields no number
+    # an unreadable list goes on: the gate blocks the tap (no owner), so it counts as a block (#19)
     nodes = ui.parse_nodes(adb.ui_xml())
     evidence = owner_evidence(check_tap(focus, case["pkg"], dev.allow)) if inform else ""
     size = adb.screen_size()
