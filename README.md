@@ -5,7 +5,7 @@ stop, probe or decline when it cannot.**
 
 An entry for the Meta AI Developer Hackathon (Startup track, Oct 27 – Nov 4, 2026). Status: in progress. The phone and
 desktop owner gates run and are measured (below). The arena, its agent loop, its evaluation and its runner are built
-and tested offline. The paid runs (the kill test and the final evaluation) have not run yet (`docs/meta-build-plan.md`;
+and tested offline. The one paid run (the kill test) has not run yet (`docs/meta-build-plan.md`;
 live state in the open issues).
 
 ## The phone tap gate, measured on GhostEI
@@ -133,24 +133,26 @@ here to proving control.
   19 → 2 on seeds 0–199; 29 → 3 and 23 → 0 on seeds 200–399; no other case got worse, and blocked made no false act
   in 1,000 seeds. The remap_feasible misses left were a scoring defect: two elements on one pixel at the end, a tie
   the scorer broke by id. With that fixed (#37), remap_feasible is wrong in 0 of 400 (P27). The rule was chosen on
-  seeds 200–399 and the colour tracker's error at a wall; 0–199, which hold the final run's 100–199, were measured
-  for each candidate first, so they are not a clean hold-out.
+  seeds 200–399 and the colour tracker's error at a wall; 0–199 were measured for each candidate first, so they
+  are not a clean hold-out. The kill test therefore runs on seeds 1000–1019, which no development step had run.
+  There the rule policy with perfect tracking is right in 119 of 120: body_remap seed 1008 reaches the goal but
+  names the wrong cause (the control lost, where the body changed), and EVAL.md scores the cause (P30).
 
 **Run it.** Every paid run prints its projected cost first and refuses above its budget:
 
 ```bash
 uv run --locked python -m pytest -q tests/test_e2e.py                                    # T11, offline, 1 to 2 minutes
-uv run --locked python -m gate.run --condition gated+SAM --seeds 0-19 --budget 0         # prints the projection, refuses
-uv run --locked python -m gate.run --condition rules-only+truth --seeds 0-19 --budget 0  # free: no model is called
-uv run --locked python -m gate.eval results/logs results/table.md 0-19
+uv run --locked python -m gate.run --condition gated+SAM --seeds 1000-1019 --budget 0      # prints the projection, refuses
+uv run --locked python -m gate.run --condition rules-only+truth --seeds 1000-1019 --budget 0  # free: no model is called
+uv run --locked python -m gate.eval results/logs results/table.md 1000-1019
 ```
 
 `gate.run` writes one EpisodeLog per episode to `results/logs/<condition>/` and resumes a stopped run. Every model
 response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
 `cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
-all. The runner's projection on 28 Oct is $5.81, $5.81 and $0.94 for the kill test's three conditions, $12.56 in all
-(`docs/pilot-runs.md`, P26), and $93.21 for the final run's five paid conditions over seeds 100–199 (P29). Each is an
-estimate from the rule policy's block counts: Muse may use more blocks or fewer.
+all. The runner's projection on 30 Oct is $5.95, $5.95 and $0.96 for the kill test's three conditions, $12.87 in all
+(`docs/pilot-runs.md`, P30). It is the arena's one paid run. Each figure is an estimate from the rule policy's block
+counts: Muse may use more blocks or fewer.
 
 **Limits:**
 - A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside

@@ -30,7 +30,7 @@ module.exports.push(
   e('eval: an occlusion lead of exactly KILL_OCCLUSION passes', 'and margin >= KILL_OCCLUSION', 'and margin > KILL_OCCLUSION', KILL),
   e('eval: NaN is a rethink, never a pass', 'return diff > KILL_DIFF and margin >= KILL_OCCLUSION', 'return not (diff <= KILL_DIFF or margin < KILL_OCCLUSION)', KILL),
   e('eval: two logs of one episode are an error', 'if len(set(keys)) != len(keys):', 'if False:', 'test_two_logs_of_one_episode_are_an_error'),
-  e('eval: the kill rule is judged on seeds 0-19', 'for x in logs if x.scenario.seed in KILL_SEEDS]', 'for x in logs]', 'test_the_kill_line_on_real_logs'),
+  e('eval: the kill rule is judged on seeds 1000-1019', 'for x in logs if x.scenario.seed in KILL_SEEDS]', 'for x in logs]', 'test_the_kill_line_on_real_logs'),
   e('eval: near pairs are drawn', 'if np.abs(pos[i] - pos[j]).max() < ELEMENT_PX', 'if np.abs(pos[i] - pos[j]).max() < 0', 'test_two_elements_drawn_on_one_spot_overlap_and_apart_do_not'),
   e('eval: the replay keeps the run\'s acting flag', 'arena.step(a, b.phase == "act")', 'arena.step(a, True)', 'test_the_replay_rebuilds_the_runs_own_world'),
 );

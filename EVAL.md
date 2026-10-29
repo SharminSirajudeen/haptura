@@ -3,9 +3,10 @@
 
 ## What is measured, exactly
 Each condition that runs uses the same episodes: each **seed** runs **all six cases**, one episode per (seed, case).
-- **Kill test (T13):** seeds 0–19 → 120 episodes per condition.
-- **Final run (T14):** seeds 100–199 → 600 episodes per condition, or the longest prefix of that range the credit
-  allows; the n is written here before the run and reported with every number.
+- **Kill test (T13):** seeds 1000–1019 → 120 episodes per condition: n = 100 for the five-case headline and n = 20
+  for feasible, reported with every number. It is the arena's one paid run, so its numbers are the ones reported,
+  and no development step had run these seeds (all six cases ran up to seed 399, blocked up to 999;
+  `docs/pilot-runs.md`, P30).
 
 ### Conditions
 | Condition | Agent | Gate (S13, S14, advice line) | Tracker |
@@ -15,6 +16,8 @@ Each condition that runs uses the same episodes: each **seed** runs **all six ca
 | gated+colour (baseline b) | Muse Spark | on | `colour_tracker` |
 | rules-only+SAM | none: S15 decides, S12 probes with `n=BLOCK_STEPS, p_noop=P_NOOP`, all directions (`usage.muse_calls` counts S15's decisions, at 0 tokens; `MAX_MUSE_CALLS` caps them) | on | `sam_tracker` |
 | gated+truth (upper bound) | Muse Spark | on | `truth_tracker` |
+
+Only the kill test's three conditions run (below); rules-only+SAM and gated+truth are defined, not run.
 
 ### Correct outcome per case (the eval scores against this table)
 | Case | Correct outcome | Checked in the log as |
@@ -63,7 +66,7 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
 
 ### Kill rule (T13), numeric. Suggested 28 Oct; Sharmin confirms before the run
 The kill test runs three conditions only: gated+SAM, no-gate+SAM and gated+colour. Rethink if either holds on seeds
-0–19:
+1000–1019:
 1. the mean paired difference (gated+SAM − no-gate+SAM) on the six-case score is ≤ 0.10;
 2. SAM's identities-kept-through-occlusion rate beats the colour tracker's by less than 0.20.
 
