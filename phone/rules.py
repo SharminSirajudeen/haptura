@@ -19,7 +19,7 @@ class Verdict:
 
 
 def check_tap(owner: str, task_pkg: str, allow: frozenset[str] = SYSTEM_ALLOW) -> Verdict:
-    """Rule 7: tap only a window owned by the task's app or by an allowlisted system package.
+    """The owner rule: tap only a window owned by the task's app or an allowlisted system package.
 
     `owner` is the package that owns the window under the tap point; empty when nothing reported it.
     """

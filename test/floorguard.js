@@ -20,8 +20,8 @@ const bail = (why) => {
    mutants.list.js, which stores the text it breaks. Scanning any of the three reports the guard as its own violation,
    so all three are exempt by path — stated here, where the reason is readable, rather than inline. */
 const EXEMPT = /test\/floorguard(\.test)?\.js$|test\/mutants(\.list\.js|\/[^/]+\.js)$|\.md$/;
-// A deleted test file counts on the project's own paths, the ones lint, types and duplication read; a template kept
-// elsewhere in the tree can leave without lowering this project's bar.
+// A deleted test file counts on the project's own paths: the ones the gate runs tests from, and their code. A template
+// kept elsewhere in the tree can leave without lowering this project's bar.
 const OWN = /^(?:gate|phone|mac|tests|test|scripts|web)\//;
 
 const LOOSENING = [

@@ -1,5 +1,5 @@
 // Run from the repo root: npx playwright test -c web/playwright.config.js
-// Chromium comes from PLAYWRIGHT_BROWSERS_PATH (the cloud container sets it to /opt/pw-browsers); never `playwright install`.
+// Chromium comes from `npx playwright install chromium`, or from PLAYWRIGHT_BROWSERS_PATH when it is set.
 const crypto = require('node:crypto');
 const os = require('node:os');
 const path = require('node:path');

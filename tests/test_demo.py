@@ -51,7 +51,7 @@ def test_the_clip_is_the_runs_own_frames() -> None:
     assert np.array_equal(demo.clip(log), join_blocks(seen))
 
 
-def test_the_plans_rule_picks_the_pairs() -> None:
+def test_the_opening_rule_picks_the_pairs() -> None:
     gated, _ = recorded(1, "feasible")  # hand: a 30-step probe, then act blocks from step 30
     probe, act = gated.blocks[0], gated.blocks[1]
     assert (probe.phase, probe.step0, len(probe.actions), act.phase, act.step0) == (

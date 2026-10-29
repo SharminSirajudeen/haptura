@@ -3,7 +3,7 @@
 **A gate that makes an agent prove, by its own experiments, that it still controls what it is about to act on, and
 stop, probe or decline when it cannot.**
 
-An entry for the Meta AI Developer Hackathon (Startup track, Oct 27 – Nov 4, 2026). Status: in progress. The phone and
+An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). Status: in progress. The phone and
 desktop owner gates run and are measured (below). The arena, its agent loop, its evaluation and its runner are built
 and tested offline. The arena's one paid run (the kill test) has not been completed: a launch on 29 Oct was paused
 after one episode, about $0.05.
@@ -186,6 +186,7 @@ Written before the event started on 26 Oct 2026:
 - The gate's tooling, copied in from a project kit of our own and adapted: `test/mutants.js`,
   `test/mutants.list.js`, `test/check.js`, `test/floorguard.js`, `test/floorguard.test.js`, `scripts/ci.sh`,
   `scripts/merge.sh`.
+- The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT).
 - Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. None of its source is in this repository.
 
 ## Run the gate

@@ -279,7 +279,7 @@ def one_way(m: Mapping[str, Vec]) -> list[Vec]:
 
 
 def test_a_one_way_axis_is_the_goals_and_the_goal_sits_on_its_live_wall() -> None:
-    # issue 21: the agent's own probe drifts an element the one way it can go; a goal in mid-frame
+    # the agent's own probe drifts an element the one way it can go; a goal in mid-frame
     # on that axis can be passed for good. The goal is the strip the clamp holds an element in, its
     # centre the clamp, so every position on the axis can still reach that centre.
     hand = make_scenario(0, "feasible")

@@ -1,5 +1,5 @@
-# EVAL.md: the pre-registered evaluation. Written 28 Oct 2026; frozen at the commit that starts the kill test, and
-# never edited afterwards. Revised on 30 Oct, while no paid condition had completed (a launch on 29 Oct was paused
+# EVAL.md: the pre-registered evaluation. Written 28 Oct 2026; frozen at the commit that starts the kill test (not
+# yet frozen), and never edited afterwards. Revised on 30 Oct, while no paid condition had completed (a launch on 29 Oct was paused
 # after 1 of 120 episodes): the kill seeds moved from 0–19 to 1000–1019, and a larger final run was dropped.
 
 ## What is measured, exactly

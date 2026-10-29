@@ -1,5 +1,5 @@
 # Meta Model API facts, measured 28 Oct 2026. Every line is from a named page fetched that day, or from a call
-# whose raw reply is under `results/api/`.
+# made that day; the probes' raw replies are under `results/api/`.
 
 ## Models (`GET /v1/models`, 1.5 s)
 `muse-wonder-1.0`, `sam-3.1`, `muse-spark-1.3`, `muse-spark-1.3-contributor`, `muse-spark-1.2`, `muse-spark-1.2-contributor`,
@@ -52,7 +52,7 @@ Reasoning tokens are billed as output tokens (docs/reasoning). Rate limits are p
 
 So: all four optional parameters are accepted; `temperature: 0` gave identical arguments on the repeat (one sample);
 `previous_response_id` carries the state; **no cache hit at 741 input tokens** (the minimum cacheable prefix is not
-documented; the 300-token system prompt will not hit either, so economy rule 5's cache saving is not available at our
+documented; the 300-token system prompt will not hit either, so no prompt-cache saving is available at these
 prompt sizes, and `cached_tokens` stays in the usage report as a check).
 
 ### SAM 3.1 video, three calls on the arena-like clip (30 frames, 10 fps, red circle and red square crossing with a

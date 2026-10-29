@@ -1,9 +1,10 @@
 # Pilot runs: what was run, what it cost, what it found, what changed because of it
 
-Clock times stay only where a log, a recording or a commit shows them (runs 0 and 1: commit times; runs 7–10, 12, 20 and
-21: logs); the other rows carry the date only.
+Clock times stay only where a log, a recording or a commit shows them (runs 0, 1 and 22: commit times; runs 7–10, 12,
+20 and 21: logs); the other rows carry the date only. Times first written on runs 2–6, 11 and 13–19 were estimates,
+not readings, and were removed.
 
-Every row comes from a command's recorded output, or from the record files named in it.
+Every row comes from a command's output at the time, or from the record files named in it.
 Prices: `muse-spark-1.3` $1.25 per million input tokens and $4.25 per million output; SAM 3.1 $0.20 per 1k video
 frames (50-frame minimum) and $2.50 per 1k images (`docs/api.md`). Phone runs used the `Small_Phone`
 emulator (Android API 36, 720×1280) on a Mac; the arena checks ran offline. Times are Dubai unless marked. Single-step

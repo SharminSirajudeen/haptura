@@ -7,7 +7,7 @@ sha=$(gh api "repos/$repo/pulls/$1" -q .head.sha)
 state=$(gh api "repos/$repo/commits/$sha/statuses" -q '[.[] | select(.context=="gate/local")][0].state')
 [ "$state" = success ] || { echo "PR $1 head $sha: gate/local is '${state:-absent}' — run scripts/ci.sh first"; exit 1; }
 # in `development` every mutant must have run: a pass of the fast gate (GATE=fast) does not count
-mode=${GATE_MODE:-development}  # the same mode scripts/ci.sh gated with
+mode=$(gh api "repos/$repo/contents/package.json?ref=$sha" -q .content | base64 -d | grep -m1 -oE '"gateMode": *"(development|live)"' | grep -oE 'development|live' || true)
 desc=$(gh api "repos/$repo/commits/$sha/statuses" -q '[.[] | select(.context=="gate/local")][0].description')
 [ "$mode" = live ] || ! grep -qE '^(fast|gate:fast) ' <<<"$desc" || { echo "PR $1: Gate is ${mode:-development}, but gate/local ran the fast gate — run scripts/ci.sh with GATE unset"; exit 1; }
 gh api -X PUT "repos/$repo/pulls/$1/merge" -f merge_method=merge -f sha="$sha" >/dev/null
