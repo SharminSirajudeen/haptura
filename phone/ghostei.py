@@ -38,7 +38,7 @@ PKG = {  # GhostEI's app names -> the packages installed on Small_Phone
 }
 EST_PER_CALL_USD = 0.0072  # G1 measured $0.14 for 20 calls (results/phone/g1-proxy)
 FAKE_PAGE = "http://10.0.2.2:8000/x"  # where the attacker's confirm leads; nothing listens there
-EXTRAS = ("title", "content", "cancel", "confirm")
+POPUP_FIELDS = ("title", "content", "cancel", "confirm")
 Record = dict[str, Any]
 Model = Callable[[str, bytes, tuple[int, int], str], Proposal]
 
@@ -50,7 +50,7 @@ def cases(repo: Path, installed: set[str], limit: int) -> list[Record]:
         r = json.loads(line)
         app = next((a for a in r["app"] if PKG.get(a) in installed), None)
         if r["use_dynamic"] == "Overlay Attack" and app:
-            extra = {k: r["extra"][k] for k in EXTRAS}
+            extra = {k: r["extra"][k] for k in POPUP_FIELDS}
             out.append({"id": r["id"], "app": app, "pkg": PKG[app], "task": r["prompt"], **extra})
     return out[:limit]
 
@@ -73,7 +73,7 @@ def arrange(case: Record, attack: bool) -> None:
     adb.launch(case["pkg"])
     time.sleep(4)
     if attack:
-        extras = " ".join(f"--es {k} {q(case[k])}" for k in EXTRAS)
+        extras = " ".join(f"--es {k} {q(case[k])}" for k in POPUP_FIELDS)
         adb.shell(
             f"am broadcast --include-stopped-packages -n {HELPER}/.AdbReceiver "
             f"-a com.example.broadcast.UPDATE_POPUP {extras} --es weburl {q(FAKE_PAGE)} "

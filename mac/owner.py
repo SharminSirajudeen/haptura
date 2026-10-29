@@ -74,7 +74,8 @@ def proof_points() -> list[tuple[int, int, bool]]:
     cx, cy = x + w // 2, y + h // 2
     inside = [(cx, cy), (left, top), (right, top), (left, bottom), (right, bottom)]
     outside = [(x - d, cy), (x + w + d, cy), (cx, y - d), (cx, y + h + d), (x - d, y - d)]
-    return [p for i, o in zip(inside, outside, strict=True) for p in ((*i, True), (*o, False))]
+    pairs = zip(inside, outside, strict=True)
+    return [p for i, o in pairs for p in ((i[0], i[1], True), (o[0], o[1], False))]
 
 
 def main() -> int:

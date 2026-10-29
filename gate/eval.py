@@ -294,11 +294,11 @@ def _recovery(logs: Sequence[EpisodeLog], kind: str) -> str:
     return f"{mean}, {len(steps)} of {len(remapped)} recovered"
 
 
-def _per_correct(logs: Sequence[EpisodeLog], k: int, tokens: list[int]) -> tuple[str, str]:
+def _per_correct(logs: Sequence[EpisodeLog], k: int, token_totals: list[int]) -> tuple[str, str]:
     """Dollars, and input / output tokens, per episode that passes the table."""
     if k == 0:
         return "no correct episode", "no correct episode"
-    return f"${sum(map(dollars, logs)) / k:.4f}", " / ".join(f"{t / k:.0f}" for t in tokens)
+    return f"${sum(map(dollars, logs)) / k:.4f}", " / ".join(f"{t / k:.0f}" for t in token_totals)
 
 
 def column(
@@ -306,8 +306,8 @@ def column(
 ) -> dict[str, str]:
     """One condition's cells, keyed by the table's row names, in EVAL.md's order."""
     n, k = len(logs), sum(map(right, logs))
-    tokens = [sum(x.usage.get(t, 0) for x in logs) for t in ("input_tokens", "output_tokens")]
-    usd, tokens_per_correct = _per_correct(logs, k, tokens)
+    token_totals = [sum(x.usage.get(t, 0) for x in logs) for t in ("input_tokens", "output_tokens")]
+    usd, tokens_per_correct = _per_correct(logs, k, token_totals)
     occlusion_cells = {
         f"identities kept through occlusion, {p} blocks": _frac(*occ[p][:2])
         + f"; {occ[p][2]} unscored"
@@ -327,7 +327,7 @@ def column(
         "advice overruled (in right episodes)": f"{sum(map(overrules, logs))} "
         f"({sum(overrules(x) for x in logs if right(x))})",
         "blocks per episode": f"{sum(len(x.blocks) for x in logs) / n:.2f}",
-        "input / output tokens per episode": " / ".join(f"{t / n:.0f}" for t in tokens),
+        "input / output tokens per episode": " / ".join(f"{t / n:.0f}" for t in token_totals),
         "billed SAM frames per episode": f"{sum(map(billed_frames, logs)) / n:.0f}",
         "dollars per correct decision": usd,
         "input / output tokens per correct decision": tokens_per_correct,
