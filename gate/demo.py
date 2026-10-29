@@ -31,8 +31,7 @@ FIRST_FRAMES = 20 * FPS  # the video's first 20 seconds, one frame per step
 
 def clip(log: EpisodeLog) -> Frames:
     """The episode's clip: every frame of the run's arena, replayed and rendered."""
-    frames: Frames = np.stack(replay(log, render)[1])
-    return frames
+    return np.stack(replay(log, render)[1])
 
 
 def decoy_commit(log: EpisodeLog) -> int | None:

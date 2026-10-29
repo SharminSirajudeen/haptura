@@ -10,6 +10,7 @@ import re
 from dataclasses import dataclass
 
 Rect = tuple[int, int, int, int]  # left, top, right, bottom; right and bottom exclusive
+Uids = dict[int, frozenset[str]]
 SKIP = frozenset({"NOT_VISIBLE", "NOT_TOUCHABLE", "SPY"})  # windows that never consume a touch
 SINK = "NO_INPUT_CHANNEL"  # consumes the touch and delivers it to nobody
 DISPLAY = re.compile(r"^  Display: (\d+)$", re.ASCII)
@@ -140,15 +141,12 @@ def focused(windows: list[Window], text: str) -> Window | None:
     return next((w for w in windows if m and w.name == m.group(1)), None)
 
 
-def packages_by_uid(text: str) -> dict[int, frozenset[str]]:
+def packages_by_uid(text: str) -> Uids:
     """`cmd package list packages -U` as uid -> its packages (system uids are shared)."""
     out: dict[int, set[str]] = {}
     for pkg, uid in UID_LINE.findall(text):
         out.setdefault(int(uid), set()).add(pkg)
     return {uid: frozenset(p) for uid, p in out.items()}
-
-
-Uids = dict[int, frozenset[str]]
 
 
 def shown(windows: list[Window], uids: Uids, pkg: str) -> bool:
