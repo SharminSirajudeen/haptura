@@ -5,6 +5,10 @@ module.exports = [
     mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_freezes_every_constant_at_its_current_value', cmd:PYTEST },
   { from:'EVAL: a constant missing from the frozen list', file:'EVAL.md', find:' EARLY_LOOKS=3;', replace:'',
     mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_freezes_every_constant_at_its_current_value', cmd:PYTEST },
+  { from:'EVAL: the kill seeds in the code drift from EVAL.md', file:'gate/eval.py', find:'KILL_SEEDS = range(1000, 1020)', replace:'KILL_SEEDS = range(20)',
+    mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_names_the_kill_seeds', cmd:PYTEST },
+  { from:'EVAL: the kill seeds in EVAL.md drift from the code', file:'EVAL.md', find:'**Kill test (T13):** seeds 1000–1019', replace:'**Kill test (T13):** seeds 0–19',
+    mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_names_the_kill_seeds', cmd:PYTEST },
 ];
 // gate/eval.py: each break is the one a reviewer would try first on that line.
 const TT = 'tests/test_eval_table.py';

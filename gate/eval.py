@@ -34,7 +34,7 @@ KILL_CONDITIONS = CONDITIONS[:3]
 KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's suggested numbers; Sharmin confirms before T13
 History = Sequence[dict[int, Vec]]
 Pairs = frozenset[tuple[int, int]]
-KILL_SEEDS = range(1000, 1020)  # EVAL.md: seeds no development step had run
+KILL_SEEDS = range(1000, 1020)  # EVAL.md: chosen before any run on them
 KILL_RANGE = f"seeds {KILL_SEEDS[0]}-{KILL_SEEDS[-1]}"
 
 

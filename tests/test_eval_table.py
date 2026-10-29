@@ -200,7 +200,7 @@ def test_the_kill_line_on_real_logs() -> None:
     empty = [replace(x, blocks=()) for x in gated]
     blank = empty + relabel(empty, "no-gate+SAM", "timeout") + relabel(empty, "gated+colour")
     assert "SAM nan" in ev.kill_rule(blank) and ev.kill_rule(blank).endswith("**Rethink.**")
-    # the rule is judged on seeds 1000-1019 only
+    # a seed outside KILL_SEEDS is not judged
     late = [replace(x, scenario=replace(x.scenario, seed=100)) for x in logs]
     assert ev.kill_rule(late).startswith("Kill rule: not computed")
 
