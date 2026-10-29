@@ -326,9 +326,8 @@ def _say(advice: Decision) -> str:
     return f"advice: {advice.kind}{target}: {advice.reason}"
 
 
-ADVICE = re.compile(
-    r"^advice: (act|probe|decline)(?: (\d+))?: (.*)$", re.M | re.ASCII
-)  # what _say writes
+# what _say writes
+ADVICE = re.compile(r"^advice: (act|probe|decline)(?: (\d+))?: (.*)$", re.M | re.ASCII)
 RULES_PROBE = {"n": BLOCK_STEPS, "p_noop": P_NOOP, "dirs": list(DIRS)}  # EVAL.md's rules-only row
 
 

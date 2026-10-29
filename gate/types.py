@@ -12,7 +12,7 @@ import math
 import types
 from collections.abc import Mapping
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Any, TypeVar, Union, cast, get_args, get_origin, get_type_hints
+from typing import Any, Union, cast, get_args, get_origin, get_type_hints
 
 import numpy as np
 
@@ -38,15 +38,12 @@ class Element:
 class Scenario:
     seed: int
     elements: tuple[Element, ...]
-    binding_schedule: tuple[
-        tuple[int, int | None], ...
-    ]  # (step, element id or None): who obeys from that step
-    action_maps: tuple[
-        tuple[int, Mapping[str, Vec]], ...
-    ]  # (step, action to (dx, dy)): the body from that step
-    events: tuple[
-        tuple[int, str, str], ...
-    ]  # (step, kind, detail): the ground truth the eval scores against
+    # (step, element id or None): who obeys from that step
+    binding_schedule: tuple[tuple[int, int | None], ...]
+    # (step, action to (dx, dy)): the body from that step
+    action_maps: tuple[tuple[int, Mapping[str, Vec]], ...]
+    # (step, kind, detail): the ground truth the eval scores against
+    events: tuple[tuple[int, str, str], ...]
     goal: tuple[float, float, float, float]  # x0, y0, x1, y1
     case: str  # feasible | blocked | remap_feasible | remap_blocked | body_remap | body_blocked
 
@@ -58,9 +55,8 @@ class Evidence:
     best_lag: int  # the most significant lag of 1..MAX_LAG
     p_best: float
     effect: float  # the largest measured effect over actions at lag 0
-    body: Mapping[
-        str, Vec | None
-    ]  # measured effect vector per action; None where the action had no samples
+    # measured effect vector per action; None where the action had no samples
+    body: Mapping[str, Vec | None]
     label: str  # mine | echo | not_me
 
 
@@ -102,15 +98,12 @@ class EpisodeLog:
     usage: Mapping[str, int]  # tokens and frames
 
 
-T = TypeVar("T")
-
-
 def to_json(obj: object) -> str:
     """S11: a dataclass to JSON. Arrays become lists, NaN becomes null, any other NaN errors."""
     return json.dumps(_encode(obj), allow_nan=False)
 
 
-def from_json(text: str, cls: type[T]) -> T:
+def from_json[T](text: str, cls: type[T]) -> T:
     """S11: JSON back to `cls`, guided by its field types. A null inside an array becomes NaN."""
     return cast(T, _decode(json.loads(text), cls))
 
