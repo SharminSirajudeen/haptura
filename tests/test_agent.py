@@ -1,15 +1,16 @@
-"""T10, the agent loop and executor, on a scripted Muse and a hand-built three-element world.
+"""The agent loop and executor, on a scripted Muse and a hand-built three-element world.
 
 The world: element 0 (the subject) starts at (40, 64); elements 1 and 2 wear its colour, so the
 arena routes 1 through the subject at each block start and parks 2 halfway to the goal. Truth
-tracking keeps the ids, so the S10 labels are exact: the subject is a perfect follower, mine at
-the permutation floor 1e-4; element 1's only non-constant step is its jump onto the crossing route
-at step 0, which no lag-0 grouping can make significant; element 2 never moves within a block. The
-experiment draws its 30 actions from the agent's own stream; on it the subject ends at (38, 64)
+tracking keeps the ids, so the control test's labels are exact: the subject is a perfect follower,
+mine at the permutation floor 1e-4; element 1's only non-constant step is its jump onto the crossing
+route at step 0, which no lag-0 grouping can make significant; element 2 never moves within a block.
+The experiment draws its 30 actions from the agent's own stream; on it the subject ends at (38, 64)
 under the identity body and at (28, 64) with `right` dead. The goal box (92..108, 56..72) has its
 centre (100, 64) 31 cells right of (38, 64), so 30 steps of `right` end at x = 98, inside the box.
-S14 is scripted here (its own tests are lane C's); T9, S9, S10, S12, S13 and S15 are the real
-ones, T9 wrapped where a test needs the tracker to err.
+`diagnose` is scripted here (it has its own tests); the block runner, `match_ids`, the control test,
+`design_block`, `check_act` and the rule policy are the real ones, the block runner wrapped where a
+test needs the tracker to err.
 """
 
 from collections import Counter
@@ -90,7 +91,7 @@ class Muse:
 
 
 def runner(swap_block: int = -1, hide_block: int = -1) -> RunBlock:
-    """T9's run_block with a tracker that errs: in block `swap_block` ids 0 and 2 trade places from
+    """`run_block` with a tracker that errs: in block `swap_block` ids 0 and 2 trade places from
     frame 25 on, the way a tracker swaps two look-alikes; in `hide_block` id 0 is not seen."""
     done = [0]
 
@@ -109,8 +110,8 @@ def runner(swap_block: int = -1, hide_block: int = -1) -> RunBlock:
 
 
 def scripted(*after_acts: str, probe: str = "body_changed", fix: str = "fix") -> Diagnose:
-    """S14's role: `probe` on a probe; after an act block, stale when the target was seen on fewer
-    than two frames (as S14 does since cf0a46b), else the scripted kinds in order, then ok."""
+    """The diagnosis' role: `probe` on a probe; after an act block, stale when the target was seen
+    on fewer than two frames (as `diagnose` does), else the scripted kinds in order, then ok."""
     queue = list(after_acts)
 
     def diagnose(
@@ -203,7 +204,7 @@ def test_a_body_remap_ends_in_body_changed_with_the_new_map_and_the_goal_reached
     assert stale is not None and stale.kind == "stale"
     assert probe is not None and probe.kind == "body_changed"
     target = log.blocks[2].evidence[0]
-    # the probe's table is S14's own S10 call, so it cannot disagree with S14's verdict
+    # the probe's table is the diagnosis' own control test, so it cannot disagree with its verdict
     recomputed = control_scores(log.blocks[2].actions, log.blocks[2].tracks, MAX_LAG, PROBE_SEED)
     assert log.blocks[2].evidence == tuple(recomputed)
     assert target.label == "mine" and target.body["right"] == (-2.0, 0.0)
@@ -225,11 +226,12 @@ def test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprobe() -> Non
     assert probe.decision is not None and probe.decision.kind == "probe"
     # the pool restarted at the diagnosis: the probe's 15 steps and the new 30, on look 3
     assert muse.heard(3).splitlines()[0] == "goal centre (100,64); look 3 of 6; 45 steps"
-    # its S10 seed: scenario seed 7 * SEED_STRIDE (= MAX_FRAMES) + block index 3
+    # its control-test seed: scenario seed 7 * SEED_STRIDE (= MAX_FRAMES) + block index 3
     pooled = _pool([(b.actions, b.tracks) for b in log.blocks[2:4]])
     assert log.blocks[3].evidence == tuple(control_scores(*pooled, MAX_LAG, 7 * MAX_FRAMES + 3))
     assert log.outcome == "decline"
-    # the same world and the same S14 ungated: no S14 runs, so the next act block is a false act
+    # the same world and the same diagnosis ungated: no diagnosis runs, so the next act block is a
+    # false act
     muse = Muse(EXPERIMENT, ("act", {"object_id": 0}))
     lost = scripted("stale", probe="target_lost", fix=LOST)
     log = play(world(binding=remap), muse, False, diagnose=lost)
@@ -237,8 +239,8 @@ def test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprobe() -> Non
 
 
 def test_a_target_the_tracker_loses_is_probed_and_handed_back() -> None:
-    # the act block's tracks lack id 0, so S14 calls it stale; the executor keeps id 0's last
-    # position, probes, and S9 finds the subject again on the probe's shared frame
+    # the act block's tracks lack id 0, so the diagnosis calls it stale; the executor keeps id 0's
+    # last position, probes, and `match_ids` finds the subject again on the probe's shared frame
     muse = Muse(EXPERIMENT, ("act", {"object_id": 0}), ("decline", {"reason": "lost"}))
     lost = scripted(probe="target_lost", fix=LOST)
     log = play(world(), muse, True, runner(hide_block=1), lost)
@@ -315,7 +317,7 @@ def tie_world() -> Arena:
 
 
 def onto_target(every_frame: bool) -> RunBlock:
-    """T9's run_block, then each act block puts element 0 on element 2's pixel, in the truth and
+    """`run_block`, then each act block puts element 0 on element 2's pixel, in the truth and
     in the tracks as the truth tracker sees it: on the block's last three frames, or on all."""
 
     def hook(
@@ -353,7 +355,7 @@ def test_a_tie_held_through_the_whole_block_is_not_control() -> None:
 
 
 def swap_tie() -> RunBlock:
-    """T9's run_block; in the act block element 2 stands on element 0's pixel on the last frame, in
+    """`run_block`; in the act block element 2 stands on element 0's pixel on the last frame, in
     the truth and in the tracks, and the tracker trades ids 0 and 2 from frame 25."""
     done = [0]
 
@@ -371,8 +373,8 @@ def swap_tie() -> RunBlock:
     return hook
 
 
-def test_after_an_eyes_fix_a_tie_is_walked_along_the_track_s14_gave_the_target() -> None:
-    # S14's scripted eyes fix swaps ids 0 and 2 back in the reference, so the target's track is
+def test_after_an_eyes_fix_a_tie_is_walked_along_the_track_the_fix_gave_the_target() -> None:
+    # the scripted eyes fix swaps ids 0 and 2 back in the reference, so the target's track is
     # now id 2's, which from frame 25 follows element 0, the bound subject; both tracks end on
     # one pixel. Walked along id 2: success. Along id 0's own track, which from frame 25 follows
     # element 2, it would be false_act.
@@ -404,16 +406,16 @@ def test_a_target_unseen_on_the_last_frame_is_matched_where_it_was_last_seen() -
 def test_an_act_on_a_target_already_in_the_goal_is_a_success_with_no_act_block() -> None:
     # The probe's directions are balanced (counts differ by at most 1), so it leaves element 0
     # within one step of (40, 64), inside this goal box. The act is judged before any block: the
-    # target is bound and in the goal, so nothing is steered (#40). Steered first, a body read
+    # target is bound and in the goal, so nothing is steered. Steered first, a body read
     # off by a fraction can walk an element at a wall out of its goal and time out.
     log = play(world(goal=(30.0, 54.0, 50.0, 74.0)), Muse(EXPERIMENT, ACT), False)
     assert [b.phase for b in log.blocks] == ["probe"] and log.outcome == "success"
 
 
 def test_the_eyes_fix_comes_before_the_goal_check() -> None:
-    # S15 advises declining: from x 28, the centre's x 40 needs right, which is dead. Muse acts
-    # anyway. The swap puts id 0 on element 2, parked at (34, 64) inside the goal box; swapped
-    # back first, id 0 is the subject at x 28, outside it, so the act runs out of frames
+    # the rule policy advises declining: from x 28, the centre's x 40 needs right, which is dead.
+    # Muse acts anyway. The swap puts id 0 on element 2, parked at (34, 64) inside the goal box;
+    # swapped back first, id 0 is the subject at x 28, outside it, so the act runs out of frames
     muse = Muse(EXPERIMENT, ACT)
     log = play(world(DEAD_RIGHT, goal=NEAR), muse, True, runner(1), scripted("eyes_swapped"))
     reason = "object 0 is mine but no live action moves it along x to the goal"
@@ -485,4 +487,4 @@ def test_rules_only_declines_when_nothing_obeys() -> None:
     said = [(b.advice.reason, b.decision.reason) for b in log.blocks if b.advice and b.decision]
     assert len(said) == len(log.blocks) and all(
         a == d for a, d in said
-    )  # S15 decides, word for word
+    )  # the rule policy decides, word for word

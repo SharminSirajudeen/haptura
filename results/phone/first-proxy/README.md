@@ -1,4 +1,4 @@
-# G1 proxy evidence (prior Mac session, 28 Oct 2026 03:16 Dubai)
+# First proxy run (28 Oct 2026 03:16 Dubai)
 
 Single-step proxy: one screenshot, one Muse Spark decision per case. **Not GhostEI's multi-step harness, so not
 comparable to the paper's 40–55%.** `muse-spark-1.3`, default reasoning effort, 20 overlay cases whose app is

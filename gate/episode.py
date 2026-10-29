@@ -1,8 +1,9 @@
-"""T9: the block runner, the one way either agent touches the world, and the episode clip.
+"""The block runner, the one way either agent touches the world, and the episode clip.
 
 A block of N actions has N+1 frames: frame 0 is the arena as the previous block left it, so
-consecutive clips share a frame (S9 links ids on it). The episode clip joins the blocks with each
-shared frame once, one frame per step, so a block starts at (the actions before it) / FPS seconds.
+consecutive clips share a frame (`match_ids` links ids on it). The episode clip joins the blocks
+with each shared frame once, one frame per step, so a block starts at (the actions before it) / FPS
+seconds.
 """
 
 from __future__ import annotations

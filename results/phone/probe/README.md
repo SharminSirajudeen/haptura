@@ -1,4 +1,8 @@
-# Press probe: plan §4b rules 1-3, §4d P4
+# Press probe
+
+Three rules before a tap: (1) press DOWN, capture the screen and send CANCEL, never UP; (2) a CANCEL at or past
+75% of `long_press_timeout` is late, and a late probe's verdict is `unknown`; (3) tap only when the press lit up
+inside the intended element. Whose element it is, is the owner check's question (`check_tap`).
 
 Written by `ANDROID_SERIAL=emulator-5554 uv run python -m phone.probe` on Small_Phone (Android
 API 36, 720×1280); the records are `trials.jsonl`. One `adb shell` string per probe: DOWN, wait
@@ -7,7 +11,7 @@ CANCEL started minus DOWN returned and at most CANCEL returned minus DOWN starte
 late when the upper bound reaches 75% of `long_press_timeout`, read from the device on
 every probe. Rule 3 allows only a highlight inside the clickable
 node under the press point. `sweep.jsonl` is the 28 Oct method sweep behind the wait, 10 trials
-per method (the plan's host round trip per step with PNG, and one string with raw at 100-220 ms).
+per method (a host round trip per step with PNG, and one string with raw at 100-220 ms).
 
 ## 20 probes on two Settings rows
 | x | y | intended | lit up | hold ms | status | verdict | opened | click |
@@ -43,7 +47,7 @@ per method (the plan's host round trip per step with PNG, and one string with ra
 | 513 | 739 | [360, 689, 666, 789] | [360, 689, 666, 789] | 258-276 | ok | allow | False | none |
 
 Rule 3 says only where the press lands: on the button it was aimed at. Whose button it is
-is rule 7's question: its owner is `com.example.myapplication`, and `check_tap` says block for a
+is the owner check's question: its owner is `com.example.myapplication`, and `check_tap` says block for a
 Settings task.
 
 ## Known limits
@@ -56,7 +60,7 @@ Settings task.
   press point and 9 showed nothing (`sweep.jsonl`). At 200 ms the smallest box here was
   126 px tall in a 156 px row. Rule 3 asks for no minimum size, so none is enforced.
 - **A hostile view inside the task app passes.** Drawn in the app's own window, sized within the
-  intended element, with its own bounded ripple, it passes rule 3, and the owner check (rule 7)
-  passes it too. That is plan §4d condition 5, the in-app red-team; it is not built here.
+  intended element, with its own bounded ripple, it passes rule 3, and the owner check
+  passes it too. That is the in-app red-team case; it is not built here.
 - **One emulator.** Settings rows sit in a scrolling list, which holds back the press state by
   Android's tap timeout; the dialog's buttons light at once. Other apps' timing is unmeasured.

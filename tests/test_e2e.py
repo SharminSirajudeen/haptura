@@ -1,10 +1,11 @@
-"""T11, the offline end-to-end floor: rules-only (S15 through T10's loop, `rules_turn`) on the
-real arena with truth tracking, seeds 0-19 x all six cases, no network. It proves the pipeline
-before money is spent: each episode is scored by EVAL.md's right-hand column (`gate.eval.right`).
+"""The offline end-to-end floor: rules-only (the rule policy through the agent loop, `rules_turn`)
+on the real arena with truth tracking, seeds 0-19 x all six cases, no network. It proves the
+pipeline before money is spent: each episode is scored by EVAL.md's right-hand column
+(`gate.eval.right`).
 
-One test node per (case, seed), so a seed that falls is red at once. All 120 end right since #24
-(S10 keeps the steps at a wall, measured 28 Oct); a miss found later is pinned to its issue as a
-strict expected failure.
+One test node per (case, seed), so a seed that falls is red at once. All 120 end right since the
+wall rule was rewritten (the control test keeps the steps at a wall, measured 28 Oct); a miss
+found later is pinned as a strict expected failure.
 """
 
 import functools

@@ -1,4 +1,4 @@
-// D1's device side (plan §4e): for each "x,y" argument (top-left screen points), the app that owns the
+// The owner lookup's device side: for each "x,y" argument (top-left screen points), the app that owns the
 // accessibility element under that point. One JSON object per line. Needs the Accessibility permission
 // for the calling terminal; with the screen locked the hit-test fails (err -25200, measured 28 Oct).
 import AppKit

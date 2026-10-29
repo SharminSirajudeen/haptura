@@ -1,8 +1,9 @@
-"""The owner gate on the Mac desktop (plan §4e): D1 the owner under a point, D2 P1's rule unchanged.
+"""The owner gate on the Mac desktop: the owner under a point, and the phone's rule unchanged.
 
     uv run python -m mac.owner           # the 10-point proof; a fake panel shows for about 15 s
 
-D1's device side is mac/hit.swift (the Accessibility hit-test); this file parses it and decides.
+The owner lookup's device side is mac/hit.swift (the Accessibility hit-test); this file parses it
+and decides.
 """
 
 import json
@@ -23,7 +24,7 @@ MAC_SYSTEM_ALLOW = frozenset({"com.apple.dock", "com.apple.systemuiserver"})
 SYSTEM_DIR = "/System/"  # sealed by System Integrity Protection, so its bundle ids are real
 DATA_DIR = "/System/Volumes/"  # except the data volume mounted under it, which users can write
 PANEL = (600, 400, 300, 120)  # x, y, w, h of the proof's fake panel, top-left screen points
-OUTSIDE_PX = 50  # the plan's distance outside the panel for the allowed points
+OUTSIDE_PX = 50  # the distance outside the panel for the allowed points
 
 
 @dataclass(frozen=True)
@@ -54,7 +55,7 @@ def parse(line: str) -> Owner:
 
 
 def owner_at(points: list[tuple[int, int]]) -> list[Owner]:
-    """D1: the owner of the accessibility element under each point."""
+    """The owner of the accessibility element under each point."""
     args = [f"{x},{y}" for x, y in points]
     cmd = ["swift", str(HERE / "hit.swift"), *args]
     out = subprocess.run(cmd, capture_output=True, text=True, timeout=120, check=False).stdout
@@ -62,7 +63,7 @@ def owner_at(points: list[tuple[int, int]]) -> list[Owner]:
 
 
 def decide(owner: Owner, task_app: str) -> Verdict:
-    """D2: P1's rule, unchanged, with the desktop allowlist."""
+    """The phone's rule, unchanged, with the desktop allowlist."""
     return check_tap(owner.key, task_app, MAC_SYSTEM_ALLOW)
 
 

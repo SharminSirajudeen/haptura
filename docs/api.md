@@ -1,0 +1,105 @@
+# Meta Model API facts, measured 28 Oct 2026. Every line is from a named page fetched that day, or from a call
+# whose raw reply is under `results/api/`.
+
+## Models (`GET /v1/models`, 1.5 s)
+`muse-wonder-1.0`, `sam-3.1`, `muse-spark-1.3`, `muse-spark-1.3-contributor`, `muse-spark-1.2`, `muse-spark-1.2-contributor`,
+`muse-spark-1.1`, `muse-voice-transcribe-1.0`, `muse-image-1.0`. The SAM id in API calls is **`sam-3.1`** (the model page's
+`sam-3-1` is its URL slug).
+
+## Prices and limits (dev.meta.ai/docs/pricing-rate-limits)
+| Model | Cached input | Input | Output | RPM | TPM |
+|---|---|---|---|---|---|
+| `muse-spark-1.3` | $0.15 /M | $1.25 /M | $4.25 /M | 3,000 | 4,000,000 |
+| `muse-spark-1.3-contributor` ("used to improve our products") | $0.002 /M | $0.10 /M | $0.20 /M | 150 | 3,000,000 |
+| `sam-3.1` | | $2.50 per 1k images; **$0.20 per 1k video frames, 50-frame minimum per video request** | | 3,000 | none |
+
+Reasoning tokens are billed as output tokens (docs/reasoning). Rate limits are per team.
+
+## SAM 3.1 video (docs/sam/segmenting, docs/sam/reading-segmentation, docs/video-understanding, docs/file-handling)
+- `POST /v1/responses`, `model: "sam-3.1"`, `input: [{type: "message", role: "user", content: [{type: "input_text",
+  text: "<noun phrase>"}, {type: "input_video", video_url: "<public or base64 data URL>"}]}]`, or
+  `{type: "input_video", file_id: "file-..."}` after `POST /v1/files` with `purpose=user_data` (video/mp4; 50 MB inline,
+  1 GiB upload). `stream: true` recommended.
+- **One concept per request.** "A second `input_text` part segments only one of the concepts." One prompt for all
+  shapes works only if one noun phrase matches every shape (probe `sam-2-shape-128` below).
+- `metadata: {"mask_encoding": "one_bit"}` (compact, `!` marker) or `lossless` (default, `~`); `include_confidence: "true"`.
+- Formats: MP4/MOV with H.264/H.265/MPEG-4; no VP9/WebM. Up to 15,000 frames and **16 tracked objects per frame**.
+- **Output:** one `response.output_text.delta` per frame, each one line: a frame marker `<Nf>` (N zero-indexed, **not
+  necessarily contiguous or ascending**; frames with no match produce no line), then comma-separated records of
+  `object_id <|box;x1=;y1=;x2=;y2=;w=;h=[;c=]|> <|mask;x=0;y=0[;c=];data=H,W,<enc><payload>|>` with a base85 payload.
+  Ids are bare integers, stable for an object within a response, possibly sparse. `response.completed` ends the stream.
+- **For centroids the box is enough** (the box centre of a circle, square or triangle): `sam_track` parses `<Nf>` and the box
+  tokens and skips the mask payload. `meta-sam-parser` (PyPI 0.1.0, 2026-10-06) exists for masks, under Meta's own
+  "SAM License" (redistribution under the same terms, a litigation clause): **not used**; box parsing is about 20 lines.
+
+## Muse Spark on the Responses API (docs/tool-calling, docs/reasoning, docs/prompt-caching; probes below)
+- Tools are flat: `{type: "function", name, description, parameters}`. A call comes back as an output item
+  `{type: "function_call", name, arguments (JSON string), call_id, status}`. The result goes back as
+  `input: [{type: "function_call_output", call_id, output}]` with **`previous_response_id`** set. `tool_choice` accepts
+  only `"auto"`.
+- `reasoning: {effort: "minimal" | "low" | "medium" | "high" | "xhigh" | "max"}` (`"none"` is a 400 for Muse);
+  reasoning tokens are in `usage.output_tokens_details.reasoning_tokens`.
+- Prompt caching is automatic on the stable token prefix; cached tokens are in `usage.input_tokens_details.cached_tokens`.
+- Workshop code (meta-models/legal-agent-workshop) also uses `text={"format":{"type":"json_object"}}` for JSON mode.
+
+## Probe results (2026-10-28; raw JSON in `results/api/`)
+### Muse Spark, three calls, about $0.005 in total (2,454 input + 469 output tokens at the prices above)
+| Call | Latency | Result | Usage |
+|---|---|---|---|
+| `muse-1-first-turn`: `instructions` + 3 tools + `temperature: 0` + `reasoning: {effort: "low"}` + `max_output_tokens: 400` | 1.6 s | output items `reasoning, message, function_call`; `run_experiment({"dirs":["up","down","left","right"],"n":40,"p_noop":0.2})` | input 741 (cached 0), output 155 (reasoning 41) |
+| `muse-2-follow-up`: `previous_response_id` + `function_call_output` holding a 4-line evidence table with the advice line | 12.2 s | `reasoning, function_call`; `act({"object_id":3})`, following the advice | input 972 (cached 0), output 159 (reasoning 110) |
+| `muse-3-repeat-first`: byte-identical repeat of call 1, 10 s later | 1.3 s | the same tool call with the same arguments | input 741, **cached 0** |
+
+So: all four optional parameters are accepted; `temperature: 0` gave identical arguments on the repeat (one sample);
+`previous_response_id` carries the state; **no cache hit at 741 input tokens** (the minimum cacheable prefix is not
+documented; the 300-token system prompt will not hit either, so economy rule 5's cache saving is not available at our
+prompt sizes, and `cached_tokens` stays in the usage report as a check).
+
+### SAM 3.1 video, three calls on the arena-like clip (30 frames, 10 fps, red circle and red square crossing with a
+2-frame occlusion, a blue triangle elsewhere), $0.03 in total
+| Call | Transport | Result |
+|---|---|---|
+| `sam-1-circle-128`: 128×128, prompt "circle" | base64 `data:video/mp4` URL, accepted | `response.completed`, **no `output_text.delta` at all: zero matches**; `usage.video_frames_processed: 50` |
+| `sam-2-shape-128`: 128×128, prompt "shape" | same | zero matches, 50 frames billed |
+| `sam-3-circle-512`: 512×512 (×4 nearest), prompt "circle" | same | zero matches, 50 frames billed |
+
+So the data-URL transport works (3,684-byte MP4, H.264, yuv420p, 2.2–2.5 s per call), **the 50-frame minimum is real
+(`video_frames_processed: 50` for a 30-frame clip)**, and SAM found nothing to call a circle or a shape in flat-colour
+geometry at either size. The image sweeps below found the phrases SAM does match; the renderer needs no change.
+
+### SAM 3.1 image prompt sweeps on frame 5 of the clip (23 images, $0.06): which noun phrase matches flat shapes?
+| Prompt | 512 px | 128 px |
+|---|---|---|
+| circle, red circle, ball, red ball, dot, red dot, triangle, shape, object | 0 boxes | (red ball: 0) |
+| square / red square | 1 box, the square, c=0.62 / 0.86 | |
+| **red object** | 2 boxes: the square and the circle, c=0.89 | 2 boxes, c=0.86 |
+| **colored object** | | **3 boxes: circle, square and the blue triangle, c≈0.8** |
+| coloured shape | | 3 boxes, c≈0.6 |
+| red or blue object | | 3 boxes, c≈0.8 |
+| blue object | | 1 box, the triangle, c=0.88 |
+| small object, bright object, blob, marker, game piece | | 0 |
+
+So SAM 3.1 answers **colour-plus-"object"** phrases on flat geometry and ignores shape nouns except "square". Boxes land
+exactly on the drawn shapes (the 8-px circle at frame 5 is x 31–39, y 60–68; its centre was drawn at (35, 64)).
+
+### SAM 3.1 video with a matching prompt (`sam-4`, `sam-5`, $0.02): identity through the occlusion
+| Call | Result |
+|---|---|
+| `sam-4-redobject-128`: 128×128, "red object" | 30 frame lines (0..29, none skipped), ids {0, 1} on every frame. id0 moves 108 → 20 and id1 20 → 107, **both monotone through the overlap at frames 14–15** (f14: id0 (64,64), id1 (60,64); f15: id0 (64,64), id1 (67,66)). 2.6 s. |
+| `sam-5-redobject-512`: ×4 upscale, "red object" | the same: 30 frames, ids {0, 1}, both monotone. 3.1 s. |
+
+**So the identities survive a 2-frame full-overlap crossing at 128 px**, confidence 0.85–0.89 on every frame, and
+the box centre is within 0.5 px of the drawn centre. 128×128 is enough; no upscaling.
+
+| `sam-6-coloredobject-128`: 128×128, **"colored object"** ($0.01) | 30 frame lines, **ids {0, 1, 2} on every frame**: the square (108 → 20), the circle (20 → 107) and the triangle (x = 100, y 20 → 107), all monotone through the overlap at frames 14–15 (f14: id0 (66,64), id1 (62,64); f15: id0 (64,64), id1 (67,65)); confidence 0.75–0.77. 2.6 s. |
+
+**So one SAM call per block with `SAM_PROMPT = "colored object"` tracks every element.** These measurements' paid calls: 3 Muse turns
+≈ $0.005, 6 video requests × $0.01, 23 images × $0.0025 ≈ $0.06: **about $0.13 in all.**
+
+## What follows for the arena
+1. **A 31-frame block is billed as 50 frames** (`video_frames_processed: 50`). A 49-step block would cost the same,
+   but the arena cannot build a scenario with it (`docs/pilot-runs.md`, run 30), so blocks stay at 30 steps.
+2. **One SAM call per block with the prompt "colored object"** (`sam-6` confirmed it on video): $0.01 per block.
+   The kill test is projected at $12.87 from the rule policy's block counts (`docs/pilot-runs.md`, run 30).
+3. Muse per turn: ~1k input + ~160 output tokens, ~8 turns ≈ $0.016 per episode.
+   Latency: 1.3–12 s per turn (the follow-up with reasoning took 12 s).

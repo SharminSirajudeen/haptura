@@ -13,7 +13,7 @@ const PANES = [
 const UNSURE = 'unsure, checking';
 const VERDICT = { mine: 'mine', echo: 'not me', not_me: 'not me' }; // by Evidence.label
 const FIX = {
-  // by Diagnosis.kind; `ok` and `stale` have no line in the plan
+  // by Diagnosis.kind; `ok` and `stale` have no line
   body_changed: 'my controls changed, relearning',
   eyes_swapped: 'my eyes swapped two objects, corrected',
   target_lost: 'control moved, re-probing',

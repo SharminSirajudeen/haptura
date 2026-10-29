@@ -1,4 +1,4 @@
-"""Every adb call of the phone lane. It reads and acts on the device; it decides nothing.
+"""Every adb call of the phone gate. It reads and acts on the device; it decides nothing.
 
 adb honours ANDROID_SERIAL: the runner points it at the emulator, never at an attached phone.
 """

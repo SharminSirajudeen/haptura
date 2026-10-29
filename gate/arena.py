@@ -1,4 +1,4 @@
-"""S1 make_scenario, S2 Arena, S3 render: the world the agent acts in (plan §1, §3).
+"""`make_scenario`, `Arena` and `render`: the world the agent acts in.
 
 An element's id is its index. Positions are centroids in pixels, origin top-left, `up` is -y, and
 they stay on the CELL_PX grid, so one step moves exactly one cell. W == H, so one bound serves
@@ -84,7 +84,7 @@ def _mover(body: str, u: tuple[int, int]) -> str | None:
 
 
 def _pool(case: str, bodies: list[str]) -> list[tuple[int, int]]:
-    """The goal directions the plan wants: in `body_blocked` the dead action's. Otherwise a
+    """The goal directions each case needs: in `body_blocked` the dead action's. Otherwise a
     direction u that no body can only go the other way along (a map has at most one dead action, so
     every body then moves along u, and on an axis a body leaves one-way u is its live side, where
     the goal sits on the wall and no drift can strand it), moved by a different action after a body
@@ -151,7 +151,7 @@ def _schedules(case: str, step: int, body: str, swap: str | None) -> tuple[Bindi
 
 
 def make_scenario(seed: int, case: str) -> Scenario:
-    """S1. Element 0 is the subject: controlled, or in `blocked` the fixed decoy standing in for
+    """Element 0 is the subject: controlled, or in `blocked` the fixed decoy standing in for
     it. Elements 1 and 2 are look-alikes (the crossing one and the one parked on the goal route),
     3 an echo, 4 a replay, the rest decoys; element 5 takes control in `remap_feasible`."""
     rng = np.random.default_rng(seed)
@@ -182,7 +182,7 @@ def make_scenario(seed: int, case: str) -> Scenario:
 
 
 class Arena:
-    """S2. `history[t]` maps each element id to its true (x, y) at frame t, and frame 0 exists
+    """`history[t]` maps each element id to its true (x, y) at frame t, and frame 0 exists
     before the first action. The truth is for the eval and the truth tracker only."""
 
     def __init__(self, scenario: Scenario) -> None:
@@ -266,7 +266,7 @@ def masks(arena: Arena) -> dict[int, Mask]:
 
 
 def render(arena: Arena) -> Frame:
-    """S3. The current frame: black background, each element in its colour, a later id on top."""
+    """The current frame: black background, each element in its colour, a later id on top."""
     frame = np.zeros((H, W, 3), dtype=np.uint8)
     drawn = masks(arena)
     for e in arena.scenario.elements:

@@ -1,4 +1,4 @@
-// Phone lane (plan §4b): one entry per guarded line, in T0's shape. The list test/mutants.list.js picks this file up.
+// The phone gate: one entry per guarded line, in the shape of tooling.js. The list test/mutants.list.js picks this file up.
 const PY = 'uv run --locked python -m pytest -q';
 const RULES = 'tests/test_phone_rules.py', UI = 'tests/test_phone_ui.py';
 module.exports = [

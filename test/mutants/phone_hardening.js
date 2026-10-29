@@ -1,4 +1,4 @@
-// Fixes from the 28 Oct security review of the phone gate (Mac session): one entry per guarded line.
+// Fixes from the 28 Oct security review of the phone gate: one entry per guarded line.
 const PY = 'uv run --locked python -m pytest -q';
 const m = (from, file, find, replace, test) =>
   ({ from, file, find, replace, mustFail:test.split('::')[0], cmd:`${PY} ${test.split('::')[0]}`, expect:`FAILED ${test}` });

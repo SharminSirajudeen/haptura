@@ -1,6 +1,6 @@
-"""S1 to S3: hand-built worlds where a number can be derived by hand, S1's own scenarios where a
-property can. The maps and steps below are written out here, not imported, so a wrong table in
-gate/arena.py shows.
+"""The arena: hand-built worlds where a number can be derived by hand, `make_scenario`'s own
+scenarios where a property can. The maps and steps below are written out here, not imported, so a
+wrong table in gate/arena.py shows.
 """
 
 from collections.abc import Mapping, Sequence
@@ -183,7 +183,7 @@ def test_after_the_body_remap_step_the_new_map_applies() -> None:
     assert late.tolist() == [60 + 2 * min(t, 9) - 2 * max(t - 9, 0) for t in range(13)]
 
 
-def test_s1_draws_exactly_the_eight_action_maps() -> None:
+def test_make_scenario_draws_exactly_the_eight_action_maps() -> None:
     seen = {frozenset(sc.action_maps[0][1].items()) for sc in scenarios()}
     assert seen == EIGHT_MAPS  # identity, two mirrors, a rotation, and each of four dead actions
 
@@ -304,7 +304,7 @@ def toward_goal(sc: Scenario) -> list[list[str]]:
 
 
 def test_a_body_remap_changes_the_action_that_moves_toward_the_goal() -> None:
-    # issue 21: a remap that leaves this action alone never shows in the steering, so S14 misses it
+    # a remap that leaves this action alone never shows in the steering, so the diagnosis misses it
     hand = make_scenario(2, "body_remap")
     assert [m for _, m in hand.action_maps] == [IDENTITY, MIRROR_X]
     # hand: the goal (34, 60) is left of the subject (102, 60): `left` under identity, then `right`
@@ -323,7 +323,8 @@ def test_same_seed_same_scenario_and_same_world() -> None:
 
 
 def test_every_case_survives_json_with_no_numpy_scalar_in_it() -> None:
-    for case in CASES:  # S11 refuses a numpy integer, and equality would hide a numpy float
+    # the JSON writer refuses a numpy integer, and equality would hide a numpy float
+    for case in CASES:
         sc = make_scenario(3, case)
         assert from_json(to_json(sc), Scenario) == sc
 
@@ -383,7 +384,8 @@ def test_the_look_alike_on_the_goal_route_sits_halfway_on_the_grid() -> None:
 def test_the_parked_look_alike_does_not_move_in_the_first_block() -> None:
     for sc in (s for s in scenarios() if s.case in ("feasible", "blocked")):
         h = play(sc, ["noop"] * BLOCK_STEPS, block=BLOCK_STEPS)
-        assert np.ptp(h[:, 2], axis=0).tolist() == [0.0, 0.0]  # S1 and start_block agree on it
+        # make_scenario and start_block agree on it
+        assert np.ptp(h[:, 2], axis=0).tolist() == [0.0, 0.0]
 
 
 @pytest.mark.parametrize("seed", range(6))

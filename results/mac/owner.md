@@ -1,4 +1,4 @@
-# Desktop owner gate proof (plan §4e), 28 Oct 2026, Mac session
+# Desktop owner gate proof, 28 Oct 2026
 
 **Result: 10 of 10 alternating points classified correctly, in each of 3 runs (30 of 30).** The plan's done-when is
 10 of 10 in one run.

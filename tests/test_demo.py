@@ -1,4 +1,4 @@
-"""T15's demo tool, offline: a replayed clip is the run's own frames, the plan's rule picks the
+"""The demo tool, offline: a replayed clip is the run's own frames, the opening rule picks the
 pairs, and only a picked pair is written for the page."""
 
 from collections.abc import Sequence

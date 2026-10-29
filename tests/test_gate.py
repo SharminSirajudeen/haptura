@@ -1,4 +1,5 @@
-"""S13, S14 and S15 on hand-written Evidence and tracks. Each expected value is derived by hand.
+"""`check_act`, `diagnose` and `rule_policy` on hand-written Evidence and tracks. Each expected
+value is derived by hand.
 
 Constants used: ALPHA_ACT = 0.01 / 48 = 2.083e-4, ALPHA_PROBE = 0.2, EFFECT_MIN = 0.5 * 2 = 1.0,
 STALE_TOL = 1.5 * 2 = 3.0, JUMP_TOL = 2.5 * 2 = 5.0; the walls hold an element's centre in
@@ -21,7 +22,8 @@ P_FLOOR = 1e-4  # a mine element sits at the permutation floor 1 / (PERMS + 1), 
 
 
 def ev(object_id: int, label: str, p0: float = 0.5, body: Body = FULL) -> Evidence:
-    """S13 and S15 read object_id, p0, body and label; the lag fields are filler."""
+    """`check_act` and the rule policy read object_id, p0, body and label; the lag fields are
+    filler."""
     return Evidence(object_id, p0, 1, p0, 2.0, body, label)
 
 
@@ -49,8 +51,9 @@ def test_refuses_when_the_object_is_not_the_mine_one() -> None:
 
 
 def test_refuses_at_p_just_above_alpha_act_since_the_label_says_not_me() -> None:
-    # p0 = 2.2e-4 sits just above ALPHA_ACT = 2.083e-4, so S10 labelled the element not_me and
-    # nothing is mine. S13 reads the label, never p, so even this near miss is refused.
+    # p0 = 2.2e-4 sits just above ALPHA_ACT = 2.083e-4, so the control test labelled the element
+    # not_me and nothing is mine. `check_act` reads the label, never p, so even this near miss is
+    # refused.
     p0 = 2.2e-4
     assert ALPHA_ACT < p0 < ALPHA_PROBE
     d = check_act([ev(3, "not_me", p0)], 3)
@@ -78,7 +81,7 @@ def test_declines_citing_the_body_when_no_live_action_moves_toward_the_goal() ->
 
 def test_an_axis_inside_the_goals_band_needs_nothing_though_off_its_centre() -> None:
     # A tracker reads an element held at the right wall at x = 123.5, inside the goal's x band
-    # 120..128 but 0.5 px short of its centre 124 (#40). Pushing right into the wall does
+    # 120..128 but 0.5 px short of its centre 124. Pushing right into the wall does
     # nothing, so "right" is dead; only y (60 -> centre 40) needs a move, and "up" makes it.
     body: Body = {"up": (0.0, -2.0), "down": (0.0, 2.0), "left": (-2.0, 0.0), "right": (0.0, 0.0)}
     d = rule_policy(
@@ -127,7 +130,7 @@ def test_does_not_decline_early_after_two_looks() -> None:
     assert d.kind == "probe"
 
 
-# S14. Tracks are (x, y) per frame; frame t+1 follows action t.
+# The diagnosis. Tracks are (x, y) per frame; frame t+1 follows action t.
 NAN = (math.nan, math.nan)
 FAR = (90.0, 90.0)  # a decoy nowhere near the target
 DIRS = ("up", "down", "left", "right")
@@ -213,14 +216,15 @@ def test_ok_when_the_target_pushes_into_a_wall() -> None:
 
 def test_ok_when_the_target_slides_along_a_wall() -> None:
     # x = 4 is at the left wall on every frame; each "up" still predicts y - 2, so (4, 64) goes to
-    # (4, 58) as seen: residual 0. With every step at a wall skipped, the old rule (#24), the
+    # (4, 58) as seen: residual 0. With every step at a wall skipped, the old rule, the
     # prediction would stay at (4, 64): 6 px > STALE_TOL = 3, stale.
     slide = track((4, 64), (4, 62), (4, 60), (4, 58))
     assert diagnose(FULL, ("up",) * 3, {1: slide}, 1).kind == "ok"
 
 
 def probe_actions() -> tuple[str, ...]:
-    # S12 with n = PROBE_STEPS = 15 and p_noop = 0.2: round(3) = 3 no-ops and 12 moves, 3 of each.
+    # design_block with n = PROBE_STEPS = 15 and p_noop = 0.2: round(3) = 3 no-ops and 12 moves, 3
+    # of each.
     acts = design_block(np.random.default_rng(0), PROBE_STEPS, 0.2, DIRS)
     assert sorted(acts.count(a) for a in (*DIRS, "noop")) == [3] * 5
     return acts
@@ -228,7 +232,7 @@ def probe_actions() -> tuple[str, ...]:
 
 def test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body() -> None:
     # The target obeys MIRROR from (64, 64): 15 steps of 2 px keep it inside [34, 94], off every
-    # wall. Three of each action make p0 sit at the 1e-4 floor < ALPHA_ACT (plan §3, PROBE_STEPS),
+    # wall. Three of each action make p0 sit at the 1e-4 floor < ALPHA_ACT (PROBE_STEPS),
     # effect 2 >= EFFECT_MIN: mine. Each e_a = mean of three identical vectors - noop mean (0, 0),
     # so the new map is MIRROR exactly. The act block alone would read stale.
     acts = probe_actions()

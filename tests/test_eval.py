@@ -34,7 +34,7 @@ def test_eval_md_freezes_every_constant_at_its_current_value() -> None:
 
 def test_eval_md_names_the_kill_seeds() -> None:
     text = (ROOT / "EVAL.md").read_text()
-    found = re.search(r"\*\*Kill test \(T13\):\*\* seeds (\d+)–(\d+)", text)
+    found = re.search(r"\*\*Kill test:\*\* seeds (\d+)–(\d+)", text)
     assert found is not None
     first, last = found.groups()
     assert range(int(first), int(last) + 1) == ev.KILL_SEEDS

@@ -1,4 +1,4 @@
-"""S4: frames to an H.264 MP4, the container SAM 3.1 accepts, through ffmpeg on stdin."""
+"""Frames to an H.264 MP4, the container SAM 3.1 accepts, through ffmpeg on stdin."""
 
 from __future__ import annotations
 

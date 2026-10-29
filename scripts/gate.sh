@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The whole gate, in order: lockfile, lint, format, types, duplication, floorguard, the suite, every mutant.
 # Run it before every push; scripts/ci.sh runs it in a fresh clone of the pushed commit.
-# EG_MUTANTS=changed runs only the mutants a change touches (the `live` gate; see CLAUDE.md, "Gate:").
+# EG_MUTANTS=changed runs only the mutants a change touches (the `live` gate; GATE_MODE in scripts/ci.sh).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 uv sync --locked --quiet

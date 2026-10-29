@@ -1,4 +1,4 @@
-// T1: the contracts and S11. Each break is the one a reviewer would try first.
+// The contracts and their JSON round trip. Each break is the one a reviewer would try first.
 const PYTEST = 'uv run --locked python -m pytest -q tests/test_types.py';
 module.exports = [
   { from:'S11: NaN written as null', file:'gate/types.py',

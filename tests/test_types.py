@@ -1,4 +1,4 @@
-"""S11 on a hand-written EpisodeLog.
+"""The JSON round trip on a hand-written EpisodeLog.
 
 Every contract type, a NaN gap, a mirrored body map and an unsampled action.
 """

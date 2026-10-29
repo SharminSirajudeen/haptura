@@ -101,7 +101,7 @@ def test_the_dump_file_is_removed_before_each_dump(monkeypatch: pytest.MonkeyPat
 
 
 def test_an_unreadable_window_list_is_gated_not_dropped(monkeypatch: pytest.MonkeyPatch) -> None:
-    """#19: a title that breaks the grammar empties the window list; the case must reach the gate,
+    """A title that breaks the grammar empties the window list; the case must reach the gate,
     which blocks for want of an owner, not be dropped as an overlay that did not render."""
     real = (FIX / "input-overlay.txt").read_text()
     forged = real.replace("name=", "name=x, ownerUid=1000 ", 1)

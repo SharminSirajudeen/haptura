@@ -1,0 +1,113 @@
+{
+ "top_logprobs": 0,
+ "temperature": 0.0,
+ "top_p": 1.0,
+ "service_tier": "auto",
+ "previous_response_id": "resp_6ae1445c34aeab2287d24f79",
+ "model": "muse-spark-1.3",
+ "reasoning": {
+  "effort": "low"
+ },
+ "background": false,
+ "tools": [
+  {
+   "type": "function",
+   "name": "run_experiment",
+   "description": "Run a randomized block of actions and return the evidence table.",
+   "parameters": {
+    "properties": {
+     "dirs": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "n": {
+      "type": "integer"
+     },
+     "p_noop": {
+      "type": "number"
+     }
+    },
+    "type": "object",
+    "required": [
+     "n",
+     "p_noop",
+     "dirs"
+    ]
+   }
+  },
+  {
+   "type": "function",
+   "name": "act",
+   "description": "Steer the object with this id into the goal.",
+   "parameters": {
+    "required": [
+     "object_id"
+    ],
+    "properties": {
+     "object_id": {
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   }
+  },
+  {
+   "type": "function",
+   "name": "decline",
+   "description": "Stop: no element is under your control.",
+   "parameters": {
+    "type": "object",
+    "required": [
+     "reason"
+    ],
+    "properties": {
+     "reason": {
+      "type": "string"
+     }
+    }
+   }
+  }
+ ],
+ "tool_choice": "auto",
+ "truncation": "disabled",
+ "id": "resp_6ae1446182634d20cd914ea3",
+ "object": "response",
+ "status": "completed",
+ "created_at": 1793148001.0,
+ "completed_at": 1793148001.0,
+ "error": null,
+ "incomplete_details": null,
+ "output": [
+  {
+   "type": "reasoning",
+   "id": "rs_6ae1446182634d20cd914ea3:rs_66dd8ef6-106f-42bd-97f6-8e8e66a9ed87",
+   "summary": [],
+   "status": "completed"
+  },
+  {
+   "type": "function_call",
+   "id": "fc_604414c6-3ff5-40f8-8c7e-913d42f5b0a5",
+   "call_id": "call_604414c6-3ff5-40f8-8c7e-913d42f5b0a5",
+   "name": "act",
+   "arguments": "{\"object_id\":3}",
+   "status": "completed"
+  }
+ ],
+ "instructions": "You control one actuator (noop, up, down, left, right) in a scene of moving shapes. You do not know which shape, if any, obeys you. Use run_experiment to measure, then act or decline. Call exactly one tool per turn.",
+ "usage": {
+  "input_tokens": 972,
+  "input_tokens_details": {
+   "cached_tokens": 0
+  },
+  "output_tokens": 159,
+  "output_tokens_details": {
+   "reasoning_tokens": 110
+  },
+  "total_tokens": 1131
+ },
+ "parallel_tool_calls": true,
+ "store": true,
+ "max_output_tokens": 400
+}

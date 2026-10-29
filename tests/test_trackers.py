@@ -1,4 +1,5 @@
-"""T8 on T2's synthetic clip: a red circle and a red square cross with a 2-frame occlusion."""
+"""The trackers on the API measurements' synthetic clip: a red circle and a red square cross with a
+2-frame occlusion."""
 
 import math
 from pathlib import Path
@@ -114,7 +115,7 @@ def _subject_id(tracks: Tracks, truth: Tracks) -> int:
     )
 
 
-def test_at_a_forced_crossing_the_colour_tracker_swaps_and_s14_catches_it() -> None:
+def test_at_a_forced_crossing_the_colour_tracker_swaps_and_the_diagnosis_catches_it() -> None:
     # seed 34: measured 28 Oct, the subject's colour id drifts 26.5 px off its true path after the
     # crossing
     body, actions, tracks, truth = _steered_block(34)
@@ -125,9 +126,9 @@ def test_at_a_forced_crossing_the_colour_tracker_swaps_and_s14_catches_it() -> N
     assert d.swap is not None and d.swap[0] == cid
 
 
-def test_where_the_colour_tracker_holds_s14_reports_no_swap() -> None:
+def test_where_the_colour_tracker_holds_the_diagnosis_reports_no_swap() -> None:
     # seed 5, an identity map: measured 28 Oct, the colour id stays on the subject through the
-    # block (0.7 px). Seed 0 was the witness until #21 moved its goal: it draws `up` dead.
+    # block (0.7 px). Seed 0 was the witness until the arena fix moved its goal: it draws `up` dead.
     body, actions, tracks, truth = _steered_block(5)
     cid = _subject_id(tracks, truth)
     assert np.nanmax(np.hypot(*(tracks[cid] - truth[0]).T)) <= JUMP_TOL

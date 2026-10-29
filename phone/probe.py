@@ -1,4 +1,4 @@
-"""P4, the press probe (plan §4b rules 1-3): press, capture, cancel, and read what lit up.
+"""The press probe: press, capture, cancel, and read what lit up (its three rules: README below).
 
     ANDROID_SERIAL=emulator-5554 uv run python -m phone.probe
 
@@ -24,7 +24,7 @@ from phone import adb, ghostei, ui
 from phone.rules import Verdict, check_tap
 
 Frame = np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
-WAIT_S = 0.20  # DOWN to capture (plan §4b: the measured holds and the ones that ran late)
+WAIT_S = 0.20  # DOWN to capture (the measured holds and the ones that ran late)
 CANCEL_SHARE = 0.75  # rule 2: CANCEL lands strictly before this share of long_press_timeout
 BASE, PRESS = "/data/local/tmp/cg_base.raw", "/data/local/tmp/cg_press.raw"
 STATUS_BAR = re.compile(r"type=statusBars frame=\[\d+,\d+\]\[\d+,(\d+)\]")
@@ -139,7 +139,7 @@ def press_probe(x: int, y: int) -> ProbeResult:
 
 
 # The runner: the probe's measured record on the emulator (results/phone/probe/).
-ROWS = (490, 850)  # two Settings rows, the presses of §4b's first measurement
+ROWS = (490, 850)  # two Settings rows, the presses of the first measurement
 TRIALS = 20
 SETTINGS = "com.android.settings"
 DIALOG = {"pkg": SETTINGS, "title": "T", "content": "C", "cancel": "Cancel", "confirm": "Install"}
@@ -204,7 +204,12 @@ TABLE = (
     + "|---" * 9
     + "|"
 )
-README = """# Press probe: plan §4b rules 1-3, §4d P4
+README = """# Press probe
+
+Three rules before a tap: (1) press DOWN, capture the screen and send CANCEL, never UP; (2) a
+CANCEL at or past {share:.0%} of `long_press_timeout` is late, and a late probe's verdict is
+`unknown`; (3) tap only when the press lit up inside the intended element. Whose element it is,
+is the owner check's question (`check_tap`).
 
 Written by `ANDROID_SERIAL=emulator-5554 uv run python -m phone.probe` on Small_Phone (Android
 API 36, 720×1280); the records are `trials.jsonl`. One `adb shell` string per probe: DOWN, wait
@@ -213,7 +218,7 @@ CANCEL started minus DOWN returned and at most CANCEL returned minus DOWN starte
 late when the upper bound reaches {share:.0%} of `long_press_timeout`, read from the device on
 every probe. Rule 3 allows only a highlight inside the clickable
 node under the press point. `sweep.jsonl` is the 28 Oct method sweep behind the wait, 10 trials
-per method (the plan's host round trip per step with PNG, and one string with raw at 100-220 ms).
+per method (a host round trip per step with PNG, and one string with raw at 100-220 ms).
 
 ## {n} probes on two Settings rows
 {table}
@@ -228,7 +233,7 @@ per method (the plan's host round trip per step with PNG, and one string with ra
 {overlay}
 
 Rule 3 says only where the press lands: on the button it was aimed at. Whose button it is
-is rule 7's question: its owner is `{owner}`, and `check_tap` says {owner_kind} for a
+is the owner check's question: its owner is `{owner}`, and `check_tap` says {owner_kind} for a
 Settings task.
 
 ## Known limits
@@ -241,8 +246,8 @@ Settings task.
   press point and 9 showed nothing (`sweep.jsonl`). At {wait:.0f} ms the smallest box here was
   {box_h} px tall in a {row_h} px row. Rule 3 asks for no minimum size, so none is enforced.
 - **A hostile view inside the task app passes.** Drawn in the app's own window, sized within the
-  intended element, with its own bounded ripple, it passes rule 3, and the owner check (rule 7)
-  passes it too. That is plan §4d condition 5, the in-app red-team; it is not built here.
+  intended element, with its own bounded ripple, it passes rule 3, and the owner check
+  passes it too. That is the in-app red-team case; it is not built here.
 - **One emulator.** Settings rows sit in a scrolling list, which holds back the press state by
   Android's tap timeout; the dialog's buttons light at once. Other apps' timing is unmeasured.
 """
@@ -258,7 +263,7 @@ def main() -> None:
     ghostei.arrange(DIALOG, attack=True)
     install = ui.with_text(ui.parse_nodes(adb.ui_xml()), "Install")
     if install is None:
-        sys.exit("GhostEI's dialog did not render: reinstall its helper (notes/mac-lane.md)")
+        sys.exit("GhostEI's dialog did not render: reinstall its helper APK and allow its overlay")
     x1, y1, x2, y2 = install.bounds
     overlay = trial((x1 + x2) // 2, (y1 + y2) // 2) | {"overlay": True}
     adb.force_stop(ghostei.HELPER)

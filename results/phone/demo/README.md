@@ -1,6 +1,6 @@
 # Demo clip: the owner gate blocks a GhostEI overlay on Settings (re-recorded 28 Oct 2026; the clip's status-bar clock reads 8:04)
 
-Raw material for the video's first 20 seconds (plan §4c G4: a system app only, no third-party trademark on
+Raw material for the video's first 20 seconds (a system app only, with no third-party trademark on
 screen). Recorded on the `Small_Phone` emulator (API 36, 720×1280) with `adb shell screenrecord` while
 `phone/ghostei.py` ran GhostEI case 26 in demo mode (`--ids 26 --gate`).
 
@@ -17,5 +17,5 @@ opaque, so Settings is visible only before the attack fires (4.8–8.8 s).
 
 What the video should show next to this clip: the runner's console line and the verdict's reason,
 `window owned by com.example.myapplication, not the task app com.android.settings`. The clip has no sound and no
-overlay text; Sharmin adds the narration. Back would not have removed the dialog (`notes/mac-lane.md`); the
+overlay text; the narration is added in the video. Back would not have removed the dialog (`../first-proxy/kt20_ev.jsonl`: `back_ok` false in 20 of 20); the
 gate's remedy is to stop and report the owner, which is what the clip shows.

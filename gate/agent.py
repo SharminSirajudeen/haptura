@@ -1,16 +1,16 @@
-"""T10: the agent loop and the executor (plan §4 T10).
+"""The agent loop and the executor.
 
 Muse Spark makes every act, probe or decline call through three tools; the executor runs the world
-and every number. One flag separates the conditions: `gated=True` puts S13 before `act`, S14 after
-each act block and the advice line under each table; `gated=False` (baseline a) removes those
-three and the table's p0 and label columns, as EVAL.md defines baseline a. The world (T9
-`run_block`), the diagnosis (S14 `diagnose`) and the model (S8 `muse_turn`) are arguments:
+and every number. One flag separates the conditions: `gated=True` puts `check_act` before `act`,
+`diagnose` after each act block and the advice line under each table; `gated=False` (baseline a)
+removes those three and the table's p0 and label columns, as EVAL.md defines baseline a. The world
+(`run_block`), the diagnosis (`diagnose`) and the model (`muse_turn`) are arguments:
 production passes `gate.episode.run_block`, `gate.gate.diagnose` and `gate.meta_api.muse_turn`,
 and the tests pass fakes.
 
-The agent never sees ground truth: ids are carried across blocks from tracked positions (S9), and
-`_controls` is the only reader of the arena's binding and true positions; its answer sets the
-outcome and nothing else.
+The agent never sees ground truth: ids are carried across blocks from tracked positions
+(`match_ids`), and `_controls` is the only reader of the arena's binding and true positions; its
+answer sets the outcome and nothing else.
 """
 
 from __future__ import annotations
@@ -38,9 +38,9 @@ from gate.constants import (
 )
 from gate.control import control_scores, design_block
 from gate.episode import Tracker
-from gate.gate import PROBE_SEED, _mine, centre, check_act, rule_policy  # _mine: public per #6
+from gate.gate import PROBE_SEED, _mine, centre, check_act, rule_policy
 from gate.meta_api import MuseReply, ToolCall
-from gate.trackers import _last, match_ids  # _last: lane B makes it public (issue #6)
+from gate.trackers import _last, match_ids
 from gate.types import (
     BlockRecord,
     Decision,
@@ -64,7 +64,7 @@ MuseTurn = Callable[[str, str | list[dict[str, Any]], list[dict[str, Any]], str 
 DIRS = ACTIONS[1:]  # up, down, left, right
 DESIGN_STREAM = 3  # the arena draws from streams 1 and 2 of the seed; the agent's designs from this
 SEED_STRIDE = MAX_FRAMES  # above the blocks one episode can run (each takes at least two frames),
-# so S10's seed `scenario.seed * SEED_STRIDE + block index` never repeats across episodes
+# so the control test's seed `scenario.seed * SEED_STRIDE + block index` never repeats
 USAGE = ("muse_calls", "input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens")
 NUDGE = "Call one of the three tools."
 
@@ -123,8 +123,8 @@ TOOLS: list[dict[str, Any]] = [
 
 @dataclass
 class _Run:
-    """One episode's state. `reference` is each id's last tracked position: S9's reference for the
-    next block, and the only positions the agent knows."""
+    """One episode's state. `reference` is each id's last tracked position: `match_ids`' reference
+    for the next block, and the only positions the agent knows."""
 
     arena: Arena
     tracker: Tracker
@@ -154,7 +154,7 @@ def run_episode(
     diagnose: Diagnose,
     muse_turn: MuseTurn,
 ) -> EpisodeLog:
-    """S8 turns until an act reaches the goal, a decline, a false act, MAX_MUSE_CALLS or
+    """`muse_turn` turns until an act reaches the goal, a decline, a false act, MAX_MUSE_CALLS or
     MAX_FRAMES; the conversation is carried by `previous_response_id`. Block k's clip is saved as
     `clips/kk.mp4` when `clips` is set."""
     scenario: Scenario = arena.scenario
@@ -181,7 +181,7 @@ def _task(goal: Goal) -> str:
 
 
 def _add_usage(total: dict[str, int], usage: Mapping[str, Any]) -> None:
-    """S8's usage, in the shape T2 measured (notes/api/muse-2-follow-up.json)."""
+    """`muse_turn`'s usage, in the shape the API returned (results/api/muse-2-follow-up.json)."""
     total["muse_calls"] += 1
     total["input_tokens"] += usage.get("input_tokens", 0)
     total["output_tokens"] += usage.get("output_tokens", 0)
@@ -224,7 +224,8 @@ def _decide(run: _Run, decision: Decision) -> None:
 
 
 def _experiment(run: _Run, args: Mapping[str, Any], said: str) -> str:
-    """One block designed by S12, run by T9, re-keyed by S9; S10 on the pool, then the table."""
+    """One block designed by `design_block`, run, re-keyed by `match_ids`; the control test on the
+    pool, then the table."""
     parsed = _parse(args)
     if parsed is None:
         return f"bad arguments: n is 1..{BLOCK_STEPS}, p_noop is 0..1, dirs lists {', '.join(DIRS)}"
@@ -254,7 +255,7 @@ def _parse(args: Mapping[str, Any]) -> tuple[int, float, list[str]] | None:
 
 
 def _block(run: _Run, actions: tuple[str, ...], phase: str) -> Tracks | None:
-    """T9 runs the block if it fits MAX_FRAMES; S9 re-keys its ids to the ones carried so far."""
+    """Runs the block if it fits MAX_FRAMES; `match_ids` re-keys its ids to the ones carried."""
     if run.frames + len(actions) + 1 > MAX_FRAMES:
         run.outcome = "timeout"
         return None
@@ -287,17 +288,18 @@ def _pool(blocks: Sequence[tuple[tuple[str, ...], Tracks]]) -> tuple[tuple[str, 
 
 
 def _look(run: _Run, actions: Sequence[str], tracks: Tracks, seed: int) -> list[Evidence]:
-    """S10, one look more: the evidence every later table, S13 and S15 read."""
+    """The control test, one look more: the evidence every later table, `check_act` and the rule
+    policy read."""
     run.looks += 1
     run.evidence = control_scores(actions, tracks, MAX_LAG, seed)
     return run.evidence
 
 
 def _advice(run: _Run, evidence: list[Evidence]) -> Decision:
-    """S15's verdict on the pooled evidence, shown to Muse as advice."""
+    """The rule policy's verdict on the pooled evidence, shown to Muse as advice."""
     goal = run.arena.scenario.goal
     mine = _mine(evidence)
-    # S15 reads target_pos only when exactly one element is mine
+    # the rule policy reads target_pos only when exactly one element is mine
     pos = run.reference[mine[0].object_id] if len(mine) == 1 else centre(goal)
     return rule_policy(evidence, run.looks, BLOCK_BUDGET, pos, goal)
 
@@ -334,7 +336,8 @@ RULES_PROBE = {"n": BLOCK_STEPS, "p_noop": P_NOOP, "dirs": list(DIRS)}  # EVAL.m
 def rules_turn(
     instructions: str, given: str | list[dict[str, Any]], tools: Any, previous: str | None
 ) -> MuseReply:
-    """The rules-only condition: S15 decides, through the same loop and tools as Muse (a MuseTurn).
+    """The rules-only condition: the rule policy decides, through the same loop and tools as Muse
+    (a MuseTurn).
 
     Each turn answers with the tool call the latest advice line names; with no advice yet, after
     a refusal, or on advice to probe, it runs one full block over every direction.
@@ -351,7 +354,7 @@ def rules_turn(
 
 
 def _act(run: _Run, object_id: Any, said: str) -> str:
-    """S13 first when gated; a refusal goes back to Muse with its reason."""
+    """`check_act` first when gated; a refusal goes back to Muse with its reason."""
     if not isinstance(object_id, int) or object_id not in run.reference:
         return f"unknown object {object_id}; act on an id from the table"
     decision = check_act(run.evidence, object_id) if run.gated else Decision("act", object_id, said)
@@ -366,7 +369,7 @@ def _act_phase(run: _Run, target: int) -> str:
     stale block, whose diagnostic probe goes back to Muse. The act is judged before every block,
     and once more after the last: a target the arena does not bind is a false act, and one already
     in the goal is a success, so a commitment to an element with no live action still counts and
-    a target S15 found inside the goal is not steered out of it (#40)."""
+    a target the rule policy found inside the goal is not steered out of it."""
     body = next((e.body for e in run.evidence if e.object_id == target), {})
     live, goal = _live(body), run.arena.scenario.goal
     while run.outcome is None:
@@ -383,8 +386,8 @@ def _act_phase(run: _Run, target: int) -> str:
 
 
 def _act_block(run: _Run, target: int, body: Body, live: Mapping[str, Vec]) -> str:
-    """One act block, then S14 when gated; the eyes fix is applied here, without a Muse turn, so
-    the act is judged on the corrected ids. Returns S14's kind ('' when ungated)."""
+    """One act block, then `diagnose` when gated; the eyes fix is applied here, without a Muse turn,
+    so the act is judged on the corrected ids. Returns the diagnosis kind ('' when ungated)."""
     actions = _steer(live, run.reference[target], centre(run.arena.scenario.goal))
     tracks = _block(run, actions, "act")
     if tracks is None:
@@ -399,8 +402,8 @@ def _act_block(run: _Run, target: int, body: Body, live: Mapping[str, Vec]) -> s
 
 
 def _probe(run: _Run, target: int, body: Body) -> str:
-    """S14's diagnostic probe after a stale block, 3 of each action; S14 on it decides, and its fix
-    reaches Muse as advice under the probe's own evidence, since the pool restarts here."""
+    """The diagnostic probe after a stale block, 3 of each action; `diagnose` on it decides, and its
+    fix reaches Muse as advice under the probe's own evidence, since the pool restarts here."""
     stale = run.blocks[-1]
     actions = design_block(run.rng, PROBE_STEPS, 1 / (len(DIRS) + 1), DIRS)
     tracks = _block(run, actions, "probe")
@@ -408,7 +411,7 @@ def _probe(run: _Run, target: int, body: Body) -> str:
         return ""
     found = run.diagnose(body, stale.actions, stale.tracks, target, (actions, tracks))
     run.pool = [(actions, tracks)]
-    # the very call S14 just made on this probe, so the table and S14's verdict cannot disagree
+    # the very call `diagnose` just made on this probe, so the table and its verdict cannot disagree
     evidence = _look(run, actions, tracks, PROBE_SEED)
     if found.kind == "body_changed":
         advice = Decision("act", target, found.fix)
@@ -421,7 +424,7 @@ def _probe(run: _Run, target: int, body: Body) -> str:
 
 
 def _live(body: Body) -> dict[str, Vec]:
-    """The measured actions that are alive: an effect of at least EFFECT_MIN (S10, step 5)."""
+    """The measured actions that are alive: an effect of at least EFFECT_MIN."""
     return {a: v for a, v in body.items() if v is not None and math.hypot(*v) >= EFFECT_MIN}
 
 
@@ -440,8 +443,8 @@ def _steer(live: Mapping[str, Vec], start: Vec, aim: Vec) -> tuple[str, ...]:
 def _controls(run: _Run, target: int) -> bool:
     """The one read of ground truth, for the outcome only: the true element nearest the target's
     tracked position must be the element the arena binds now. Two on one pixel, which a wall's
-    clamp can hold there, are told apart one frame back at a time along the track that ends there
-    (#37): the one S14's eyes fix in this block handed the target to, else the target's own. A
+    clamp can hold there, are told apart one frame back at a time along the track that ends there:
+    the one the eyes fix in this block handed the target to, else the target's own. A
     frame where that track is unseen is skipped, so a target unseen at the end is matched where it
     was last seen, against that frame's truth. A pair that shared every frame of the block is a
     tie, and a tie is not control."""
@@ -457,7 +460,7 @@ def _controls(run: _Run, target: int) -> bool:
             near = {e for e in near if gap[e] == min(gap.values())}
         if len(near) == 1:
             break
-    return near == {arena._at(arena.scenario.binding_schedule)}  # _at: public per issue #6
+    return near == {arena._at(arena.scenario.binding_schedule)}
 
 
 def _in_goal(pos: Vec, goal: Goal) -> bool:

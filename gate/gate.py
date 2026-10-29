@@ -1,7 +1,8 @@
-"""S13, the gate; S14, the diagnosis after an act block; S15, the rule policy (plan §3).
+"""`check_act`, the gate; `diagnose`, the diagnosis after an act block; `rule_policy`.
 
-All three read `Evidence.label`, which S10 derived from ALPHA_ACT and EFFECT_MIN: one derivation per
-quantity. Every reason is one sentence naming the evidence it rests on, since Muse reads it.
+All three read `Evidence.label`, which `control_scores` derived from ALPHA_ACT and EFFECT_MIN: one
+derivation per quantity. Every reason is one sentence naming the evidence it rests on, since Muse
+reads it.
 """
 
 from __future__ import annotations
@@ -16,11 +17,11 @@ from gate.control import Floats, Ints, control_scores
 from gate.types import Array, Decision, Diagnosis, Evidence, Tracks, Vec
 
 Goal = tuple[float, float, float, float]  # x0, y0, x1, y1, as Scenario.goal
-PROBE_SEED = 0  # S14's S10 call on the probe: fixed, so a diagnosis replays exactly
+PROBE_SEED = 0  # the diagnosis' control test on the probe: fixed, so it replays exactly
 
 
 def check_act(evidence: Sequence[Evidence], object_id: int) -> Decision:
-    """S13: act only when `object_id` is the single element labelled mine."""
+    """Act only when `object_id` is the single element labelled mine."""
     mine = [e.object_id for e in _mine(evidence)]
     if len(mine) != 1:
         reason = f"{len(mine)} elements are labelled mine {mine}, not one"
@@ -35,7 +36,7 @@ def check_act(evidence: Sequence[Evidence], object_id: int) -> Decision:
 def rule_policy(
     evidence: Sequence[Evidence], blocks_used: int, budget: int, target_pos: Vec, goal: Goal
 ) -> Decision:
-    """S15, in this order: act on the single mine when the goal is reachable; decline citing the
+    """In this order: act on the single mine when the goal is reachable; decline citing the
     body when it is not; decline when the budget is spent, or when every p0 is above ALPHA_PROBE
     after EARLY_LOOKS looks; else probe."""
     mine = _mine(evidence)
@@ -57,7 +58,7 @@ def centre(goal: Goal) -> Vec:
 
 def _act_or_decline(e: Evidence, target_pos: Vec, goal: Goal) -> Decision:
     """Act on the mine element `e` when its live body reaches the goal, else decline. What each
-    axis needs is the way to the goal's band: nothing once the target is inside it (#40)."""
+    axis needs is the way to the goal's band: nothing once the target is inside it."""
     need = np.clip(target_pos, goal[:2], goal[2:]) - np.asarray(target_pos)
     live = [v for v in e.body.values() if v is not None]
     missing = [name for axis, name in enumerate("xy") if not _reaches(live, axis, need[axis])]
@@ -78,7 +79,7 @@ def _reaches(live: list[Vec], axis: int, need: float) -> bool:
 
 
 def _mine(evidence: Sequence[Evidence]) -> list[Evidence]:
-    """The elements S10 labelled mine: the label is read, never re-derived from p."""
+    """The elements `control_scores` labelled mine: the label is read, never re-derived from p."""
     return [e for e in evidence if e.label == "mine"]
 
 
@@ -89,8 +90,8 @@ def diagnose(
     target_id: int,
     probe: tuple[Sequence[str], Tracks] | None = None,
 ) -> Diagnosis:
-    """S14, first rule that holds: eyes_swapped, stale, ok. With `probe` given, S10 on the probe
-    alone decides body_changed or target_lost. An action with no measured vector predicts no
+    """First rule that holds: eyes_swapped, stale, ok. With `probe` given, the control test on the
+    probe alone decides body_changed or target_lost. An action with no measured vector predicts no
     motion, and the walls hold every predicted step as they hold the element."""
     if probe is not None:
         return _reprobe(probe[0], probe[1], target_id)
@@ -131,7 +132,7 @@ def _swap(tracks: Tracks, target_id: int, steps: Floats, seen: Ints) -> tuple[in
 
 def _predict(pos: Array, steps: Floats, t1: int, t2: int) -> Floats:
     """The target at visible frame t1 moved by the body's steps t1..t2-1, each held by the walls
-    as the arena holds an element (plan §3, "Edges clamp"): a push into a wall moves nothing."""
+    as the arena holds an element: a push into a wall moves nothing."""
     guess: Floats = pos[t1]
     for step in steps[t1:t2]:
         guess = np.clip(guess + step, HALF, LIMIT)
@@ -144,7 +145,8 @@ def _dist(a: Floats, b: Floats) -> float:
 
 
 def _reprobe(actions: Sequence[str], tracks: Tracks, target_id: int) -> Diagnosis:
-    """S14 on the diagnostic probe: body_changed with the new map if S10 labels the target mine."""
+    """The diagnostic probe: body_changed with the new map if the control test labels the target
+    mine."""
     found = [
         e for e in control_scores(actions, tracks, MAX_LAG, PROBE_SEED) if e.object_id == target_id
     ]

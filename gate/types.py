@@ -1,4 +1,4 @@
-"""The contracts every lane imports (plan §2), plus S11, JSON in and out.
+"""The contracts every module imports, plus JSON in and out.
 
 Frozen dataclasses with no domain logic. Steps in a scenario's schedules count from the agent's
 first act step. Tracks are (x, y) pixels, origin top-left, NaN where the tracker lost the object;
@@ -20,9 +20,10 @@ Vec = tuple[float, float]
 Array = np.ndarray[tuple[int, int], np.dtype[np.float64]]
 """A [T, 2] float array, spelled out: numpy's NDArray alias hides np.ndarray from get_origin."""
 Tracks = dict[int, Array]
-"""Object id to an array [T, 2] of centroids. The ids are the tracker's own; S9 maps them."""
+"""Object id to an array [T, 2] of centroids. The ids are the tracker's own; `match_ids` maps
+them."""
 Frames = np.ndarray[tuple[int, int, int, int], np.dtype[np.uint8]]
-"""A clip: [T, H, W, 3] RGB, as S3 renders it and S4 encodes it."""
+"""A clip: [T, H, W, 3] RGB, as `render` renders it and `encode_mp4` encodes it."""
 
 
 @dataclass(frozen=True)
@@ -83,9 +84,9 @@ class BlockRecord:
     clip_path: str
     tracks: Tracks
     evidence: tuple[Evidence, ...]
-    advice: Decision | None  # the S15 or S14 line shown to Muse; None in baseline a
+    advice: Decision | None  # the advice line shown to Muse; None in baseline a
     decision: Decision | None  # Muse's call after this block
-    diagnosis: Diagnosis | None  # S14's result; a diagnostic probe's verdict; None in experiments
+    diagnosis: Diagnosis | None  # the diagnosis; a diagnostic probe's verdict; None in experiments
 
 
 @dataclass(frozen=True)
@@ -99,12 +100,12 @@ class EpisodeLog:
 
 
 def to_json(obj: object) -> str:
-    """S11: a dataclass to JSON. Arrays become lists, NaN becomes null, any other NaN errors."""
+    """A dataclass to JSON. Arrays become lists, NaN becomes null, any other NaN errors."""
     return json.dumps(_encode(obj), allow_nan=False)
 
 
 def from_json[T](text: str, cls: type[T]) -> T:
-    """S11: JSON back to `cls`, guided by its field types. A null inside an array becomes NaN."""
+    """JSON back to `cls`, guided by its field types. A null inside an array becomes NaN."""
     return cast(T, _decode(json.loads(text), cls))
 
 

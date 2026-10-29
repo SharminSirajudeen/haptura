@@ -1,6 +1,6 @@
-"""T12's gate/eval.py on three hand-written EpisodeLogs whose metrics are worked out by hand in the
+"""gate/eval.py on three hand-written EpisodeLogs whose metrics are worked out by hand in the
 comments, plus hand-written histories for the eyes and occlusion metrics, and one real episode for
-the replay. Prices are notes/api.md's: SAM $0.20 per 1k frames (50 at least per block), Muse
+the replay. Prices are docs/api.md's: SAM $0.20 per 1k frames (50 at least per block), Muse
 $1.25 / $4.25 per million input / output tokens.
 """
 
@@ -67,8 +67,9 @@ def log(
 REMAP = ((10, "control_remap", "0 -> None"),)
 # L1, feasible: a 30-step probe, then a 30-step act block that reaches the goal.
 L1 = log("feasible", "success", [block(0, "probe", 30), block(30, "act", 30, "ok")], (1000, 200))
-# L2, remap_blocked: act from step 0, the remap fires at act step 10 inside that block, S14 says
-# stale, the 15-step diagnostic probe says target_lost, one more probe, then the decline.
+# L2, remap_blocked: act from step 0, the remap fires at act step 10 inside that block, the
+# diagnosis says stale, the 15-step diagnostic probe says target_lost, one more probe, then the
+# decline.
 L2 = log(
     "remap_blocked",
     "decline",
