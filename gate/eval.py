@@ -34,7 +34,8 @@ KILL_CONDITIONS = CONDITIONS[:3]
 KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's suggested numbers; Sharmin confirms before T13
 History = Sequence[dict[int, Vec]]
 Pairs = frozenset[tuple[int, int]]
-KILL_SEEDS = range(20)  # EVAL.md: the kill rule is judged on seeds 0-19
+KILL_SEEDS = range(1000, 1020)  # EVAL.md: chosen before any run on them
+KILL_RANGE = f"seeds {KILL_SEEDS[0]}-{KILL_SEEDS[-1]}"
 
 
 def acted_before(log: EpisodeLog, i: int) -> int:
@@ -339,16 +340,16 @@ def column(
 
 
 def kill_rule(logs: Sequence[EpisodeLog]) -> str:
-    """EVAL.md's numeric kill rule on seeds 0-19 of the kill test's three conditions. It says
+    """EVAL.md's numeric kill rule on KILL_SEEDS of the kill test's three conditions. It says
     rethink unless both arms clearly pass, so a number that could not be computed is a rethink."""
     by = _by_condition([x for x in logs if x.scenario.seed in KILL_SEEDS])
     if not all(c in by for c in KILL_CONDITIONS):
-        return "Kill rule: not computed; it needs seeds 0-19 of " + ", ".join(KILL_CONDITIONS) + "."
+        return f"Kill rule: not computed; it needs {KILL_RANGE} of {', '.join(KILL_CONDITIONS)}."
     diff, pairs = paired_difference(by["gated+SAM"], by["no-gate+SAM"])
     sam, colour = (kept_rate(replayed(by[c])[1]) for c in ("gated+SAM", "gated+colour"))
     passes = kill_passes(diff, sam - colour)
     return (
-        f"Kill rule, seeds 0-19: paired difference (gated+SAM - no-gate+SAM) = {diff:.3f} over "
+        f"Kill rule, {KILL_RANGE}: paired difference (gated+SAM - no-gate+SAM) = {diff:.3f} over "
         f"{pairs} pairs (rethink at <= {KILL_DIFF}); identities kept through occlusion, SAM "
         f"{sam:.3f} - colour {colour:.3f} = {sam - colour:.3f} (rethink below {KILL_OCCLUSION}). "
         + ("Passes." if passes else "**Rethink.**")

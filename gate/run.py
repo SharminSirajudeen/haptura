@@ -1,6 +1,6 @@
-"""T13 / T14: one condition over seeds x all six cases (plan T13, EVAL.md "Cost").
+"""T13, the kill test: one condition over seeds x all six cases (plan T13, EVAL.md "Cost").
 
-`python -m gate.run --condition gated+SAM --seeds 0-19 --budget 25 [--push]`
+`python -m gate.run --condition gated+SAM --seeds 1000-1019 --budget 25 [--push]`
 
 It first prints EVAL.md's projection, an estimate, and refuses above the budget: episodes x blocks
 per episode (T11's rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per
@@ -144,7 +144,7 @@ def _push(message: str, out: Path) -> None:
 def main(argv: Sequence[str]) -> None:
     parser = argparse.ArgumentParser(prog="python -m gate.run", description=__doc__.split("\n")[0])
     parser.add_argument("--condition", required=True, choices=sorted(SETUP))
-    parser.add_argument("--seeds", required=True, help="first-last, e.g. 0-19")
+    parser.add_argument("--seeds", required=True, help="first-last, e.g. 1000-1019")
     parser.add_argument("--budget", type=float, required=True, help="RUN_BUDGET_USD for this run")
     parser.add_argument("--push", action="store_true")
     args = parser.parse_args(argv)

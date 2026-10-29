@@ -1,11 +1,15 @@
 # EVAL.md: the pre-registered evaluation (T12). Draft of 28 Oct 2026; frozen by the commit named in `notes/progress.md`
 # before the first paid run (T13), and never edited afterwards.
+# 30 Oct (#44): kill seeds 0–19 → 1000–1019, final run dropped. T13's launch on 29 Oct had been paused at 1 of 120
+# episodes; no condition completed (#42), so this file was not yet frozen.
 
 ## What is measured, exactly
 Each condition that runs uses the same episodes: each **seed** runs **all six cases**, one episode per (seed, case).
-- **Kill test (T13):** seeds 0–19 → 120 episodes per condition.
-- **Final run (T14):** seeds 100–199 → 600 episodes per condition, or the longest prefix of that range the credit
-  allows; the n is written here before the run and reported with every number.
+- **Kill test (T13):** seeds 1000–1019 → 120 episodes per condition: n = 100 for the five-case headline and n = 20
+  for feasible, reported with every number. It is the arena's one paid run, so its numbers are the ones reported,
+  and the seeds were chosen before any run on them (development ran all six cases up to seed 399 and blocked up to
+  999; `docs/pilot-runs.md`, P30). No code changes because of what these seeds show: before the kill test they are
+  run only by P30's free check and the kill-line test.
 
 ### Conditions
 | Condition | Agent | Gate (S13, S14, advice line) | Tracker |
@@ -15,6 +19,8 @@ Each condition that runs uses the same episodes: each **seed** runs **all six ca
 | gated+colour (baseline b) | Muse Spark | on | `colour_tracker` |
 | rules-only+SAM | none: S15 decides, S12 probes with `n=BLOCK_STEPS, p_noop=P_NOOP`, all directions (`usage.muse_calls` counts S15's decisions, at 0 tokens; `MAX_MUSE_CALLS` caps them) | on | `sam_tracker` |
 | gated+truth (upper bound) | Muse Spark | on | `truth_tracker` |
+
+Only the kill test's three conditions run (below); rules-only+SAM and gated+truth are defined, not run.
 
 ### Correct outcome per case (the eval scores against this table)
 | Case | Correct outcome | Checked in the log as |
@@ -54,8 +60,7 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
   on to its next. This scores swaps, not two touching look-alikes read as one blob. Never held apart again before the
   next overlap is not kept; no such frame before it, or an overlap reaching the episode's end, is unscored. Frames are
   counted per overlapping pair and reported, unscored ones too, per block phase;
-- how often Muse overruled S15's advice, and how often the overrule was right against this table; blocks used and
-  false acts, rules-only against Muse;
+- how often Muse overruled S15's advice, and how often the overrule was right against this table;
 - input tokens, output tokens and SAM frames per episode, and **dollars per correct decision** (all Muse and SAM
   spend of the condition / its episodes that pass the table), with input and output tokens per correct decision
   beside it (T2 measured about 6 input tokens per output token, so output alone would understate it). SAM frames
@@ -63,9 +68,12 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
 
 ### Kill rule (T13), numeric. Suggested 28 Oct; Sharmin confirms before the run
 The kill test runs three conditions only: gated+SAM, no-gate+SAM and gated+colour. Rethink if either holds on seeds
-0–19:
+1000–1019:
 1. the mean paired difference (gated+SAM − no-gate+SAM) on the six-case score is ≤ 0.10;
 2. SAM's identities-kept-through-occlusion rate beats the colour tracker's by less than 0.20.
+
+No run follows the kill test, so its verdict is reported with its numbers: on a rethink the README states that the
+arena's claim did not hold on these seeds.
 
 ### Cost, printed before every paid run and refused above `RUN_BUDGET_USD`
 SAM: $0.20 per 1k frames, 50-frame minimum per call, one call per block. Muse Spark: $1.25 / $4.25 per million
