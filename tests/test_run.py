@@ -1,4 +1,4 @@
-"""T13's runner, offline: the projection by hand, and the loop on the free rules-only+truth
+"""The kill-test runner, offline: the projection by hand, and the loop on the free rules-only+truth
 condition (no network). A paid condition is only ever projected here; its episodes are replaced by
 a stub that fails the test if it is called.
 """

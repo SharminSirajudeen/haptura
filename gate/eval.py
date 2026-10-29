@@ -1,4 +1,4 @@
-"""T12: EpisodeLogs to results/table.md, every quantity as EVAL.md defines it.
+"""EpisodeLogs to results/table.md, every quantity as EVAL.md defines it.
 
 Only the logs are read, plus a replay of each log's own arena (same scenario, same actions, same
 acting flag per block), which gives the true positions the eyes and occlusion metrics score
@@ -24,14 +24,14 @@ from gate.types import BlockRecord, EpisodeLog, Tracks, Vec, from_json
 
 FIVE = ("blocked", "remap_feasible", "remap_blocked", "body_remap", "body_blocked")
 Z95 = 1.959963984540054  # the normal quantile at 0.975
-SAM_USD_PER_FRAME = 0.20 / 1000  # notes/api.md: $0.20 per 1k video frames,
+SAM_USD_PER_FRAME = 0.20 / 1000  # docs/api.md: $0.20 per 1k video frames,
 SAM_MIN_FRAMES = 50  # billed at least 50 frames per request; one request per block
-MUSE_USD_IN, MUSE_USD_OUT = 1.25e-6, 4.25e-6  # notes/api.md: per input / output token
+MUSE_USD_IN, MUSE_USD_OUT = 1.25e-6, 4.25e-6  # docs/api.md: per input / output token
 DIAGNOSED_BY = {"target_lost": "control_remap", "body_changed": "body_remap"}
 KINDS = ("eyes_swapped", "body_changed", "target_lost")
 CONDITIONS = ("gated+SAM", "no-gate+SAM", "gated+colour", "rules-only+SAM", "gated+truth")
 KILL_CONDITIONS = CONDITIONS[:3]
-KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's suggested numbers; Sharmin confirms before T13
+KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's kill rule
 History = Sequence[dict[int, Vec]]
 Pairs = frozenset[tuple[int, int]]
 KILL_SEEDS = range(1000, 1020)  # EVAL.md: chosen before any run on them
@@ -94,7 +94,8 @@ def recovery_steps(log: EpisodeLog, kind: str) -> int | None:
 
 
 def true_ids(tracks: Tracks, truth: dict[int, Vec], t: int) -> dict[int, int]:
-    """S9 at one frame: each tracker id seen at frame t of its block to the nearest true element."""
+    """`match_ids` at one frame: each tracker id seen at frame t of its block to the nearest true
+    element."""
     seen = {k: p[t : t + 1] for k, p in tracks.items() if not np.isnan(p[t]).any()}
     return match_ids(seen, truth)
 
@@ -191,7 +192,7 @@ def _held(
     log: EpisodeLog, owner: list[int], history: History, pair: tuple[int, int], frames: range
 ) -> tuple[int, int] | None:
     """The tracker ids holding the pair's two true elements on the first of `frames` where both
-    are held, by S9 at that frame; None if no frame has both."""
+    are held, by `match_ids` at that frame; None if no frame has both."""
     for f in frames:
         b = log.blocks[owner[f]]
         held = {true: tid for tid, true in true_ids(b.tracks, history[f], f - b.step0).items()}

@@ -1,7 +1,6 @@
-# Desktop owner gate proof (plan §4e), 28 Oct 2026, Mac session
+# Desktop owner gate proof, 28 Oct 2026
 
-**Result: 10 of 10 alternating points classified correctly, in each of 3 runs (30 of 30).** The plan's done-when is
-10 of 10 in one run.
+**Result: 10 of 10 alternating points classified correctly, in each of 3 runs (30 of 30).**
 
 Setup: macOS 27.0.1, Swift 6.4, the calling terminal trusted for Accessibility (`AXIsProcessTrusted: true`), screen
 unlocked. Terminal was the app in front. `mac/panel.swift` drew a borderless, non-activating, always-on-top panel with
@@ -26,12 +25,12 @@ task app: com.apple.Terminal Terminal | panel frame: 600,400,300,120
 ```
 Runs 2 and 3: `10 of 10 classified correctly` each (`owner-proof-repeats.txt`).
 
-**What it measured before the proof** (same session):
+**What it measured before the proof:**
 - `CGWindowListCopyWindowInfo` lists windows with owner and bounds and needs no permission, but the Dock keeps a
   full-screen window at layer 20, so "topmost window under the point" would name the Dock everywhere. The
   Accessibility hit-test sees through it: a point over the Terminal text returned Terminal, a Dock icon returned
   `com.apple.dock`, the menu bar returned the front app.
-- With the screen locked (an earlier session) the hit-test returned -25200; unlocked it returned 0 at every point.
+- With the screen locked (earlier that day) the hit-test returned -25200; unlocked it returned 0 at every point.
 
 **Hardened after the 28 Oct security review, then rerun: 10 of 10 in each of 3 runs again**
 (`owner-proof-hardened.txt`, `-2.txt`, `-3.txt`). Two changes. An app's bundle id counts only when the app lives under `/System/`

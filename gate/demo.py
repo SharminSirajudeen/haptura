@@ -1,14 +1,13 @@
-"""T15: the demo page's two panes from real EpisodeLogs (plan T15).
+"""The demo page's two panes from real EpisodeLogs.
 
 `python -m gate.demo <gated logs dir> <baseline logs dir> [<seed>-<case>]`
 
-It lists every (seed, case) where the plan's rule for the video's first 20 seconds holds: the
+It lists every (seed, case) where the rule for the video's first 20 seconds holds: the
 baseline commits to an element it does not control within those 20 seconds, while the gated run,
 right by EVAL.md's table, has not acted yet. Given one of them, it writes that pair's logs and
 clips to web/episodes/, each clip the run's own arena replayed and rendered, one frame per step, as
 web/app.js reads it. The pair is chosen from the results, by eye; one the rule does not pick is
-refused, so none is staged. The page reads web/fixtures/ until the kill test's logs give a pair
-(#31 lists the switch).
+refused, so none is staged. The page reads web/fixtures/ until the kill test's logs give a pair.
 """
 
 from __future__ import annotations

@@ -1,0 +1,226 @@
+{
+ "512:circle": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:red circle": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:ball": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:red ball": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:dot": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:red dot": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:square": {
+  "boxes": 1,
+  "text": "<0f>0<|box;x1=356;y1=240;x2=387;y2=271;w=512;h=512;c=0.6167664527893066|><|mask;x=0;y=0;c=0.6167664527893066;data=32,32,!!!!!(y:SRo?iX|>\n",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:red square": {
+  "boxes": 1,
+  "text": "<0f>0<|box;x1=356;y1=240;x2=387;y2=271;w=512;h=512;c=0.8552036285400391|><|mask;x=0;y=0;c=0.8552036285400391;data=32,32,!!!!!(y:SRo?iX|>\n",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:triangle": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:shape": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:object": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "512:red object": {
+  "boxes": 2,
+  "text": "<0f>0<|box;x1=356;y1=240;x2=387;y2=271;w=512;h=512;c=0.8947368264198303|><|mask;x=0;y=0;c=0.8947368264198303;data=32,32,!!!!!(y:SRo?iX|>,1<|box;x1=124;y1=240;x2=159;y2=275;w=512;h=512;c=0.8518518805503845|><|mask;x=0;y=0;c=0.8518518805503845;data=36,36,!!!!!KFj#$1)t3uoL%2`_CQn/%R6u{.l%a7o1#O26&[!?w1#I?t!!|>\n",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "128:red ball": {
+  "boxes": 0,
+  "text": "",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ },
+ "128:red object": {
+  "boxes": 2,
+  "text": "<0f>0<|box;x1=89;y1=60;x2=96;y2=67;w=128;h=128;c=0.8632478713989258|><|mask;x=0;y=0;c=0.8632478713989258;data=8,8,!!!!!'y:Duu@D|>,1<|box;x1=31;y1=60;x2=39;y2=68;w=128;h=128;c=0.8400000333786011|><|mask;x=0;y=0;c=0.8400000333786011;data=9,9,!!!!!1IqlR0V{']YSceVebL{|>\n",
+  "usage": {
+   "input_tokens": 0,
+   "input_tokens_details": {
+    "cached_tokens": 0
+   },
+   "output_tokens": 0,
+   "output_tokens_details": {
+    "reasoning_tokens": 0
+   },
+   "total_tokens": 0,
+   "images_processed": 1
+  }
+ }
+}

@@ -1,0 +1,45 @@
+// check_act, the gate; diagnose, the diagnosis; rule_policy, the rule policy. Each break is the one a reviewer would try first.
+const PYTEST = 'uv run --locked python -m pytest -q tests/test_gate.py';
+const T = 'tests/test_gate.py', G = 'gate/gate.py';
+const m = (from, find, replace, test) => ({ from, file:G, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
+const WALL = 'test_ok_when_the_target_pushes_into_a_wall';
+const SLIDE = 'test_ok_when_the_target_slides_along_a_wall';
+module.exports = [
+  m('diagnose: an unseen target is stale, not a crash', '    if pos is None or np.count_nonzero(~np.isnan(pos).any(axis=1)) < 2:\n', '    if pos is None:\n', 'test_a_target_never_seen_in_the_block_is_stale_so_the_probe_decides'),
+  m('check_act: a single mine, not any mine', '    if len(mine) != 1:\n', '    if not mine:\n', 'test_refuses_when_two_are_mine'),
+  m('check_act: the object must be the mine one', '    if mine[0] != object_id:\n        return Decision(\n            "refused", object_id, f"object {object_id} is not mine; object {mine[0]} is"\n        )\n', '', 'test_refuses_when_the_object_is_not_the_mine_one'),
+  m('gate, rule policy: the label says mine, never p', 'e.label == "mine"', 'e.p0 < ALPHA_PROBE', 'test_refuses_at_p_just_above_alpha_act_since_the_label_says_not_me'),
+  m('rule policy: the act rule comes before the budget rule',
+    '    if len(mine) == 1:\n        return _act_or_decline(mine[0], target_pos, goal)\n    if blocks_used >= budget:\n        return Decision("decline", None, f"no single mine element after all {budget} looks")\n',
+    '    if blocks_used >= budget:\n        return Decision("decline", None, f"no single mine element after all {budget} looks")\n    if len(mine) == 1:\n        return _act_or_decline(mine[0], target_pos, goal)\n',
+    'test_acts_on_the_single_mine_when_the_goal_is_reachable'),
+  m('rule policy: a single mine, not any mine', '    if len(mine) == 1:\n', '    if mine:\n', 'test_two_mine_is_not_a_single_mine_so_the_policy_probes'),
+  m('rule policy: the budget is spent at >=, not >', 'if blocks_used >= budget:', 'if blocks_used > budget:', 'test_declines_when_the_budget_is_spent'),
+  { from:'S15: three looks before the early decline', file:'gate/constants.py', find:'EARLY_LOOKS = 3', replace:'EARLY_LOOKS = 2',
+    mustFail:T, expect:`FAILED ${T}::test_does_not_decline_early_after_two_looks`, cmd:PYTEST },
+  m('rule policy: the early decline fires at three looks, not after', 'blocks_used >= EARLY_LOOKS', 'blocks_used > EARLY_LOOKS', 'test_declines_early_after_three_looks_when_every_p0_is_above_alpha_probe'),
+  m('rule policy: every p0 above ALPHA_PROBE, not any', 'all(e.p0 > ALPHA_PROBE', 'any(e.p0 > ALPHA_PROBE', 'test_probes_within_budget_while_some_p0_is_at_or_below_alpha_probe'),
+  m('rule policy: p0 strictly above ALPHA_PROBE', 'e.p0 > ALPHA_PROBE', 'e.p0 >= ALPHA_PROBE', 'test_probes_within_budget_while_some_p0_is_at_or_below_alpha_probe'),
+  m('rule policy: an axis the goal does not need is not checked', 'need == 0 or ', '', 'test_acts_on_the_single_mine_when_the_goal_is_reachable'),
+  m('rule policy: the way to the band, not to the centre', 'np.clip(target_pos, goal[:2], goal[2:])', 'np.add(goal[:2], goal[2:]) / 2', 'test_an_axis_inside_the_goals_band_needs_nothing_though_off_its_centre'),
+  m('rule policy: reachability needs the sign', 'v[axis] * need > 0 and ', '', 'test_declines_citing_the_body_when_no_live_action_moves_toward_the_goal'),
+  m('rule policy: reachability needs the magnitude', ' and abs(v[axis]) >= EFFECT_MIN', '', 'test_a_component_of_the_right_sign_below_effect_min_does_not_count'),
+  m('rule policy: a component of exactly EFFECT_MIN counts', 'abs(v[axis]) >= EFFECT_MIN', 'abs(v[axis]) > EFFECT_MIN', 'test_acts_on_the_single_mine_when_the_goal_is_reachable'),
+  m("diagnose: the probe skips both rules", "    if probe is not None:\n        return _reprobe(probe[0], probe[1], target_id)\n", "", "test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body"),
+  m("diagnose: an unmeasured action predicts no motion", "body[a] or (0.0, 0.0)", "body[a]", "test_stale_when_a_dead_steering_action_was_used_twice"),
+  m("diagnose: the walls hold each predicted step", "guess = np.clip(guess + step, HALF, LIMIT)", "guess = guess + step", WALL),
+  m("diagnose: a step along a wall is predicted: the old skip, back", "guess = np.clip(guess + step, HALF, LIMIT)", "guess = np.clip(guess + step * (np.minimum(guess, LIMIT + HALF - guess) > HALF + 1).all(), HALF, LIMIT)", SLIDE),
+  m("diagnose: the near walls hold at HALF", "np.clip(guess + step, HALF, LIMIT)", "np.clip(guess + step, 0, LIMIT)", WALL),
+  m("diagnose: the far walls hold at LIMIT", "np.clip(guess + step, HALF, LIMIT)", "np.clip(guess + step, HALF, LIMIT + HALF)", WALL),
+  m("diagnose: spans run between visible frames", "seen = np.flatnonzero(~np.isnan(pos).any(axis=1))", "seen = np.arange(len(pos))", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),
+  m("diagnose: a span predicts every step up to t2", "for step in steps[t1:t2]:", "for step in steps[t1 : t1 + 1]:", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),
+  m("diagnose: a swap needs the target off its prediction", "if _dist(pos[t2], guess) > JUMP_TOL and near:", "if near:", "test_crossing_a_look_alike_without_a_swap_is_not_flagged"),
+  m("diagnose: a swap needs another track on the prediction", " > JUMP_TOL and near:", " > JUMP_TOL:", "test_a_jump_with_no_look_alike_near_is_stale_not_a_swap"),
+  m("diagnose: the eyes rule comes before stale", "    swap = _swap(tracks, target_id, steps, seen)\n    if swap is not None:\n        other, t2 = swap\n        fix = f\"tracker ids {target_id} and {other} swapped at frame {t2}; swap them back\"\n        return Diagnosis(\"eyes_swapped\", fix, (target_id, other), None)\n    first, last = seen[0], seen[-1]\n    residual = _dist(pos[last], _predict(pos, steps, first, last))\n    if residual > STALE_TOL:\n        fix = f\"object {target_id} ended {residual:.1f} px from its prediction; probe its body\"\n        return Diagnosis(\"stale\", fix, None, None)\n", "    first, last = seen[0], seen[-1]\n    residual = _dist(pos[last], _predict(pos, steps, first, last))\n    if residual > STALE_TOL:\n        fix = f\"object {target_id} ended {residual:.1f} px from its prediction; probe its body\"\n        return Diagnosis(\"stale\", fix, None, None)\n    swap = _swap(tracks, target_id, steps, seen)\n    if swap is not None:\n        other, t2 = swap\n        fix = f\"tracker ids {target_id} and {other} swapped at frame {t2}; swap them back\"\n        return Diagnosis(\"eyes_swapped\", fix, (target_id, other), None)\n", "test_an_eyes_swap_across_a_3_frame_occlusion_is_caught_at_the_reappearance_frame"),
+  m("diagnose: the summed residual, not the last step", "first, last = seen[0], seen[-1]", "first, last = seen[-2], seen[-1]", "test_stale_when_a_dead_steering_action_was_used_twice"),
+  m("diagnose: stale above STALE_TOL, not JUMP_TOL", "if residual > STALE_TOL:", "if residual > JUMP_TOL:", "test_stale_when_a_dead_steering_action_was_used_twice"),
+  m("diagnose: jitter within STALE_TOL is ok", "residual > STALE_TOL", "residual > 0", "test_ok_with_one_px_jitter_on_every_frame"),
+  m("diagnose: the probe decides on the target alone", " if e.object_id == target_id", "", "test_target_lost_on_a_probe_where_the_target_ignores_the_actions"),
+  m("diagnose: body_changed needs the mine label", "mine = _mine(found)", "mine = found", "test_target_lost_on_a_probe_where_the_target_ignores_the_actions"),
+  m("diagnose: the new body map comes from the probe", "Diagnosis(\"body_changed\", fix, None, mine[0].body)", "Diagnosis(\"body_changed\", fix, None, None)", "test_body_changed_on_a_probe_where_the_target_follows_a_mirrored_body"),
+];

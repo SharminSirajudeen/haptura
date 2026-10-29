@@ -1,6 +1,6 @@
-"""The Meta Model API: S5 `post_json`, S6 `cached`, S7 `sam_track`, S8 `muse_turn`.
+"""The Meta Model API: `post_json`, `cached`, `sam_track`, `muse_turn`.
 
-S5 is the only network function. Everything rides the official SDK's generic `post`, so its
+`post_json` is the only network function. Everything rides the official SDK's generic `post`, so its
 retries on 429 and 503 and its server-sent-event parsing come free. The key is read from
 `META_API_KEY` and never logged. Every paid call goes through the cache, so `REPLAY=1` reruns an
 evaluation offline and deterministically.
@@ -40,7 +40,7 @@ BOX = re.compile(
 def post_json(
     path: str, body: dict[str, Any], *, stream: bool = False, http: httpx.Client | None = None
 ) -> dict[str, Any] | Iterator[dict[str, Any]]:
-    """S5: POST `body` to `path` under the Meta base URL.
+    """POST `body` to `path` under the Meta base URL.
 
     Returns the parsed JSON object, or with `stream=True` an iterator of the parsed `data:`
     events in order, ending at `[DONE]`. `http` lets a test substitute a transport.
@@ -63,7 +63,7 @@ def cache_key(*parts: str | bytes) -> str:
 
 
 def cached(key: str, fn: Callable[[], Any], root: Path = CACHE_DIR) -> Any:
-    """S6: the value stored for `key`, else `fn()` stored under it; under REPLAY=1 a miss errors."""
+    """The value stored for `key`, else `fn()` stored under it; under REPLAY=1 a miss errors."""
     path = root / f"{key}.json"
     if path.exists():
         return json.loads(path.read_text())
@@ -78,7 +78,7 @@ def cached(key: str, fn: Callable[[], Any], root: Path = CACHE_DIR) -> Any:
 def sam_track(
     frames: Frames, prompt: str, *, root: Path = CACHE_DIR, http: httpx.Client | None = None
 ) -> Tracks:
-    """S7: SAM 3.1 tracks for `prompt` over the clip: box centres per frame, NaN where absent."""
+    """SAM 3.1 tracks for `prompt` over the clip: box centres per frame, NaN where absent."""
     key = cache_key(SAM_MODEL, prompt, str(frames.shape), frames.tobytes())
     lines = cached(key, lambda: _sam_lines(frames, prompt, http), root)
     return parse_tracks(lines, frames.shape[0])
@@ -135,7 +135,7 @@ def muse_turn(
     root: Path = CACHE_DIR,
     http: httpx.Client | None = None,
 ) -> MuseReply:
-    """S8: one Muse Spark turn on the Responses API, temperature 0, the lowest reasoning effort."""
+    """One Muse Spark turn on the Responses API, temperature 0, the lowest reasoning effort."""
     body: dict[str, Any] = {
         "model": MUSE_MODEL,
         "instructions": instructions,

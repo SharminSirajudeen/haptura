@@ -1,4 +1,5 @@
-"""T9: block lengths, the shared frame, acting reaching the schedules, the truth slice, the clip."""
+"""The block runner: block lengths, the shared frame, acting reaching the schedules, the truth
+slice, the clip."""
 
 import subprocess
 from pathlib import Path
@@ -21,7 +22,7 @@ def test_two_blocks_of_30_give_62_frames_and_a_61_frame_join() -> None:
 
 def test_acting_steps_reach_the_schedules() -> None:
     # schedules run on acting steps only: a probe block leaves the clock at 0, an act block of 30
-    # advances it to 30, past the secret remap step S1 drew from [5, 25]
+    # advances it to 30, past the secret remap step make_scenario drew from [5, 25]
     scenario = make_scenario(3, "remap_blocked")
     arena = Arena(scenario)
     run_block(arena, ["noop"] * 30, colour_tracker, acting=False)

@@ -1,6 +1,6 @@
-"""S10 `control_scores` and S12 `design_block`: the control statistic and the block designer.
+"""`control_scores` and `design_block`: the control statistic and the block designer.
 
-S10 is the one test behind every number the gate shows (plan §3, "S10, exactly"): for each
+`control_scores` is the one test behind every number the gate shows: for each
 object and each lag 0..max_lag, a permutation test of whether the object's displacement depends
 on the action taken that many steps earlier, and the body map that falls out of the same group
 means. It assumes nothing about what an action does, so a mirrored, rotated or dead action needs
@@ -26,7 +26,7 @@ Ints = NDArray[np.int64]
 def control_scores(
     actions: Sequence[str], tracks: Tracks, max_lag: int, seed: int
 ) -> list[Evidence]:
-    """S10: one Evidence per object of `tracks`, in its order, from one rng seeded with `seed`."""
+    """One Evidence per object of `tracks`, in its order, from one rng seeded with `seed`."""
     names = sorted(set(actions) | {NOOP})
     labels = np.array([names.index(a) for a in actions])
     rng = np.random.default_rng(seed)
@@ -36,8 +36,8 @@ def control_scores(
 def _evidence(
     oid: int, labels: Ints, names: list[str], pos: Array, max_lag: int, rng: np.random.Generator
 ) -> Evidence:
-    """Steps 1 and 5–6 of the plan: the kept steps, then the label from p_0, p_best and the body.
-    A step at a wall is kept as the motion the clamp left (#24): an element pressed to a wall is
+    """The kept steps, then the label from p_0, p_best and the body.
+    A step at a wall is kept as the motion the clamp left: an element pressed to a wall is
     mine through its moves along it, and a push into the wall reads as the nothing it does."""
     d = pos[1:] - pos[:-1]
     ok = ~np.isnan(d).any(axis=1)
@@ -96,7 +96,7 @@ def _body(names: list[str], means: Floats) -> dict[str, Vec | None]:
 def design_block(
     rng: np.random.Generator, n: int, p_noop: float, dirs: Sequence[str]
 ) -> tuple[str, ...]:
-    """S12: `n` actions in an order drawn from `rng`: round(p_noop * n) no-ops, never fewer than 2,
+    """`n` actions in an order drawn from `rng`: round(p_noop * n) no-ops, never fewer than 2,
     and the directions balanced (counts differ by at most 1, the extra ones from a random start)."""
     n_noop = max(2, round(p_noop * n))
     start = int(rng.integers(len(dirs)))

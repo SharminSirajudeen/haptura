@@ -1,4 +1,4 @@
-// The touch owner from the input dispatcher's window list (phone/windows.py, Mac session): one entry per guarded line.
+// The touch owner from the input dispatcher's window list (phone/windows.py): one entry per guarded line.
 const PY = 'uv run --locked python -m pytest -q';
 const T = 'tests/test_phone_windows.py';
 const m = (from, find, replace, test) =>

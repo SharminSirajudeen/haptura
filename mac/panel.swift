@@ -1,4 +1,4 @@
-// The proof's attacker (plan §4e): a borderless, always-on-top "Allow" panel drawn by a second process
+// The proof's attacker: a borderless, always-on-top "Allow" panel drawn by a second process
 // over whatever app is in front, without taking focus. Prints its frame once as "x,y,w,h" in top-left screen
 // points, then exits by itself after the given number of seconds. Arguments: x y w h seconds.
 import AppKit

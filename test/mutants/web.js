@@ -1,5 +1,5 @@
-// T6: the demo page (web/). One entry per guarded line, in the kit's format for another runner (see the header of
-// docs/project-kit/test/mutants.list.js): `cmd` runs the spec with Playwright's dot reporter, which prints nothing for a
+// The demo page (web/). One entry per guarded line, in the format for another runner (`cmd` and `expect` instead of
+// `mustFail`, as test/mutants.js reads them): `cmd` runs the spec with Playwright's dot reporter, which prints nothing for a
 // passing test, and `expect` is the failing test's own header line as that reporter prints it (file:line:column › title).
 // Moving a test in a spec moves its entry's `expect` in the same change.
 const PW = 'npx playwright test -c web/playwright.config.js --reporter=dot --workers=1';

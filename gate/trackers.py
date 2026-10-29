@@ -1,9 +1,9 @@
-"""T8: the trackers, each a plain callable that returns `Tracks`, and S9 `match_ids`.
+"""The trackers, each a plain callable that returns `Tracks`, and `match_ids`.
 
 `colour_tracker` is baseline b: it sees only colour, so two look-alikes that cross swap ids.
-`sam_tracker` is S7 with the one prompt SAM 3.1 matched on every shape. `truth_tracker` is the
-arena's own history, the upper bound. S9 links ids across blocks on the frame two clips share, or
-to true ids in the eval; the agent never sees truth.
+`sam_tracker` is `sam_track` with the one prompt SAM 3.1 matched on every shape. `truth_tracker` is
+the arena's own history, the upper bound. `match_ids` links ids across blocks on the frame two clips
+share, or to true ids in the eval; the agent never sees truth.
 """
 
 from __future__ import annotations
@@ -116,7 +116,7 @@ def _nearest(points: list[Vec], anchors: dict[int, Vec | None]) -> list[int | No
 
 
 def match_ids(tracks: Tracks, reference: dict[int, Vec]) -> dict[int, int]:
-    """S9: each tracker id to the reference id nearest its first visible position; others get fresh
+    """Each tracker id to the reference id nearest its first visible position; others get fresh
     ids.
     """
     ids = list(tracks)

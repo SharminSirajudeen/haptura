@@ -20,6 +20,9 @@ const bail = (why) => {
    mutants.list.js, which stores the text it breaks. Scanning any of the three reports the guard as its own violation,
    so all three are exempt by path — stated here, where the reason is readable, rather than inline. */
 const EXEMPT = /test\/floorguard(\.test)?\.js$|test\/mutants(\.list\.js|\/[^/]+\.js)$|\.md$/;
+// A deleted test file counts on the project's own paths: the ones the gate runs tests from, and their code. A template
+// kept elsewhere in the tree can leave without lowering this project's bar.
+const OWN = /^(?:gate|phone|mac|tests|test|scripts|web)\//;
 
 const LOOSENING = [
   { rule:'a test skipped or narrowed', re:/\b(?:it|test|describe)\.(?:skip|only)\b|\bx(?:it|describe)\(|pytest\.mark\.skip|\bpytest\.skip\(/ },
@@ -117,7 +120,7 @@ function scan(d){
     if (EXEMPT.test(file)) continue;
     for (const { rule, re } of LOOSENING) if (re.test(text)) out.push(rule + ' in ' + file + ': ' + text.trim().slice(0, 90));
   }
-  for (const f of d.deleted) if (/\.test\.js$|\.spec\.js$|\/test_[^/]+\.py$|_test\.py$/.test(f)) out.push('a test file deleted: ' + f);
+  for (const f of d.deleted) if (OWN.test(f) && /\.test\.js$|\.spec\.js$|\/test_[^/]+\.py$|_test\.py$/.test(f)) out.push('a test file deleted: ' + f);
   for (const name of mutantsGone(d)) out.push('a mutant removed from the list: ' + name);
   numberFindings(d, out);
   return out;

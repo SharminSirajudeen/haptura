@@ -1,19 +1,19 @@
-"""T13, the kill test: one condition over seeds x all six cases (plan T13, EVAL.md "Cost").
+"""The kill test: one condition over seeds x all six cases (EVAL.md, "Cost").
 
 `python -m gate.run --condition gated+SAM --seeds 1000-1019 --budget 25 [--push]`
 
 It first prints EVAL.md's projection, an estimate, and refuses above the budget: episodes x blocks
-per episode (T11's rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per
-SAM block + Muse tokens per turn x price), with tokens, frames and wall-clock from T2's measurements
-in notes/api.md. Each episode's EpisodeLog is then written to
+per episode (the rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per
+SAM block + Muse tokens per turn x price), with tokens, frames and wall-clock from the measurements
+in docs/api.md. Each episode's EpisodeLog is then written to
 results/logs/<condition>/<seed>-<case>.json the moment it ends; one already on disk is skipped and
 its spend counted, so a restarted container resumes. Before each episode it stops if that episode
 would take the spend past the budget, at the larger of the projected and the measured cost per
-episode. The projection counts the rule policy's blocks, one Muse turn per block at T2's sizes: Muse
-may use more blocks or fewer, and turns without a block, growing prompts and retries are not in it.
-The guard's measured mean catches a projection that was low. With --push, cache/ and the logs are
-committed and pushed after every seed and when the run stops for any reason: the container is
-temporary.
+episode. The projection counts the rule policy's blocks, one Muse turn per block at the measured
+sizes: Muse may use more blocks or fewer, and turns without a block, growing prompts and retries
+are not in it. The guard's measured mean catches a projection that was low. With --push, cache/
+and the logs are committed and pushed after every seed and when the run stops for any reason: the
+container is temporary.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ from gate.trackers import colour_tracker, sam_tracker, truth_tracker
 from gate.types import EpisodeLog, from_json, to_json
 
 CASES = ("feasible", "blocked", "remap_feasible", "remap_blocked", "body_remap", "body_blocked")
-SETUP = {  # condition: (gated, tracker, policy), EVAL.md's table plus T11's free one
+SETUP = {  # condition: (gated, tracker, policy), EVAL.md's table plus the free one
     "gated+SAM": (True, "sam", "muse"),
     "no-gate+SAM": (False, "sam", "muse"),
     "gated+colour": (True, "colour", "muse"),
@@ -43,13 +43,13 @@ SETUP = {  # condition: (gated, tracker, policy), EVAL.md's table plus T11's fre
     "rules-only+truth": (True, "truth", "rules"),
 }
 FREE = "rules-only+truth"
-MUSE_TOKENS_PER_TURN = (1000, 160)  # notes/api.md, T2: about 1k input and 160 output tokens
-SECONDS_PER_BLOCK = {"sam": 2.5, "muse": 12.0}  # notes/api.md: SAM 2.2-2.5 s, Muse up to 12 s
+MUSE_TOKENS_PER_TURN = (1000, 160)  # docs/api.md: about 1k input and 160 output tokens
+SECONDS_PER_BLOCK = {"sam": 2.5, "muse": 12.0}  # docs/api.md: SAM 2.2-2.5 s, Muse up to 12 s
 LOGS = Path("results/logs")
 
 
 def episode(seed: int, case: str, condition: str) -> EpisodeLog:
-    """One episode of `condition` through T10's loop with its gate, tracker and policy."""
+    """One episode of `condition` through the agent loop with its gate, tracker and policy."""
     gated, track, policy = SETUP[condition]
     arena = Arena(make_scenario(seed, case))
     trackers: dict[str, Tracker] = {"sam": sam_tracker, "colour": colour_tracker}

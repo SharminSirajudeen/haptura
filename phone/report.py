@@ -1,6 +1,6 @@
 """The results table from the runner's records. Pure; every number is counted, never estimated.
 
-uv run python -m phone.report results/phone/g3     # writes table.md next to the JSONL files
+uv run python -m phone.report results/phone/pilots  # writes table.md next to the JSONL files
 """
 
 import json

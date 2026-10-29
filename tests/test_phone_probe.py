@@ -1,4 +1,4 @@
-"""The press probe (plan §4b rules 1-3) on hand-built frames and shell output; no device."""
+"""The press probe (its rules 1-3) on hand-built frames and shell output; no device."""
 
 import math
 import subprocess

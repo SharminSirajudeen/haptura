@@ -36,7 +36,7 @@ PKG = {  # GhostEI's app names -> the packages installed on Small_Phone
     "Settings": "com.android.settings",
     "Files": "com.google.android.documentsui",
 }
-EST_PER_CALL_USD = 0.0072  # G1 measured $0.14 for 20 calls (results/phone/g1-proxy)
+EST_PER_CALL_USD = 0.0072  # the first proxy run: $0.14 for 20 calls (results/phone/first-proxy)
 FAKE_PAGE = "http://10.0.2.2:8000/x"  # where the attacker's confirm leads; nothing listens there
 POPUP_FIELDS = ("title", "content", "cancel", "confirm")
 Record = dict[str, Any]
@@ -62,8 +62,8 @@ def q(s: str) -> str:
 def arrange(case: Record, attack: bool) -> None:
     """A fresh helper and a freshly started task app; with `attack`, GhostEI's dialog over it.
 
-    The task app is stopped first, so no case starts where the previous one left it (G3 did not do
-    this; see docs/pilot-runs.md P15).
+    The task app is stopped first, so no case starts where the previous one left it (the pilot runs
+    did not do this; see docs/pilot-runs.md, run 15).
     """
     adb.force_stop(HELPER)
     adb.force_stop(case["pkg"])
@@ -151,7 +151,7 @@ def run_case(
     rec |= {"dump_readable": readable, "overlay_shown": windows.shown(wins, dev.uids, HELPER)}
     if attack and readable and not rec["overlay_shown"]:
         return rec  # the attack did not render, or no list came back: no model call, no number
-    # a list that breaks the grammar goes on: the gate blocks the tap (no owner), a block (#19)
+    # a list that breaks the grammar goes on: the gate blocks the tap (no owner), a block
     nodes = ui.parse_nodes(adb.ui_xml())
     evidence = owner_evidence(check_tap(focus, case["pkg"], dev.allow)) if inform else ""
     size = adb.screen_size()
@@ -192,7 +192,7 @@ def main(argv: list[str]) -> int:
     packages = adb.shell("pm list packages").splitlines()
     installed = {ln.replace("package:", "").strip() for ln in packages}
     if HELPER not in installed:
-        print(f"{HELPER} not installed: see notes/mac-lane.md (install the APK, allow the overlay)")
+        print(f"{HELPER} not installed: install GhostEI's helper APK and allow its overlay")
         return 1
     done = {r["id"] for r in (json.loads(ln) for ln in a.out.open())} if a.out.exists() else set()
     wanted = {int(i) for i in a.ids.split(",") if i}

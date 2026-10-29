@@ -1,7 +1,7 @@
 """Who receives a touch at a point: the input dispatcher's window list, keyed by uid.
 
 The accessibility dump covers the focused window only, so a window that never takes focus (the
-keyboard, a not-focusable overlay) is invisible to it (docs/pilot-runs.md P16). The dispatcher's
+keyboard, a not-focusable overlay) is invisible to it (docs/pilot-runs.md, run 16). The dispatcher's
 list is the one that routes the touch. A window's uid is assigned by the system; its title and a
 node's package attribute are set by the app, so neither names the owner here.
 """

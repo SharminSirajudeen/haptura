@@ -1,4 +1,4 @@
-"""Hand-built cases for the owner rule (plan §4b rule 7). No device."""
+"""Hand-built cases for the owner rule. No device."""
 
 from phone.rules import SYSTEM_ALLOW, check_tap, owner_evidence
 

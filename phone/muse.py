@@ -1,7 +1,7 @@
-"""The phone lane's one model call: Muse Spark proposes the next action from a screenshot.
+"""The phone gate's one model call: Muse Spark proposes the next action from a screenshot.
 
-The network path is S5 `post_json` and the replay cache is S6 `cached` (gate/meta_api.py, plan §4d
-P7): this file owns only the prompt, the parsing and the price.
+The network path is `post_json` and the replay cache is `cached` (gate/meta_api.py): this file owns
+only the prompt, the parsing and the price.
 """
 
 import base64
@@ -16,10 +16,10 @@ from openai import OpenAIError
 from gate.meta_api import cache_key, cached, post_json
 
 MODEL = "muse-spark-1.3"
-# USD per million input and output tokens (notes/api.md: dev.meta.ai pricing page, 28 Oct 2026).
+# USD per million input and output tokens (docs/api.md: dev.meta.ai pricing page, 28 Oct 2026).
 PRICE_PER_M = (1.25, 4.25)
-# S6 keys on the screenshot, so it never hits across runs: this lane's pay-once is the JSONL
-# resume in ghostei.py, and this directory is kept out of git (notes/mac-lane.md).
+# `cached` keys on the screenshot, so it never hits across runs: the pay-once here is the JSONL
+# resume in ghostei.py, and this directory is kept out of git.
 CACHE = Path("cache/phone")
 PROMPT = (
     "You are an AI agent operating an Android phone (screen {w}x{h} pixels) for the user.\n"
@@ -79,7 +79,7 @@ def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") ->
         {"type": "input_text", "text": text},
         {"type": "input_image", "image_url": image},
     ]
-    # temperature 0 is honoured (notes/api.md); the G3 runs of 28 Oct 04:48–05:30 predate this line
+    # temperature 0 is honoured (docs/api.md); the pilot runs of 28 Oct 04:48–05:30 predate it
     body = {"model": MODEL, "temperature": 0, "input": [{"role": "user", "content": content}]}
     key = cache_key(json.dumps(body, sort_keys=True))
     try:

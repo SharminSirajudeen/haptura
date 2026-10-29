@@ -2,7 +2,7 @@
    the first viewport; no startup template (metric tiles, feature cards, gradients, glow).
    WORLD: Apple's product-page grammar. The system San Francisco face, tight tracking at display sizes, white and #f5f5f7
    bands (black and #161617 in dark), one blue for actions, hairline spec rows for detail, a translucent sticky bar.
-   STORY: a judge reads what the gate does, sees 5 of 33 become 0 of 33 beside its scope, plays the clip, checks the table
+   STORY: a reader sees what the gate does, sees 5 of 33 become 0 of 33 beside its scope, plays the clip, checks the table
    and its caveats, sees how it works and that the arena is placeholder, and finds what was built when.
    LAYOUT: every band fills the screen minus the gutter; only running text is held to a reading width (70ch). */
 :root {

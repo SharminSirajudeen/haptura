@@ -23,12 +23,15 @@ check(found(hunk('tests/test_a.py', ['+@pytest.mark.xfail(strict=True, reason="#
 check(/a checker silenced/.test(found(hunk('gate/a.py', ['+x = f()  # noqa: E501']))), 'an added noqa is caught');
 check(/a checker silenced/.test(found(hunk('gate/a.py', ['+x = f()  # type: ignore']))), 'an added type: ignore is caught');
 check(/a test file deleted/.test(found(['diff --git a/tests/test_a.py b/tests/test_a.py', '--- a/tests/test_a.py', '+++ /dev/null'])), 'a deleted pytest file is caught');
+check(/a test file deleted/.test(found(['diff --git a/web/tests/a.spec.js b/web/tests/a.spec.js', '--- a/web/tests/a.spec.js', '+++ /dev/null'])), 'a deleted page spec is caught');
+check(found(['diff --git a/docs/kit/test/a.test.js b/docs/kit/test/a.test.js', '--- a/docs/kit/test/a.test.js', '+++ /dev/null']) === '',
+  'a test file deleted outside the project\'s own paths (a template kept elsewhere) is not a finding');
 check(/a lint limit raised/.test(found(hunk('pyproject.toml', ['-max-nested-blocks = 3', '+max-nested-blocks = 4']))), 'a raised nesting limit is caught');
 check(found(hunk('pyproject.toml', ['-max-nested-blocks = 4', '+max-nested-blocks = 3'])) === '', 'a lowered nesting limit is silent');
-check(/a mutant removed from the list/.test(found(hunk('test/mutants/t3.js', ["-  { from:'area: the product', file:'src/area.js' }"]))), 'a removed mutant entry is caught');
+check(/a mutant removed from the list/.test(found(hunk('test/mutants/arena.js', ["-  { from:'area: the product', file:'src/area.js' }"]))), 'a removed mutant entry is caught');
 check(found(hunk('docs/plan.md', ['+use `# noqa` only with a reason'])) === '', 'prose in a .md file is not a silenced checker');
 check(found(hunk('test/floorguard.js', ['+// eslint-disable-next-line complexity'])) === '', 'the guard does not report its own pattern table');
 check(found(hunk('test/floorguard.test.js', ['+it.skip("x", () => {});'])) === '', 'the guard does not report its own test fixtures');
-check(found(hunk('test/mutants/t3.js', ["-  { from:'a', file:'x' }", "+  { from:'a', file:'x' },"])) === '', 'a reformatted mutant entry is not a removal');
+check(found(hunk('test/mutants/arena.js', ["-  { from:'a', file:'x' }", "+  { from:'a', file:'x' },"])) === '', 'a reformatted mutant entry is not a removal');
 
-done(21, n => 'floorguard: all ' + n + ' checks passed');
+done(23, n => 'floorguard: all ' + n + ' checks passed');

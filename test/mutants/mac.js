@@ -1,4 +1,4 @@
-// The desktop owner gate (plan §4e, Mac session): one entry per guarded line, in T0's shape.
+// The desktop owner gate: one entry per guarded line, in the shape of tooling.js.
 const PY = 'uv run --locked python -m pytest -q';
 const T = 'tests/test_mac_owner.py';
 module.exports = [

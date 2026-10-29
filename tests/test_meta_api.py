@@ -1,4 +1,5 @@
-"""S5 to S8 against a mock transport and the T2 recordings (notes/api/, replayed from fixtures)."""
+"""The API edge against a mock transport and the recorded replies (results/api/, replayed from
+fixtures)."""
 
 import json
 import math
@@ -100,7 +101,7 @@ def arena_frames() -> Frames:
     return cast(Frames, np.load(FIXTURES / "arena128_frames.npz")["frames"])
 
 
-# S5
+# post_json
 def test_posts_the_body_to_the_meta_url_with_the_key(key: str) -> None:
     seen: list[httpx.Request] = []
     out = post_json("/responses", {"model": "muse-spark-1.3", "input": "hi"}, http=transport(seen))
@@ -126,7 +127,7 @@ def test_the_key_comes_from_meta_api_key(monkeypatch: pytest.MonkeyPatch) -> Non
         post_json("/responses", {}, http=transport([]))
 
 
-# S6
+# cached
 def test_cache_hit_returns_the_file_without_calling_fn(tmp_path: Path) -> None:
     (tmp_path / "k.json").write_text('{"a": 1}')
     assert cached("k", lambda: pytest.fail("fn called on a hit"), tmp_path) == {"a": 1}
@@ -159,7 +160,7 @@ def test_cache_key_separates_the_parts() -> None:
     assert cache_key("x", b"\x00\x01") == cache_key("x", b"\x00\x01")
 
 
-# S7
+# sam_track
 def test_sam_track_replays_the_recorded_red_objects(replay: Path) -> None:
     tracks = sam_track(arena_frames(), "red object", root=replay)
     assert set(tracks) == {0, 1}
@@ -192,7 +193,7 @@ def test_parse_tracks_rejects_a_line_without_a_frame_marker() -> None:
         parse_tracks(["0<|box;x1=0;y1=0;x2=4;y2=4;w=10;h=10|>"], 1)
 
 
-# S8
+# muse_turn
 def test_muse_turn_replays_the_recorded_first_turn(replay: Path) -> None:
     reply = muse_turn(SYSTEM, "Begin. There is no evidence yet.", TOOLS, root=replay)
     assert reply.response_id == "resp_6ae1445c34aeab2287d24f79"
@@ -220,7 +221,7 @@ def test_muse_turn_sends_the_follow_up_with_previous_response_id(key: str, tmp_p
     assert reply.response_id == "resp_1"
 
 
-# S4
+# encode_mp4
 def test_encode_mp4_gives_h264_at_the_frame_size_and_rate() -> None:
     mp4 = encode_mp4(arena_frames())
     probe = subprocess.run(

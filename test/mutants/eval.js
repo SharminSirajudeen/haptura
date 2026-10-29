@@ -1,4 +1,4 @@
-// T12: EVAL.md is pinned to the code.
+// EVAL.md is pinned to the code.
 const PYTEST = 'uv run --locked python -m pytest -q tests/test_eval.py';
 module.exports = [
   { from:'EVAL: a frozen constant drifts from the code', file:'gate/constants.py', find:'BLOCK_BUDGET = 6', replace:'BLOCK_BUDGET = 8',
@@ -7,7 +7,7 @@ module.exports = [
     mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_freezes_every_constant_at_its_current_value', cmd:PYTEST },
   { from:'EVAL: the kill seeds in the code drift from EVAL.md', file:'gate/eval.py', find:'KILL_SEEDS = range(1000, 1020)', replace:'KILL_SEEDS = range(20)',
     mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_names_the_kill_seeds', cmd:PYTEST },
-  { from:'EVAL: the kill seeds in EVAL.md drift from the code', file:'EVAL.md', find:'**Kill test (T13):** seeds 1000–1019', replace:'**Kill test (T13):** seeds 0–19',
+  { from:'EVAL: the kill seeds in EVAL.md drift from the code', file:'EVAL.md', find:'**Kill test:** seeds 1000–1019', replace:'**Kill test:** seeds 0–19',
     mustFail:'tests/test_eval.py', expect:'FAILED tests/test_eval.py::test_eval_md_names_the_kill_seeds', cmd:PYTEST },
 ];
 // gate/eval.py: each break is the one a reviewer would try first on that line.

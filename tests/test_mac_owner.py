@@ -1,4 +1,4 @@
-"""The desktop owner gate by hand (plan §4e): hit-test lines, the key, the decision, the points."""
+"""The desktop owner gate by hand: hit-test lines, the key, the decision, the points."""
 
 import json
 

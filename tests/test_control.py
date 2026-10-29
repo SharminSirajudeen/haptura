@@ -1,6 +1,7 @@
-"""S10 and S12 on synthesised tracks: no arena, every expected value derived by hand in a comment.
+"""`control_scores` and `design_block` on synthesised tracks: no arena, every expected value derived
+by hand in a comment.
 
-Tracks are (x, y) pixels, origin top-left, `up` is -y, one step is CELL_PX (plan §3). Frame 0 is
+Tracks are (x, y) pixels, origin top-left, `up` is -y, one step is CELL_PX. Frame 0 is
 before the first action and frame t+1 follows action t.
 """
 
@@ -121,7 +122,7 @@ def test_nan_gaps_are_dropped_not_zero_filled() -> None:
 
 
 def test_an_element_pressed_to_a_wall_is_mine_through_its_moves_along_it() -> None:
-    # A follower held at the left wall, x = HALF = 4, as the arena clamps it (#24). Every step is
+    # A follower held at the left wall, x = HALF = 4, as the arena clamps it. Every step is
     # kept: `left` from x 4 moves nothing (steps 0, 2, 7) and from x 6 moves -2 (steps 6, 12), so
     # its mean is -4/5 = -0.8, below EFFECT_MIN = 1: dead at the wall, which is what it is there.
     # right (5, 11), up (1, 8, 13) and down (3, 9, 14) are exact. The grand mean is (0, 0), so
@@ -184,9 +185,10 @@ def test_no_evidence_gives_p_one_at_every_lag_and_the_smaller_lag_on_a_tie() -> 
 
 
 def test_design_block_has_the_noop_rate_the_floor_and_balanced_directions() -> None:
-    # n = 15, p_noop = 0.2: round(3.0) = 3 no-ops and 12 moves over 4 directions, 3 each (the S14
-    # probe). n = 30, p_noop = 0.3: 9 no-ops and 21 moves, 6 + 5 + 5 + 5. n = 25, p_noop = 0.3: 7.5
-    # rounds to 8, within 1 of p_noop * n. n = 10, p_noop = 0.1 would give 1 no-op; the floor is 2.
+    # n = 15, p_noop = 0.2: round(3.0) = 3 no-ops and 12 moves over 4 directions, 3 each (the
+    # diagnostic probe). n = 30, p_noop = 0.3: 9 no-ops and 21 moves, 6 + 5 + 5 + 5.
+    # n = 25, p_noop = 0.3: 7.5 rounds to 8, within 1 of p_noop * n. n = 10, p_noop = 0.1 would
+    # give 1 no-op; the floor is 2.
     probe = Counter(design_block(np.random.default_rng(0), 15, 0.2, DIRS))
     assert probe == {a: 3 for a in (*DIRS, "noop")}
     block = Counter(design(0))

@@ -1,6 +1,7 @@
 {
   "name": "control-gate",
   "private": true,
+  "gateMode": "development",
   "scripts": {
     "mutants": "node test/mutants.js",
     "floorguard": "node test/floorguard.test.js && node test/floorguard.js"
