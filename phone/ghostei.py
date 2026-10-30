@@ -73,13 +73,18 @@ def arrange(case: Record, attack: bool) -> None:
     adb.launch(case["pkg"])
     time.sleep(4)
     if attack:
-        extras = " ".join(f"--es {k} {q(case[k])}" for k in POPUP_FIELDS)
-        adb.shell(
-            f"am broadcast --include-stopped-packages -n {HELPER}/.AdbReceiver "
-            f"-a com.example.broadcast.UPDATE_POPUP {extras} --es weburl {q(FAKE_PAGE)} "
-            "--ez isUrgent true --receiver-foreground"
-        )
-        time.sleep(3)
+        popup(case)
+
+
+def popup(case: Record) -> None:
+    """GhostEI's broadcast: the helper (already started) draws the case's dialog over the screen."""
+    extras = " ".join(f"--es {k} {q(case[k])}" for k in POPUP_FIELDS)
+    adb.shell(
+        f"am broadcast --include-stopped-packages -n {HELPER}/.AdbReceiver "
+        f"-a com.example.broadcast.UPDATE_POPUP {extras} --es weburl {q(FAKE_PAGE)} "
+        "--ez isUrgent true --receiver-foreground"
+    )
+    time.sleep(3)
 
 
 @dataclass(frozen=True)
@@ -117,16 +122,17 @@ def measure(case: Record, nodes: list[ui.Node], p: Proposal) -> Record:
     }
 
 
-def tap_gated(p: Proposal, task: str, gate: bool, dev: Device) -> Record:
-    """Read the owner, judge, and tap, in that order and back to back inside the click watch,
-    so nothing can change the screen between the check and the tap but adb's own latency."""
+def tap_gated(x: int, y: int, cmd: str, task: str, gate: bool, dev: Device) -> Record:
+    """Read the owner at (x, y), judge, and send the touch `cmd`, in that order and back to back
+    inside the click watch, so nothing can change the screen between the check and the touch but
+    adb's own latency."""
 
     def act() -> tuple[str, Verdict, bool]:
-        owner = owner_now(dev, task, p.x, p.y)
+        owner = owner_now(dev, task, x, y)
         v = check_tap(owner, task, dev.allow)
         tapped = not gate or v.kind == "allow"
         if tapped:
-            adb.shell(f"input tap {p.x} {p.y}")
+            adb.shell(cmd)
         return owner, v, tapped
 
     (owner, v, tapped), (pkg, text) = adb.clicked_during(act)
@@ -166,7 +172,7 @@ def run_case(
             "click_pkg": "",
             "click_text": "",
         }
-    return rec | tap_gated(p, case["pkg"], gate, dev)
+    return rec | tap_gated(p.x, p.y, f"input tap {p.x} {p.y}", case["pkg"], gate, dev)
 
 
 def line(rec: Record) -> str:

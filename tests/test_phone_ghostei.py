@@ -18,6 +18,7 @@ UIDS = (FIX / "uids.txt").read_text()
 SETTINGS, HELPER = "com.android.settings", "com.example.myapplication"
 SYSTEM = "package:com.android.systemui\npackage:com.android.settings\n"
 TAP = Proposal("tap", 513, 739, "Install", "r", 1, 1)  # GhostEI's Install button on the overlay
+AT = (TAP.x, TAP.y, "input tap 513 739")
 
 
 def recorder(sent: list[str]) -> Callable[..., str]:
@@ -58,30 +59,33 @@ def test_the_allowlist_is_cut_to_this_devices_system_packages() -> None:
 
 def test_a_gated_tap_on_the_overlay_is_never_sent(monkeypatch: pytest.MonkeyPatch) -> None:
     sent = fake_device(monkeypatch, "overlay")
-    rec = ghostei.tap_gated(TAP, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
     assert rec["owner_at_tap"] == HELPER and rec["verdict"]["kind"] == "block"
     assert not rec["tapped"] and sent == ["watch", "dump"]  # read inside the watch
 
 
 def test_an_ungated_tap_is_sent_and_still_judged(monkeypatch: pytest.MonkeyPatch) -> None:
     sent = fake_device(monkeypatch, "overlay")
-    rec = ghostei.tap_gated(TAP, SETTINGS, False, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, False, ghostei.device(UIDS, SYSTEM))
     assert rec["tapped"] and rec["verdict"]["kind"] == "block"
     assert sent == ["watch", "dump", "input tap 513 739"]
 
 
 def test_a_tap_on_the_task_apps_own_window_is_sent(monkeypatch: pytest.MonkeyPatch) -> None:
     sent = fake_device(monkeypatch, "settings")
-    rec = ghostei.tap_gated(TAP, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
     assert rec["owner_at_tap"] == SETTINGS and rec["tapped"]
     assert sent == ["watch", "dump", "input tap 513 739"]
 
 
 def test_the_keyboard_is_not_the_task_app(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_device(monkeypatch, "keyboard")
-    key = Proposal("tap", 100, 1000, "q", "r", 1, 1)  # under the keyboard, not the search page
+    under_keyboard = (100, 1000, "input tap 100 1000")  # not the search page
     rec = ghostei.tap_gated(
-        key, "com.google.android.settings.intelligence", True, ghostei.device(UIDS, SYSTEM)
+        *under_keyboard,
+        "com.google.android.settings.intelligence",
+        True,
+        ghostei.device(UIDS, SYSTEM),
     )
     assert rec["owner_at_tap"] == "com.google.android.inputmethod.latin"
     assert rec["verdict"]["kind"] == "block"  # Gboard is not a system package on this list

@@ -1,0 +1,47 @@
+// The multi-step agent (phone/agent.py, its call in muse.py, the description in ui.py): one entry per guarded line.
+const PY = 'uv run --locked python -m pytest -q';
+const T = 'tests/test_phone_agent.py';
+const m = (from, file, find, replace, test) =>
+  ({ from, file, find, replace, mustFail:T, cmd:`${PY} ${T}`, expect:`FAILED ${T}::${test}` });
+const A = 'phone/agent.py';
+module.exports = [
+  m('agent: the task app is the app last opened', A, '        r.app = a.arg\n', '',
+    'test_a_tap_in_the_task_app_lands_on_the_elements_centre'),
+  m('agent: only the person\'s apps can be opened', A, '        if a.arg not in r.apps:\n', '        if False:\n',
+    'test_only_the_persons_apps_can_be_opened'),
+  m('agent: a tap goes through the gate', A, 'tap = ghostei.tap_gated(x, y, f"input tap {x} {y}", r.app, r.gate, r.dev)',
+    'tap = ghostei.tap_gated(x, y, f"input tap {x} {y}", r.app, False, r.dev)',
+    'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
+  m('agent: a scroll is checked where the finger lands', A, 'ghostei.tap_gated(x, y0,', 'ghostei.tap_gated(x, y1,',
+    'test_a_scroll_is_checked_where_the_finger_lands'),
+  m('agent: up swaps the swipe', A, '        y0, y1 = y1, y0\n', '        pass\n', 'test_a_scroll_is_checked_where_the_finger_lands'),
+  m('agent: typing waits for the task app to hold focus', A, '    sent = not r.gate or v.kind == "allow"\n', '    sent = True\n',
+    'test_typing_into_a_strangers_window_is_refused'),
+  m('agent: spaces are escaped for input text', A, "text.replace(' ', '%s')", 'text', 'test_typing_into_the_task_app_is_sent_with_spaces_escaped'),
+  m('agent: an element number outside the list is refused', A, '        if not 0 <= i < len(els):\n', '        if False:\n',
+    'test_an_unknown_element_or_action_is_refused_not_guessed'),
+  m('agent: an unknown action is refused', A, '    return {} if a.kind == "done" else {"refused": "that is not one of the actions"}\n',
+    '    return {}\n', 'test_an_unknown_element_or_action_is_refused_not_guessed'),
+  m('agent: the gate\'s refusal reaches Muse', A, '    if rec.get("verdict") and not rec["tapped"]:\n', '    if False:\n',
+    'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
+  m('agent: the history line carries the outcome', A, '        r.history[-1] += f" -> {outcome(rec)}"\n', '',
+    'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
+  m('agent: done stops the run', A, '        if a.kind in ("done", "error"):\n', '        if a.kind == "error":\n',
+    'test_the_run_stops_after_done_or_a_failed_call'),
+  m('agent: a failed call stops the run', A, '        if a.kind in ("done", "error"):\n', '        if a.kind == "done":\n',
+    'test_the_run_stops_after_done_or_a_failed_call'),
+  m('agent: the attack hook runs before the screen is read', A, '        attack(i)\n', '',
+    'test_the_attack_hook_runs_before_each_step_reads_the_screen'),
+  m('agent: off-screen nodes are not listed', A, ' and ui.area(n) > 0]', ']',
+    'test_the_element_list_names_icon_buttons_and_drops_offscreen_nodes'),
+  m('agent: over budget runs nothing', A, '    if cost > a.budget or ghostei.HELPER in apps:\n', '    if ghostei.HELPER in apps:\n',
+    'test_over_budget_or_the_attacker_on_the_list_runs_nothing[args0]'),
+  m('agent: the attacker\'s app on the list runs nothing', A, '    if cost > a.budget or ghostei.HELPER in apps:\n', '    if cost > a.budget:\n',
+    'test_over_budget_or_the_attacker_on_the_list_runs_nothing[args1]'),
+  m('ui: the content description is read', 'phone/ui.py', '        desc = el.get("content-desc", "")\n', '        desc = ""\n',
+    'test_the_element_list_names_icon_buttons_and_drops_offscreen_nodes'),
+  m('muse: each action\'s argument comes from its own key', 'phone/muse.py', 'str(d.get(ARG.get(kind, ""), ""))', '""',
+    'test_each_actions_argument_is_read_from_its_own_key'),
+  m('muse: the agent\'s call is at low effort', 'phone/muse.py', 'call(text, png, reasoning={"effort": MUSE_EFFORT})', 'call(text, png)',
+    'test_the_agents_call_is_at_low_effort_and_shows_the_elements'),
+];
