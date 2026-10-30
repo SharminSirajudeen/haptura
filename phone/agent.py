@@ -23,7 +23,9 @@ from phone.ghostei import Device, Record
 from phone.muse import Action, next_action
 from phone.rules import check_tap
 
-EST_STEP_USD = 0.02  # an upper guess per step, until the first run measures it
+# The projection's rate: just above the most one step cost in docs/pilot-runs.md, runs 33-35
+# ($0.0063). Not a ceiling: --budget stops a run once its calls cost more.
+EST_STEP_USD = 0.0065
 OPEN_WAIT_S = 3  # an app's first screen settles
 Model = Callable[[str, list[str], str, str, bytes], Action]
 
@@ -147,7 +149,7 @@ def attacker(repo: Path | None, case_id: int, at: int) -> Callable[[int], None]:
 
 def start(apps: list[str], attack: bool) -> None:
     """Every listed app stopped, then the home screen; with an attack, GhostEI's helper started
-    first, as in §4c, so only its broadcast fires mid-task."""
+    first, as ghostei.arrange does, so only its broadcast fires mid-task."""
     for pkg in [*apps, ghostei.HELPER]:
         adb.force_stop(pkg)
     if attack:
