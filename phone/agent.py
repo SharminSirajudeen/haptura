@@ -20,7 +20,7 @@ from pathlib import Path
 
 from phone import adb, ghostei, ui
 from phone.ghostei import Device, Record
-from phone.muse import Action, as_int, next_action
+from phone.muse import Action, next_action
 from phone.rules import check_tap
 
 EST_STEP_USD = 0.02  # an upper guess per step, until the first run measures it
@@ -40,8 +40,9 @@ class Run:
 
 
 def elements(nodes: list[ui.Node]) -> list[ui.Node]:
-    """The nodes worth naming to the model: labelled or clickable, with an on-screen area."""
-    return [n for n in nodes if (n.text or n.desc or n.clickable) and ui.area(n) > 0]
+    """The nodes worth naming to the model: labelled or clickable, with a width and a height."""
+    on = [n for n in nodes if n.bounds[2] > n.bounds[0] and n.bounds[3] > n.bounds[1]]
+    return [n for n in on if n.text or n.desc or n.clickable]
 
 
 def label(n: ui.Node) -> str:
@@ -66,9 +67,10 @@ def scroll(direction: str, r: Run) -> Record:
 
 
 def type_gated(text: str, r: Run) -> Record:
-    """Type into the focused field only when the task app owns the focused window."""
+    """Type into the focused field only when the task app itself owns the focused window, never an
+    allowlisted system one (systemui draws a notification's reply field)."""
     owner = ghostei.owner_now(r.dev, r.app)
-    v = check_tap(owner, r.app, r.dev.allow)
+    v = check_tap(owner, r.app, frozenset())
     sent = not r.gate or v.kind == "allow"
     if sent:
         adb.shell(f"input text {ghostei.q(text.replace(' ', '%s'))}")
@@ -79,15 +81,15 @@ def act(a: Action, els: list[ui.Node], r: Run) -> Record:
     """Carry out one action through the gate; the record says what happened and why."""
     if a.kind == "open":
         if a.arg not in r.apps:
-            return {"refused": f"{a.arg or 'that app'} is not on the person's list of apps"}
+            return {"refused": f"{a.arg!r} is not on the person's list of apps"}
         adb.launch(a.arg)
         time.sleep(OPEN_WAIT_S)
         r.app = a.arg
         return {}
     if a.kind == "tap":
-        i = as_int(a.arg)
+        i = int(a.arg) if a.arg.isdecimal() else -1
         if not 0 <= i < len(els):
-            return {"refused": f"there is no element {a.arg}"}
+            return {"refused": f"there is no element {a.arg!r}"}
         x, y = centre(els[i])
         tap = ghostei.tap_gated(x, y, f"input tap {x} {y}", r.app, r.gate, r.dev)
         return {"label": label(els[i])} | tap
@@ -98,7 +100,13 @@ def act(a: Action, els: list[ui.Node], r: Run) -> Record:
     if a.kind == "back":
         adb.shell("input keyevent BACK")
         return {}
-    return {} if a.kind == "done" else {"refused": "that is not one of the actions"}
+    return {} if a.kind in ("done", "error") else {"refused": "that is not one of the actions"}
+
+
+def what(rec: Record) -> str:
+    """The step in one line; argument and label quoted, so a label cannot forge a history line."""
+    a, lab = rec["action"], rec.get("label")
+    return " ".join([a["kind"], *(repr(s) for s in (a["arg"], lab) if s)])
 
 
 def outcome(rec: Record) -> str:
@@ -110,18 +118,22 @@ def outcome(rec: Record) -> str:
     return "done"
 
 
-def run(r: Run, model: Model, steps: int, attack: Callable[[int], None]) -> Iterator[Record]:
-    """Up to `steps` steps; it stops after `done` or a failed model call."""
+def run(
+    r: Run, model: Model, steps: int, budget: float, attack: Callable[[int], None]
+) -> Iterator[Record]:
+    """Up to `steps` steps; it stops after `done`, a failed model call, or once the calls so far
+    cost more than `budget` USD."""
+    spent = 0.0
     for i in range(1, steps + 1):
         attack(i)
         els = elements(ui.parse_nodes(adb.ui_xml()))
         a = model(r.task, r.apps, "\n".join(r.history), listing(els), adb.screenshot())
         rec = {"step": i, "app": r.app, "action": a.__dict__, "cost_usd": a.cost_usd}
         rec |= act(a, els, r)
-        r.history.append(f"{i}. {a.kind} {a.arg} {rec.get('label', '')}".rstrip())
-        r.history[-1] += f" -> {outcome(rec)}"
+        r.history.append(f"{i}. {what(rec)} -> {outcome(rec)}")
         yield rec
-        if a.kind in ("done", "error"):
+        spent += a.cost_usd
+        if a.kind in ("done", "error") or spent > budget:
             return
 
 
@@ -129,10 +141,7 @@ def attacker(repo: Path | None, case_id: int, at: int) -> Callable[[int], None]:
     """What runs before each step: nothing, or GhostEI's dialog for `case_id` before step `at`."""
     if repo is None:
         return lambda i: None
-    installed = {
-        ln.removeprefix("package:").strip() for ln in adb.shell("pm list packages").split()
-    }
-    case = next(c for c in ghostei.cases(repo, installed, 999) if c["id"] == case_id)
+    case = next(c for c in ghostei.cases(repo, ghostei.installed(), 999) if c["id"] == case_id)
     return lambda i: ghostei.popup(case) if i == at else None
 
 
@@ -150,9 +159,8 @@ def start(apps: list[str], attack: bool) -> None:
 
 def line(rec: Record) -> str:
     """One console line per step."""
-    a = rec["action"]
-    what = f"{a['kind']} {a['arg']} {rec.get('label', '')}".strip()
-    return f"{rec['step']:>2} {what} -> {outcome(rec)} ${rec['cost_usd']:.4f} | {a['reason']}"
+    reason = rec["action"]["reason"]
+    return f"{rec['step']:>2} {what(rec)} -> {outcome(rec)} ${rec['cost_usd']:.4f} | {reason}"
 
 
 def main(argv: list[str]) -> int:
@@ -173,17 +181,15 @@ def main(argv: list[str]) -> int:
     apps = [p for p in a.apps.split(",") if p]
     cost = a.steps * EST_STEP_USD
     print(f"{a.steps} steps: projected {cost:.2f} USD at {EST_STEP_USD} each; budget {a.budget}")
-    if cost > a.budget or ghostei.HELPER in apps:
-        print("over budget, or the attacker's app is on --apps: nothing run")
+    if cost > a.budget or ghostei.HELPER in apps or (a.attack and a.attack_at < 1):
+        print("over budget, the attacker's app on --apps, or --attack with no --attack-at: not run")
         return 1
-    attack = attacker(a.attack, a.attack_case, a.attack_at)
-    dev = ghostei.device(
-        adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
-    )
-    r = Run(a.task, apps, not a.no_gate, dev, adb.screen_size())
-    start(apps, a.attack is not None)
-    with a.out.open("x") as f:
-        for rec in run(r, next_action, a.steps, attack):
+    with a.out.open("x") as f:  # before anything touches the device: an existing file stops here
+        attack = attacker(a.attack, a.attack_case, a.attack_at)
+        uids, system = adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
+        r = Run(a.task, apps, not a.no_gate, ghostei.device(uids, system), adb.screen_size())
+        start(apps, a.attack is not None)
+        for rec in run(r, next_action, a.steps, a.budget, attack):
             f.write(json.dumps(rec) + "\n")
             f.flush()
             print(line(rec), flush=True)

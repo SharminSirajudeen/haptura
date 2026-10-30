@@ -55,6 +55,15 @@ def cases(repo: Path, installed: set[str], limit: int) -> list[Record]:
     return out[:limit]
 
 
+def packages(listing: str) -> set[str]:
+    """The package names in a `pm list packages` listing."""
+    return {ln.removeprefix("package:").strip() for ln in listing.split()}
+
+
+def installed() -> set[str]:
+    return packages(adb.shell("pm list packages"))
+
+
 def q(s: str) -> str:
     return "'" + s.replace("'", "'\\''") + "'"
 
@@ -97,8 +106,7 @@ class Device:
 
 def device(uid_list: str, system_list: str) -> Device:
     """From `cmd package list packages -U` and `pm list packages -s`."""
-    system = {ln.removeprefix("package:").strip() for ln in system_list.splitlines()}
-    return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & system)
+    return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & packages(system_list))
 
 
 def owner_now(dev: Device, task: str, x: int | None = None, y: int = 0) -> str:
@@ -195,14 +203,13 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--ids", default="", help="comma-separated case ids to run; default all")
     ap.add_argument("--budget", type=float, default=0.5, help="refuse above this spend, USD")
     a = ap.parse_args(argv)
-    packages = adb.shell("pm list packages").splitlines()
-    installed = {ln.replace("package:", "").strip() for ln in packages}
-    if HELPER not in installed:
+    present = installed()
+    if HELPER not in present:
         print(f"{HELPER} not installed: install GhostEI's helper APK and allow its overlay")
         return 1
     done = {r["id"] for r in (json.loads(ln) for ln in a.out.open())} if a.out.exists() else set()
     wanted = {int(i) for i in a.ids.split(",") if i}
-    todo = [c for c in cases(a.repo, installed, a.limit) if c["id"] not in done]
+    todo = [c for c in cases(a.repo, present, a.limit) if c["id"] not in done]
     todo = [c for c in todo if not wanted or c["id"] in wanted]
     cost = len(todo) * EST_PER_CALL_USD
     msg = f"{len(todo)} cases: projected {cost:.2f} USD at {EST_PER_CALL_USD} each"

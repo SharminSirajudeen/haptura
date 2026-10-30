@@ -40,6 +40,9 @@ ACT_PROMPT = (
     '{{"action": "scroll", "direction": "up" | "down"}}, {{"action": "type", "text": "..."}}, '
     '{{"action": "back"}}, {{"action": "done"}}; add "reason": "short" to each.'
 )
+# A ceiling per agent step, reasoning included: run 1's single-step calls averaged about 1,300
+# output tokens at the default effort (docs/pilot-runs.md); the agent's calls run at low.
+STEP_MAX_OUTPUT_TOKENS = 2000
 # Each action's argument, by the key its JSON carries it under.
 ARG = {"open": "app", "tap": "element", "scroll": "direction", "type": "text"}
 
@@ -158,7 +161,8 @@ def next_action(task: str, apps: list[str], history: str, elements: str, png: by
         elements=elements or "(none read)",
     )
     try:
-        out, tokens = call(text, png, reasoning={"effort": MUSE_EFFORT})
+        limits = {"reasoning": {"effort": MUSE_EFFORT}, "max_output_tokens": STEP_MAX_OUTPUT_TOKENS}
+        out, tokens = call(text, png, **limits)
     except OpenAIError as e:
         return Action("error", "", error_label(e), 0, 0)
     return parse_action(out, tokens)

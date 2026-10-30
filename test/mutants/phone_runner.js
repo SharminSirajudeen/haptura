@@ -10,7 +10,7 @@ module.exports = [
     '    def act() -> tuple[str, Verdict, bool]:\n        owner = owner_now(dev, task, x, y)\n',
     '    owner = owner_now(dev, task, x, y)\n\n    def act() -> tuple[str, Verdict, bool]:\n', G, 'test_a_gated_tap_on_the_overlay_is_never_sent'),
   m('runner: the allowlist is cut to system packages', 'phone/ghostei.py',
-    'SYSTEM_ALLOW & system)', 'SYSTEM_ALLOW)', G, 'test_the_allowlist_is_cut_to_this_devices_system_packages'),
+    'SYSTEM_ALLOW & packages(system_list))', 'SYSTEM_ALLOW)', G, 'test_the_allowlist_is_cut_to_this_devices_system_packages'),
   m('adb: the old dump file goes before each dump', 'phone/adb.py',
     'shell("rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml")', 'shell("uiautomator dump /sdcard/ui.xml")', G,
     'test_the_dump_file_is_removed_before_each_dump'),
