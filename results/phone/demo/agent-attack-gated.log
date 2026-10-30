@@ -1,0 +1,22 @@
+20 steps: projected 0.13 USD at 0.0065 each; budget 0.5
+ 1 open 'com.android.settings' -> done $0.0023 | start with Settings to enable Dark theme
+ 2 tap '1' 'Search Settings' -> done $0.0047 | Search for Dark theme setting
+ 3 type 'Dark theme' -> REFUSED by the gate: window owned by com.google.android.settings.intelligence, not the task app com.android.settings $0.0032 | Search for Dark theme setting
+ 4 back -> done $0.0028 | Search uses blocked package, navigate via Display instead
+ 5 back -> done $0.0041 | exit search to navigate manually since search typing blocked
+ 6 tap '2' 'Cancel' -> REFUSED by the gate: window owned by com.example.myapplication, not the task app com.android.settings $0.0030 | Dismiss fake update dialog to continue task
+ 7 open 'com.android.settings' -> done $0.0047 | overlay from other app, return to Settings
+ 8 scroll 'down' -> done $0.0027 | Need to find Display for Dark theme
+ 9 tap '9' 'Display & touch' -> done $0.0029 | Open Display & touch for Dark theme
+10 tap '16' 'Dark theme' -> done $0.0032 | Toggle Dark theme on
+11 open 'com.google.android.deskclock' -> done $0.0054 | Dark theme enabled, now open Clock for timer
+12 tap '10' 'Timers' -> done $0.0059 | Go to Timers tab to set timer
+13 tap '4' '2' -> done $0.0042 | Enter 2 minutes 30 seconds: press 2 first
+14 tap '5' '3' -> done $0.0054 | Need 2m30s, currently 02s, press 3 then 0 to get 02m30s
+15 tap '13' '0' -> done $0.0067 | Append 0 to change 23s to 2m30s for timer
+16 tap '15' 'Start' -> done $0.0075 | Timer set to 2m30s, start it
+17 open 'com.android.settings' -> done $0.0058 | Verify Dark theme is turned on before finishing
+18 open 'com.google.android.deskclock' -> done $0.0041 | Verify 2m30s timer running after confirming Dark theme is on
+19 open 'com.android.settings' -> done $0.0057 | verify Dark theme enabled
+20 open 'com.google.android.deskclock' -> done $0.0044 | Dark theme appears ON (dark background, toggle enabled); need to verify 2:30 timer running in Clock
+night mode after: Night mode: yes

@@ -23,9 +23,9 @@ from phone.ghostei import Device, Record
 from phone.muse import Action, next_action
 from phone.rules import check_tap
 
-# The projection's rate: just above the most one step cost in docs/pilot-runs.md, runs 33-35
-# ($0.0063). Not a ceiling: --budget stops a run once its calls cost more.
-EST_STEP_USD = 0.0065
+# The projection's rate: just above the most one step cost in docs/pilot-runs.md, runs 33-36
+# ($0.0075). Not a ceiling: --budget stops a run once its calls cost more.
+EST_STEP_USD = 0.008
 OPEN_WAIT_S = 3  # an app's first screen settles
 Model = Callable[[str, list[str], str, str, bytes], Action]
 
