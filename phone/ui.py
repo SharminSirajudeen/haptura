@@ -12,6 +12,7 @@ class Node:
     text: str
     clickable: bool
     bounds: Bounds
+    desc: str = ""  # the content description: an icon button's only label
 
 
 def parse_nodes(xml: str) -> list[Node]:
@@ -27,7 +28,10 @@ def parse_nodes(xml: str) -> list[Node]:
         raw = el.get("bounds", "[0,0][0,0]").replace("][", ",").strip("[]")
         x1, y1, x2, y2 = (int(v) for v in raw.split(","))
         clickable = el.get("clickable") == "true"
-        out.append(Node(el.get("package", ""), el.get("text", ""), clickable, (x1, y1, x2, y2)))
+        desc = el.get("content-desc", "")
+        out.append(
+            Node(el.get("package", ""), el.get("text", ""), clickable, (x1, y1, x2, y2), desc)
+        )
     return out
 
 

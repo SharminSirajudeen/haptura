@@ -55,6 +55,15 @@ def cases(repo: Path, installed: set[str], limit: int) -> list[Record]:
     return out[:limit]
 
 
+def packages(listing: str) -> set[str]:
+    """The package names in a `pm list packages` listing."""
+    return {ln.removeprefix("package:").strip() for ln in listing.split()}
+
+
+def installed() -> set[str]:
+    return packages(adb.shell("pm list packages"))
+
+
 def q(s: str) -> str:
     return "'" + s.replace("'", "'\\''") + "'"
 
@@ -73,13 +82,18 @@ def arrange(case: Record, attack: bool) -> None:
     adb.launch(case["pkg"])
     time.sleep(4)
     if attack:
-        extras = " ".join(f"--es {k} {q(case[k])}" for k in POPUP_FIELDS)
-        adb.shell(
-            f"am broadcast --include-stopped-packages -n {HELPER}/.AdbReceiver "
-            f"-a com.example.broadcast.UPDATE_POPUP {extras} --es weburl {q(FAKE_PAGE)} "
-            "--ez isUrgent true --receiver-foreground"
-        )
-        time.sleep(3)
+        popup(case)
+
+
+def popup(case: Record) -> None:
+    """GhostEI's broadcast: the helper (already started) draws the case's dialog over the screen."""
+    extras = " ".join(f"--es {k} {q(case[k])}" for k in POPUP_FIELDS)
+    adb.shell(
+        f"am broadcast --include-stopped-packages -n {HELPER}/.AdbReceiver "
+        f"-a com.example.broadcast.UPDATE_POPUP {extras} --es weburl {q(FAKE_PAGE)} "
+        "--ez isUrgent true --receiver-foreground"
+    )
+    time.sleep(3)
 
 
 @dataclass(frozen=True)
@@ -92,8 +106,7 @@ class Device:
 
 def device(uid_list: str, system_list: str) -> Device:
     """From `cmd package list packages -U` and `pm list packages -s`."""
-    system = {ln.removeprefix("package:").strip() for ln in system_list.splitlines()}
-    return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & system)
+    return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & packages(system_list))
 
 
 def owner_now(dev: Device, task: str, x: int | None = None, y: int = 0) -> str:
@@ -117,16 +130,17 @@ def measure(case: Record, nodes: list[ui.Node], p: Proposal) -> Record:
     }
 
 
-def tap_gated(p: Proposal, task: str, gate: bool, dev: Device) -> Record:
-    """Read the owner, judge, and tap, in that order and back to back inside the click watch,
-    so nothing can change the screen between the check and the tap but adb's own latency."""
+def tap_gated(x: int, y: int, cmd: str, task: str, gate: bool, dev: Device) -> Record:
+    """Read the owner at (x, y), judge, and send the touch `cmd`, in that order and back to back
+    inside the click watch, so nothing can change the screen between the check and the touch but
+    adb's own latency."""
 
     def act() -> tuple[str, Verdict, bool]:
-        owner = owner_now(dev, task, p.x, p.y)
+        owner = owner_now(dev, task, x, y)
         v = check_tap(owner, task, dev.allow)
         tapped = not gate or v.kind == "allow"
         if tapped:
-            adb.shell(f"input tap {p.x} {p.y}")
+            adb.shell(cmd)
         return owner, v, tapped
 
     (owner, v, tapped), (pkg, text) = adb.clicked_during(act)
@@ -166,7 +180,7 @@ def run_case(
             "click_pkg": "",
             "click_text": "",
         }
-    return rec | tap_gated(p, case["pkg"], gate, dev)
+    return rec | tap_gated(p.x, p.y, f"input tap {p.x} {p.y}", case["pkg"], gate, dev)
 
 
 def line(rec: Record) -> str:
@@ -189,14 +203,13 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--ids", default="", help="comma-separated case ids to run; default all")
     ap.add_argument("--budget", type=float, default=0.5, help="refuse above this spend, USD")
     a = ap.parse_args(argv)
-    packages = adb.shell("pm list packages").splitlines()
-    installed = {ln.replace("package:", "").strip() for ln in packages}
-    if HELPER not in installed:
+    present = installed()
+    if HELPER not in present:
         print(f"{HELPER} not installed: install GhostEI's helper APK and allow its overlay")
         return 1
     done = {r["id"] for r in (json.loads(ln) for ln in a.out.open())} if a.out.exists() else set()
     wanted = {int(i) for i in a.ids.split(",") if i}
-    todo = [c for c in cases(a.repo, installed, a.limit) if c["id"] not in done]
+    todo = [c for c in cases(a.repo, present, a.limit) if c["id"] not in done]
     todo = [c for c in todo if not wanted or c["id"] in wanted]
     cost = len(todo) * EST_PER_CALL_USD
     msg = f"{len(todo)} cases: projected {cost:.2f} USD at {EST_PER_CALL_USD} each"
