@@ -1,0 +1,14 @@
+# Muse Wonder, 1 Nov 2026 (docs/pilot-runs.md, run 43): a cut-off reply sent back. One line per reply,
+# oldest first: file prefix, time, response id, status, incomplete_details, output item types and the
+# cap sent, previous_response_id, store, usage. Order: turn 1 at cap 90, its follow-up (cap 2000), turn 1
+# at cap 150, its follow-up, turn 1 at cap 185, its follow-up, then a transcript of the task and the
+# nudge alone. The follow-ups carry the cut-off reply's message item (not its reasoning item) and the
+# nudge; every request was accepted.
+
+2d00561e 03:49:28 resp_6ae67e883a7589f92aad4d1f incomplete {'reason': 'max_output_tokens'} ['reasoning', 'message'] cap 90 prev None store True usage {'input_tokens': 900, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 90, 'output_tokens_details': {'reasoning_tokens': 79}, 'total_tokens': 990}
+9d6d9a00 03:49:30 resp_6ae67e8a3dc110b4df76415e completed None ['reasoning', 'message', 'function_call'] cap 2000 prev None store True usage {'input_tokens': 920, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 164, 'output_tokens_details': {'reasoning_tokens': 49}, 'total_tokens': 1084}
+9fecc70c 03:49:33 resp_6ae67e8c076450e0304f4f1b incomplete {'reason': 'max_output_tokens'} ['reasoning', 'message'] cap 150 prev None store True usage {'input_tokens': 900, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 150, 'output_tokens_details': {'reasoning_tokens': 79}, 'total_tokens': 1050}
+bc19319e 03:49:35 resp_6ae67e8e866316ef61454e64 completed None ['reasoning', 'message', 'function_call'] cap 2000 prev None store True usage {'input_tokens': 945, 'input_tokens_details': {'cached_tokens': 0}, 'output_tokens': 113, 'output_tokens_details': {'reasoning_tokens': 4}, 'total_tokens': 1058}
+e27013e7 03:49:36 resp_6ae67e90958f740f21694b53 incomplete {'reason': 'max_output_tokens'} ['reasoning', 'message'] cap 185 prev None store True usage {'input_tokens': 900, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 185, 'output_tokens_details': {'reasoning_tokens': 79}, 'total_tokens': 1085}
+07449d76 03:49:38 resp_6ae67e921465e341bea14cbc completed None ['reasoning', 'message', 'function_call'] cap 2000 prev None store True usage {'input_tokens': 947, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 116, 'output_tokens_details': {'reasoning_tokens': 4}, 'total_tokens': 1063}
+bd381465 03:50:06 resp_6ae67eae85c001222bab4818 completed None ['reasoning', 'message', 'function_call'] cap 2000 prev None store True usage {'input_tokens': 911, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 175, 'output_tokens_details': {'reasoning_tokens': 48}, 'total_tokens': 1086}

@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from gate import meta_api
+from gate.agent import _user
 from gate.constants import FPS
 from gate.meta_api import (
     ToolCall,
@@ -194,31 +195,40 @@ def test_parse_tracks_rejects_a_line_without_a_frame_marker() -> None:
 
 
 # muse_turn
-def test_muse_turn_replays_the_recorded_first_turn(replay: Path) -> None:
-    reply = muse_turn(SYSTEM, "Begin. There is no evidence yet.", TOOLS, root=replay)
-    assert reply.response_id == "resp_6ae1445c34aeab2287d24f79"
+def test_muse_turn_replays_the_recorded_first_turn(
+    replay: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # recorded on 1 Nov 2026 with muse-wonder-1.0 and a 2000-token cap; the key hashes the body
+    monkeypatch.setattr(meta_api, "MUSE_MODEL", "muse-wonder-1.0")
+    monkeypatch.setattr(meta_api, "MUSE_MAX_OUTPUT_TOKENS", 2000)
+    reply = muse_turn(SYSTEM, [_user("Begin. There is no evidence yet.")], TOOLS, root=replay)
     assert reply.tool_calls == (
         ToolCall(
             "run_experiment",
-            {"dirs": ["up", "down", "left", "right"], "n": 40, "p_noop": 0.2},
-            "call_9655343e-eb65-4256-ae30-94b08610a747",
+            {"dirs": ["up", "down", "left", "right"], "n": 200, "p_noop": 0.2},
+            "call_4cc93311-beaa-4366-b129-2562291b4561",
         ),
     )
-    assert reply.usage["output_tokens"] == 155
-    assert reply.usage["output_tokens_details"]["reasoning_tokens"] == 41
+    # the reply hands back its message and its call, not the reasoning item (summary: [])
+    assert [i["type"] for i in reply.items] == ["message", "function_call"]
+    assert reply.usage["output_tokens"] == 236
+    assert reply.usage["output_tokens_details"]["reasoning_tokens"] == 118
 
 
-def test_muse_turn_sends_the_follow_up_with_previous_response_id(key: str, tmp_path: Path) -> None:
+def test_muse_turn_sends_the_whole_conversation_as_input_items(key: str, tmp_path: Path) -> None:
     seen: list[httpx.Request] = []
-    result = [{"type": "function_call_output", "call_id": "call_1", "output": "table"}]
-    reply = muse_turn(SYSTEM, result, TOOLS, "resp_prev", root=tmp_path, http=transport(seen))
+    call = {"type": "function_call", "call_id": "call_1", "name": "act", "arguments": "{}"}
+    result = {"type": "function_call_output", "call_id": "call_1", "output": "table"}
+    conversation = [_user("The goal box spans x 92 to 108."), call, result]
+    reply = muse_turn(SYSTEM, conversation, TOOLS, root=tmp_path, http=transport(seen))
     body = json.loads(seen[0].content)
-    assert body["previous_response_id"] == "resp_prev"
-    assert body["input"] == result
+    assert body["input"] == conversation
+    assert "previous_response_id" not in body
+    assert body["model"] == "muse-wonder-1.0"
+    assert body["max_output_tokens"] == 2000
     assert body["temperature"] == 0
     assert body["reasoning"] == {"effort": "low"}
-    assert reply.tool_calls == ()
-    assert reply.response_id == "resp_1"
+    assert reply.tool_calls == () and reply.items == ()
 
 
 # encode_mp4

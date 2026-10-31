@@ -1,6 +1,7 @@
 // The API edge: encode_mp4, post_json, cached, sam_track and muse_turn. Each break is the one a reviewer would try first.
 const PYTEST = 'uv run --locked python -m pytest -q tests/test_meta_api.py';
 const T = 'tests/test_meta_api.py';
+const SENDS = 'test_muse_turn_sends_the_whole_conversation_as_input_items';
 const m = (from, file, find, replace, test) => ({ from, file, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
 module.exports = [
   m('post_json: key read from META_API_KEY', 'gate/meta_api.py', 'os.environ["META_API_KEY"]', 'os.environ.get("META_API_KEY", os.environ.get("MODEL_API_KEY", ""))', 'test_the_key_comes_from_meta_api_key'),
@@ -14,7 +15,11 @@ module.exports = [
   m('sam_track: absent frames are NaN', 'gate/meta_api.py', 'np.full((n_frames, 2), np.nan)', 'np.zeros((n_frames, 2))', 'test_parse_tracks_reads_the_frame_marker_and_leaves_nan_gaps'),
   m('sam_track: the box centre, not its corner', 'gate/meta_api.py', 'track[frame] = ((int(x1) + int(x2)) / 2, (int(y1) + int(y2)) / 2)', 'track[frame] = (int(x1), int(y1))', 'test_sam_track_replays_the_recorded_red_objects'),
   m('sam_track: a line without a marker is a defect', 'gate/meta_api.py', '        if marker is None:\n            raise ValueError(f"SAM line without a frame marker: {line[:60]!r}")\n', '        if marker is None:\n            continue\n', 'test_parse_tracks_rejects_a_line_without_a_frame_marker'),
-  m('muse_turn: previous_response_id sent', 'gate/meta_api.py', '    if previous_response_id is not None:\n        body["previous_response_id"] = previous_response_id\n', '', 'test_muse_turn_sends_the_follow_up_with_previous_response_id'),
+  m('muse_turn: the whole conversation is sent as the input items', 'gate/meta_api.py', '        "input": input,\n', '        "input": input[-1:],\n', SENDS),
+  m('muse_turn: no previous_response_id is sent', 'gate/meta_api.py', '        "tools": tools,\n', '        "tools": tools,\n        "previous_response_id": "resp_x",\n', SENDS),
+  m('muse_turn: the arena\'s agent is Muse Wonder', 'gate/meta_api.py', 'MUSE_MODEL = "muse-wonder-1.0"', 'MUSE_MODEL = "muse-spark-1.3"', SENDS),
+  m('muse_turn: the output cap is 2000 tokens', 'gate/constants.py', 'MUSE_MAX_OUTPUT_TOKENS = 2000', 'MUSE_MAX_OUTPUT_TOKENS = 400', SENDS),
+  m('muse_turn: a reply hands back its items but not the reasoning', 'gate/meta_api.py', 'if o["type"] != "reasoning")', 'if True)', 'test_muse_turn_replays_the_recorded_first_turn'),
   m('muse_turn: tool arguments decoded from JSON', 'gate/meta_api.py', 'ToolCall(o["name"], _arguments(o["arguments"]), o["call_id"])', 'ToolCall(o["name"], {"raw": o["arguments"]}, o["call_id"])', 'test_muse_turn_replays_the_recorded_first_turn'),
   m('video: H.264, the codec SAM accepts', 'gate/video.py', 'libx264', 'mpeg4', 'test_encode_mp4_gives_h264_at_the_frame_size_and_rate'),
 ];

@@ -1,6 +1,6 @@
 """The agent loop and the executor.
 
-Muse Spark makes every act, probe or decline call through three tools; the executor runs the world
+Muse makes every act, probe or decline call through three tools; the executor runs the world
 and every number. One flag separates the conditions: `gated=True` puts `check_act` before `act`,
 `diagnose` after each act block and the advice line under each table; `gated=False` (baseline a)
 removes those three and the table's p0 and label columns, as EVAL.md defines baseline a. The world
@@ -59,7 +59,7 @@ RunBlock = Callable[[Arena, Sequence[str], Tracker, bool, Path | None], tuple[Fr
 Diagnose = Callable[
     [Body, Sequence[str], Tracks, int, tuple[Sequence[str], Tracks] | None], Diagnosis
 ]
-MuseTurn = Callable[[str, str | list[dict[str, Any]], list[dict[str, Any]], str | None], MuseReply]
+MuseTurn = Callable[[str, list[dict[str, Any]], list[dict[str, Any]]], MuseReply]
 
 DIRS = ACTIONS[1:]  # up, down, left, right
 DESIGN_STREAM = 3  # the arena draws from streams 1 and 2 of the seed; the agent's designs from this
@@ -155,19 +155,18 @@ def run_episode(
     muse_turn: MuseTurn,
 ) -> EpisodeLog:
     """`muse_turn` turns until an act reaches the goal, a decline, a false act, MAX_MUSE_CALLS or
-    MAX_FRAMES; the conversation is carried by `previous_response_id`. Block k's clip is saved as
-    `clips/kk.mp4` when `clips` is set."""
+    MAX_FRAMES. Every turn is given the whole conversation as items: the task, then each reply's
+    items and the executor's answer to it. Block k's clip is saved as `clips/kk.mp4` when `clips`
+    is set."""
     scenario: Scenario = arena.scenario
     rng = np.random.default_rng([scenario.seed, DESIGN_STREAM])
     run = _Run(arena, tracker, gated, clips, run_block, diagnose, rng)
     usage = dict.fromkeys(USAGE, 0)
-    given: str | list[dict[str, Any]] = _task(scenario.goal)
-    previous: str | None = None
+    transcript = [_user(_task(scenario.goal))]
     for _ in range(MAX_MUSE_CALLS):
-        reply = muse_turn(PROMPT, given, TOOLS, previous)
+        reply = muse_turn(PROMPT, transcript, TOOLS)
         _add_usage(usage, reply.usage)
-        previous = reply.response_id
-        given = _answer(run, reply)
+        transcript = [*transcript, *reply.items, *_answer(run, reply)]
         if run.outcome is not None:
             break
     usage |= {"frames": run.frames, "sam_calls": len(run.blocks)}
@@ -180,6 +179,11 @@ def _task(goal: Goal) -> str:
     return f"The goal box spans x {x0:.0f} to {x1:.0f} and y {y0:.0f} to {y1:.0f}."
 
 
+def _user(text: str) -> dict[str, Any]:
+    """A user message item, in the form the API took in the conversation probe (docs/api.md)."""
+    return {"type": "message", "role": "user", "content": [{"type": "input_text", "text": text}]}
+
+
 def _add_usage(total: dict[str, int], usage: Mapping[str, Any]) -> None:
     """`muse_turn`'s usage, in the shape the API returned (results/api/muse-2-follow-up.json)."""
     total["muse_calls"] += 1
@@ -189,10 +193,10 @@ def _add_usage(total: dict[str, int], usage: Mapping[str, Any]) -> None:
     total["reasoning_tokens"] += usage.get("output_tokens_details", {}).get("reasoning_tokens", 0)
 
 
-def _answer(run: _Run, reply: MuseReply) -> str | list[dict[str, Any]]:
+def _answer(run: _Run, reply: MuseReply) -> list[dict[str, Any]]:
     """Each tool call's output in order, until one ends the episode; a reply with none is nudged."""
     if not reply.tool_calls:
-        return NUDGE
+        return [_user(NUDGE)]
     outputs: list[dict[str, Any]] = []
     for call in reply.tool_calls:
         said = reply.text or f"{call.name} {json.dumps(call.arguments)}"
@@ -333,24 +337,23 @@ ADVICE = re.compile(r"^advice: (act|probe|decline)(?: (\d+))?: (.*)$", re.M | re
 RULES_PROBE = {"n": BLOCK_STEPS, "p_noop": P_NOOP, "dirs": list(DIRS)}  # EVAL.md's rules-only row
 
 
-def rules_turn(
-    instructions: str, given: str | list[dict[str, Any]], tools: Any, previous: str | None
-) -> MuseReply:
+def rules_turn(instructions: str, transcript: list[dict[str, Any]], tools: Any) -> MuseReply:
     """The rules-only condition: the rule policy decides, through the same loop and tools as Muse
     (a MuseTurn).
 
-    Each turn answers with the tool call the latest advice line names; with no advice yet, after
-    a refusal, or on advice to probe, it runs one full block over every direction.
+    Each turn answers with the tool call the advice line of the executor's last answer names; with
+    no advice yet, after a refusal, or on advice to probe, it runs one full block over every
+    direction. It makes one call a turn, so the transcript's last item is that answer.
     """
-    said = given if isinstance(given, str) else "\n".join(str(o.get("output", "")) for o in given)
-    kind, target, reason = (ADVICE.findall(said) or [("probe", "", "")])[-1]
+    advice = ADVICE.search(str(transcript[-1].get("output", "")))  # the task message has none
+    kind, target, reason = advice.groups() if advice else ("probe", "", "")
     if kind == "act":
         call = ToolCall("act", {"object_id": int(target)}, "rules")
     elif kind == "decline":
         call = ToolCall("decline", {"reason": reason}, "rules")
     else:
         call = ToolCall("run_experiment", dict(RULES_PROBE), "rules")
-    return MuseReply(reason or "no advice yet", (call,), "", {})
+    return MuseReply(reason or "no advice yet", (call,), (), {})
 
 
 def _act(run: _Run, object_id: Any, said: str) -> str:

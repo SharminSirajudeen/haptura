@@ -22,6 +22,7 @@ import numpy as np
 import pytest
 
 from gate.agent import (
+    NUDGE,
     PROMPT,
     Body,
     Diagnose,
@@ -29,6 +30,7 @@ from gate.agent import (
     _live,
     _pool,
     _steer,
+    _user,
     rules_turn,
     run_episode,
 )
@@ -70,24 +72,28 @@ def world(maps: Any = IDENTITY, binding: Any = ((0, 0),), goal: Any = GOAL) -> A
 
 
 class Muse:
-    """A scripted muse_turn: the next tool call per turn, none once the script runs out."""
+    """A scripted muse_turn: the next tool call per turn, none once the script runs out. It keeps
+    the transcript each turn was given, and hands back its call as an output item."""
 
     def __init__(self, *calls: Call) -> None:
         self.calls = calls
-        self.sent: list[tuple[str, Any, str | None]] = []
+        self.sent: list[tuple[str, list[dict[str, Any]]]] = []
 
     def __call__(
-        self, instructions: str, given: Any, tools: Any, previous: str | None
+        self, instructions: str, transcript: list[dict[str, Any]], tools: Any
     ) -> MuseReply:
         k = len(self.sent)
-        self.sent.append((instructions, given, previous))
-        call = (ToolCall(*self.calls[k], f"c{k}"),) if k < len(self.calls) else ()
-        return MuseReply("", call, f"r{k}", USAGE)
+        self.sent.append((instructions, transcript))
+        if k >= len(self.calls):
+            return MuseReply("", (), (), USAGE)
+        name, args = self.calls[k]
+        item = {"type": "function_call", "call_id": f"c{k}", "name": name}
+        return MuseReply("", (ToolCall(name, args, f"c{k}"),), (item,), USAGE)
 
     def heard(self, turn: int) -> str:
-        """Everything the executor sent on `turn`, as one string."""
-        given = self.sent[turn][1]
-        return given if isinstance(given, str) else "\n".join(o["output"] for o in given)
+        """What the executor sent on `turn`: the last item of the transcript that turn was given."""
+        last = self.sent[turn][1][-1]
+        return str(last["output"] if "output" in last else last["content"][0]["text"])
 
 
 def runner(swap_block: int = -1, hide_block: int = -1) -> RunBlock:
@@ -161,7 +167,6 @@ def test_gated_refuses_an_unsupported_act_and_ungated_runs_it() -> None:
     assert log.outcome == "decline"
     assert {s[0] for s in muse.sent} == {PROMPT}
     assert len(PROMPT) <= 1200  # the 300-token cap, assuming about 4 characters per token
-    assert [s[2] for s in muse.sent] == [None, "r0", "r1"]
     assert log.usage == {
         "muse_calls": 3,
         "input_tokens": 300,
@@ -176,6 +181,28 @@ def test_gated_refuses_an_unsupported_act_and_ungated_runs_it() -> None:
     assert log.outcome == "false_act" and len(muse.sent) == 2
     assert log.blocks[0].decision == Decision("act", 2, 'act {"object_id": 2}')
     assert not any(w in muse.heard(1) for w in ("mine", "p0", "advice"))
+
+
+def test_the_conversation_is_carried_as_the_transcript_of_items() -> None:
+    too_long = ("run_experiment", {"n": 40, "p_noop": 0.3, "dirs": ALL})
+    muse = Muse(too_long, ("act", {"object_id": 2}), ("decline", {"reason": "no"}))
+    play(world(), muse, True)
+    # hand: a turn is given the task, then the call and the answer of every turn before it
+    task = "The goal box spans x 92 to 108 and y 56 to 72."
+    first = {"type": "message", "role": "user", "content": [{"type": "input_text", "text": task}]}
+    assert [len(transcript) for _, transcript in muse.sent] == [1, 3, 5]
+    assert muse.sent[0][1] == [first]
+    last = muse.sent[2][1]
+    assert [o["type"] for o in last] == ["message"] + ["function_call", "function_call_output"] * 2
+    assert [o.get("call_id") for o in last] == [None, "c0", "c0", "c1", "c1"]
+    assert last[2]["output"] == muse.heard(1) and last[4]["output"] == muse.heard(2)
+
+
+def test_a_reply_with_no_tool_call_is_nudged_with_a_user_message() -> None:
+    muse = Muse(EXPERIMENT)  # the script ends after one call; every later reply has none
+    play(world(), muse, True)
+    assert muse.sent[2][1][-1] == _user(NUDGE) and muse.heard(2) == NUDGE
+    assert len(muse.sent) == MAX_MUSE_CALLS
 
 
 def test_an_eyes_swap_is_corrected_without_a_muse_turn() -> None:
@@ -433,16 +460,22 @@ def test_bad_arguments_are_answered_and_run_nothing() -> None:
     assert log.blocks == () and log.outcome == "decline"
 
 
-def test_rules_turn_answers_the_latest_advice_line() -> None:
-    later = [{"output": "t\nadvice: probe: 2 mine"}, {"output": "t\nadvice: act 3: 3 is mine"}]
-    act = rules_turn(PROMPT, later, None, None).tool_calls[0]
+def test_rules_turn_answers_the_advice_line_of_the_last_answer() -> None:
+    task = _user("The goal box spans x 92 to 108.")
+    earlier = {"output": "t\nadvice: probe: 2 mine"}
+    later = {"output": "t\nadvice: act 3: 3 is mine"}
+    act = rules_turn(PROMPT, [task, earlier, later], None).tool_calls[0]
     assert (act.name, act.arguments) == ("act", {"object_id": 3})
-    out = [{"output": "advice: decline: every p0 is above 0.2"}]
-    decline = rules_turn(PROMPT, out, None, None).tool_calls[0]
+    out = [task, {"output": "advice: decline: every p0 is above 0.2"}]
+    decline = rules_turn(PROMPT, out, None).tool_calls[0]
     assert (decline.name, decline.arguments) == ("decline", {"reason": "every p0 is above 0.2"})
-    first = rules_turn(PROMPT, "The goal box spans x 92 to 108.", None, None).tool_calls[0]
     probe = {"n": BLOCK_STEPS, "p_noop": P_NOOP, "dirs": ALL}
+    first = rules_turn(PROMPT, [task], None).tool_calls[0]
     assert (first.name, first.arguments) == ("run_experiment", probe)
+    # an answer with no advice line (a refusal) is not answered with an earlier turn's advice
+    refusal = {"output": "refused: object 9 is not mine"}
+    refused = rules_turn(PROMPT, [task, later, refusal], None).tool_calls[0]
+    assert (refused.name, refused.arguments) == ("run_experiment", probe)
 
 
 def rules_only(arena: Arena) -> EpisodeLog:

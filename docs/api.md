@@ -1,5 +1,5 @@
-# Meta Model API facts, measured 28 Oct 2026. Every line is from a named page fetched that day, or from a call
-# made that day; the probes' raw replies are under `results/api/`.
+# Meta Model API facts, measured 28 Oct 2026, and for Muse Wonder 1 Nov. Every line is from a named page fetched
+# that day, or from a call made that day; the probes' raw replies are under `results/api/`.
 
 ## Models (`GET /v1/models`, 1.5 s)
 `muse-wonder-1.0`, `sam-3.1`, `muse-spark-1.3`, `muse-spark-1.3-contributor`, `muse-spark-1.2`, `muse-spark-1.2-contributor`,
@@ -11,6 +11,7 @@
 |---|---|---|---|---|---|
 | `muse-spark-1.3` | $0.15 /M | $1.25 /M | $4.25 /M | 3,000 | 4,000,000 |
 | `muse-spark-1.3-contributor` ("used to improve our products") | $0.002 /M | $0.10 /M | $0.20 /M | 150 | 3,000,000 |
+| `muse-wonder-1.0` ("in preview", Standard mode only; read 1 Nov by the Mac session) | $0.20 /M | $4.00 /M | $20.00 /M | not recorded | not recorded |
 | `sam-3.1` | | $2.50 per 1k images; **$0.20 per 1k video frames, 50-frame minimum per video request** | | 3,000 | none |
 
 Reasoning tokens are billed as output tokens (docs/reasoning). Rate limits are per team.
@@ -35,8 +36,8 @@ Reasoning tokens are billed as output tokens (docs/reasoning). Rate limits are p
 ## Muse Spark on the Responses API (docs/tool-calling, docs/reasoning, docs/prompt-caching; probes below)
 - Tools are flat: `{type: "function", name, description, parameters}`. A call comes back as an output item
   `{type: "function_call", name, arguments (JSON string), call_id, status}`. The result goes back as
-  `input: [{type: "function_call_output", call_id, output}]` with **`previous_response_id`** set. `tool_choice` accepts
-  only `"auto"`.
+  `input: [{type: "function_call_output", call_id, output}]` with **`previous_response_id`** set (Spark, 28 Oct; Wonder lost
+  such a response on 1 Nov, below). `tool_choice` accepts only `"auto"`.
 - `reasoning: {effort: "minimal" | "low" | "medium" | "high" | "xhigh" | "max"}` (`"none"` is a 400 for Muse);
   reasoning tokens are in `usage.output_tokens_details.reasoning_tokens`.
 - Prompt caching is automatic on the stable token prefix; cached tokens are in `usage.input_tokens_details.cached_tokens`.
@@ -96,10 +97,43 @@ the box centre is within 0.5 px of the drawn centre. 128×128 is enough; no upsc
 **So one SAM call per block with `SAM_PROMPT = "colored object"` tracks every element.** These measurements' paid calls: 3 Muse turns
 ≈ $0.005, 6 video requests × $0.01, 23 images × $0.0025 ≈ $0.06: **about $0.13 in all.**
 
+## Muse Wonder on the Responses API (1 Nov 2026; docs/pilot-runs.md, runs 39–43; raw replies `results/api/wonder-*`)
+Same endpoint, tools, `temperature: 0`, `reasoning.effort` and `max_output_tokens` as Spark. In all 41 Wonder replies read
+(runs 39–43), `cached_tokens` is part of `input_tokens` and reasoning tokens are part of `output_tokens`; the arena
+prices a reply as (input − cached) × $4/M + cached × $0.20/M + output × $20/M.
+- **The output cap.** At `max_output_tokens: 400`, 6 of 11 replies came back `status: incomplete` with
+  `incomplete_details.reason: max_output_tokens`, reasoning up to 398 of the 400 tokens, and 4 of the 6 held a reasoning
+  item and nothing else (run 39). At 2,000, 0 of the pilot's 17 replies were incomplete and the longest was 763 output
+  tokens, 636 of them reasoning (run 42).
+- **A cut-off reply is safe to echo.** In all 9 cut-off replies seen (6 in run 39, 3 in run 43) the output held a
+  `reasoning` item and sometimes a completed `message`, and never a `function_call`. Sent back as the task, that
+  `message` and the nudge, or as the task and the nudge alone when only reasoning came back, the next turn was
+  accepted and made the call the full reply makes (run 43).
+- **A stored response can be lost.** With `previous_response_id`, call 3 of an episode at a 1,500-token cap failed with
+  `400 {'error': {'code': None, 'message': 'referenced response not found or expired', 'param': None, 'type':
+  'invalid_request_error'}}`, seconds after call 2's response was created (the Mac session's reading), and every response
+  had `store: true`. A rerun (calls 1–2 from a scratch cache) failed the same way at call 3, in a script that, by its
+  code and its traceback, retried a failed call twice, 3 s apart (run 40; the lines are in
+  `results/api/wonder-probes-1-nov.txt`). The 11-call chain at a 400-token cap had no such failure, so it did not happen
+  on every chain; the cause is not known.
+- **The conversation can be sent as input items instead.** A turn 2 with no `previous_response_id` and `input` = the
+  turn-1 user message (`{type: "message", role: "user", content: [{type: "input_text", text}]}`), the turn-1 output
+  items as returned (`reasoning`, `message`, `function_call`) and the `function_call_output` was accepted: `completed`,
+  an `act` call citing the table (run 41). So was the same input without the `reasoning` item. Input tokens were 1,407
+  with the item and 1,401 without (cached 0 and 884); the item has `summary: []` and no other text, so the arena does
+  not carry it.
+- **Prefix caching** varies by request: 0 to 2,932 cached tokens in one request; 21,288 of the pilot's 35,830 input
+  tokens (59%) and 20,500 of run 39's 27,043 (76%) were cached.
+- **Latency.** The pilot's Muse requests took 2.24–7.34 s, mean 3.44 s over 17; its SAM requests mean 3.15 s over 20,
+  longest 3.87 s. The probes of run 39, at a 400-token cap with `previous_response_id`, took 2.5–16.4 s a call, mostly
+  11–14 s (the Mac session's record). What made the difference was not isolated.
+
 ## What follows for the arena
 1. **A 31-frame block is billed as 50 frames** (`video_frames_processed: 50`). A 49-step block would cost the same,
    but the arena cannot build a scenario with it (`docs/pilot-runs.md`, run 30), so blocks stay at 30 steps.
 2. **One SAM call per block with the prompt "colored object"** (`sam-6` confirmed it on video): $0.01 per block.
-   The kill test is projected at $12.87 from the rule policy's block counts (`docs/pilot-runs.md`, run 30).
-3. Muse per turn: ~1k input + ~160 output tokens, ~8 turns ≈ $0.016 per episode.
-   Latency: 1.3–12 s per turn (the follow-up with reasoning took 12 s).
+   The kill test on Muse Wonder (60 episodes a condition, seeds 1010–1019) is projected at $10.97 from the rule policy's
+   block counts (`docs/pilot-runs.md`, run 42).
+3. Muse Spark per turn (28 Oct): ~1k input + ~160 output tokens, ~8 turns ≈ $0.016 per episode; latency 1.3–12 s per
+   turn. Muse Wonder per turn (the pilot, run 42): 1,629 input tokens (968 cached) + 271 output, $0.0083, 3.44 s, and
+   one Muse turn per block (22 turns, 22 blocks).

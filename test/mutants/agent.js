@@ -3,6 +3,7 @@ const PYTEST = 'uv run --locked python -m pytest -q tests/test_agent.py';
 const T = 'tests/test_agent.py', A = 'gate/agent.py';
 const m = (from, find, replace, test) => ({ from, file:A, find, replace, mustFail:T, expect:`FAILED ${T}::${test}`, cmd:PYTEST });
 const REFUSE = 'test_gated_refuses_an_unsupported_act_and_ungated_runs_it';
+const TRANSCRIPT = 'test_the_conversation_is_carried_as_the_transcript_of_items';
 const EYES = 'test_an_eyes_swap_is_corrected_without_a_muse_turn';
 const BODY = 'test_a_body_remap_ends_in_body_changed_with_the_new_map_and_the_goal_reached';
 const LOST = 'test_a_control_remap_ends_in_target_lost_with_the_advice_to_reprobe';
@@ -28,7 +29,11 @@ module.exports = [
   m('agent: Muse\'s first call after a block is the one logged', 'if run.blocks and run.blocks[-1].phase == "probe" and run.blocks[-1].decision is None:', 'if run.blocks and run.blocks[-1].phase == "probe":', REFUSE),
   m('agent: n is clamped to BLOCK_STEPS', 'min(n, BLOCK_STEPS)', 'n', REFUSE),
   m('agent: model arguments are checked', ' or not set(dirs) <= set(DIRS)', '', 'test_bad_arguments_are_answered_and_run_nothing'),
-  m('agent: the conversation is carried by previous_response_id', 'previous = reply.response_id', 'previous = None', REFUSE),
+  m('agent: the conversation is carried as the transcript', 'transcript = [*transcript, *reply.items, *_answer(run, reply)]', 'transcript = [*reply.items, *_answer(run, reply)]', TRANSCRIPT),
+  m('agent: a reply\'s items are carried back', 'transcript = [*transcript, *reply.items, *_answer(run, reply)]', 'transcript = [*transcript, *_answer(run, reply)]', TRANSCRIPT),
+  m('agent: the task opens the conversation as a user message', 'transcript = [_user(_task(scenario.goal))]', 'transcript = [_user("")]', TRANSCRIPT),
+  m('agent: a user message is an input_text item', '"content": [{"type": "input_text", "text": text}]', '"content": [{"type": "text", "text": text}]', TRANSCRIPT),
+  m('agent: a reply with no tool call is nudged', 'return [_user(NUDGE)]', 'return []', 'test_a_reply_with_no_tool_call_is_nudged_with_a_user_message'),
   m('agent: usage adds every turn', 'total["input_tokens"] += usage.get("input_tokens", 0)', 'total["input_tokens"] = usage.get("input_tokens", 0)', REFUSE),
   m('agent: MAX_MUSE_CALLS turns, not one more', 'for _ in range(MAX_MUSE_CALLS):', 'for _ in range(MAX_MUSE_CALLS + 1):', 'test_muse_turns_stop_at_max_muse_calls'),
   m('agent: MAX_FRAMES is reachable, not a bar below it', 'if run.frames + len(actions) + 1 > MAX_FRAMES:', 'if run.frames + len(actions) + 1 >= MAX_FRAMES:', 'test_frames_stop_at_max_frames'),
@@ -60,14 +65,15 @@ module.exports = [
   m('agent: the prompt stays within the 300-token proxy', '"soon as the evidence is clear. Call one tool per turn."', '"soon as the evidence is clear. Call one tool per turn." + " " * 400', REFUSE),
   m('agent: the shared frame is kept once', 't.get(i, g)[min(k, 1) :]', 't.get(i, g)', 'test_pool_joins_blocks_on_their_shared_frame'),
 ];
-const RULES = 'test_rules_turn_answers_the_latest_advice_line';
+const RULES = 'test_rules_turn_answers_the_advice_line_of_the_last_answer';
 module.exports.push(
-  m('rules: the latest advice line decides', '(ADVICE.findall(said) or [("probe", "", "")])[-1]', '(ADVICE.findall(said) or [("probe", "", "")])[0]', RULES),
+  m('rules: the last answer decides', 'str(transcript[-1].get("output", ""))', 'str(transcript[0].get("output", ""))', RULES),
+  m('rules: no advice is a probe', 'advice.groups() if advice else ("probe", "", "")', 'advice.groups() if advice else ("act", "0", "")', RULES),
   m('rules: act advice becomes an act', '    if kind == "act":\n', '    if kind == "acts":\n', RULES),
   m('rules: decline advice becomes a decline', '    elif kind == "decline":\n', '    elif kind == "declines":\n', RULES),
   m('rules: the probe is a full block', 'RULES_PROBE = {"n": BLOCK_STEPS,', 'RULES_PROBE = {"n": PROBE_STEPS,', RULES),
 );
 module.exports.push(
-  m('rules: a decision carries the rule policy\'s sentence', '    return MuseReply(reason or "no advice yet", (call,), "", {})', '    return MuseReply("rules", (call,), "", {})',
+  m('rules: a decision carries the rule policy\'s sentence', '    return MuseReply(reason or "no advice yet", (call,), (), {})', '    return MuseReply("rules", (call,), (), {})',
     'test_rules_only_declines_when_nothing_obeys'),
 );

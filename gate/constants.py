@@ -25,5 +25,7 @@ MAX_FRAMES = (BLOCK_BUDGET + 4) * (BLOCK_STEPS + 1)  # per episode: the budget p
 SAM_PROMPT = (
     "colored object"  # the one noun phrase SAM 3.1 matched on every flat shape (docs/api.md)
 )
-MUSE_EFFORT = "low"  # the lowest reasoning effort; the kill test says whether it keeps accuracy
-MUSE_MAX_OUTPUT_TOKENS = 400  # one tool call with a one-line reason needs about 160
+MUSE_EFFORT = "low"  # one step above "minimal"; the kill test says whether it keeps accuracy
+# a ceiling per reply, reasoning included: at 400, 6 of 11 Wonder replies were cut off (run 39);
+# at 2000 none of 17 was, and the longest used 763 (run 42)
+MUSE_MAX_OUTPUT_TOKENS = 2000

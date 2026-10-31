@@ -20,20 +20,22 @@ def test_every_eval_condition_has_a_setup() -> None:
 
 def test_the_projection_by_hand() -> None:
     # hand: 3 + 5 = 8 blocks, one SAM call and one Muse turn each. SAM 8 x 50 = 400 frames at
-    # $0.0002 = $0.08; Muse 8 x 1000 = 8000 input at $1.25/M = $0.01 and 8 x 160 = 1280 output at
-    # $4.25/M = $0.00544; $0.09544 in all, and 8 x (2.5 + 12) s = 116 s = 0.032222 h
+    # $0.0002 = $0.08; Muse 8 x 1629 = 13,032 input tokens of which 8 x 968 = 7,744 cached, and
+    # 8 x 271 = 2,168 output: 5,288 x $4/M = $0.021152, 7,744 x $0.20/M = $0.0015488 and
+    # 2,168 x $20/M = $0.04336, so $0.0660608; $0.1460608 in all, and 8 x (3.15 + 3.44) s = 52.72 s
     got = run.projection("gated+SAM", [3, 5])
     assert got == pytest.approx({
         "episodes": 2,
         "blocks": 8,
         "frames": 400,
-        "input_tokens": 8000,
-        "output_tokens": 1280,
-        "usd": 0.09544,
-        "hours": 116 / 3600,
+        "input_tokens": 13032,
+        "cached_tokens": 7744,
+        "output_tokens": 2168,
+        "usd": 0.1460608,
+        "hours": 52.72 / 3600,
     })
     assert run.projection("rules-only+SAM", [3, 5])["usd"] == pytest.approx(0.08)  # SAM only
-    assert run.projection("gated+truth", [3, 5])["usd"] == pytest.approx(0.01544)  # Muse only
+    assert run.projection("gated+truth", [3, 5])["usd"] == pytest.approx(0.0660608)  # Muse only
     assert run.projection(run.FREE, [3, 5])["usd"] == 0
 
 
@@ -170,6 +172,6 @@ def test_each_condition_runs_as_evals_table_says() -> None:
     rows = [[c.strip() for c in line.strip("|").split("|")] for line in table]
     assert len(rows) == len(ev.CONDITIONS)
     for name, agent, gate, tracker in rows:
-        policy = "muse" if agent == "Muse Spark" else "rules"
+        policy = "muse" if agent == "Muse Wonder" else "rules"
         want = (gate.startswith("on"), tracker.strip("`").removesuffix("_tracker"), policy)
         assert run.SETUP[name.split(" ")[0]] == want, name

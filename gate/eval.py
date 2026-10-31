@@ -26,7 +26,8 @@ FIVE = ("blocked", "remap_feasible", "remap_blocked", "body_remap", "body_blocke
 Z95 = 1.959963984540054  # the normal quantile at 0.975
 SAM_USD_PER_FRAME = 0.20 / 1000  # docs/api.md: $0.20 per 1k video frames,
 SAM_MIN_FRAMES = 50  # billed at least 50 frames per request; one request per block
-MUSE_USD_IN, MUSE_USD_OUT = 1.25e-6, 4.25e-6  # docs/api.md: per input / output token
+# docs/api.md: muse-wonder-1.0, per input / cached input / output token
+MUSE_USD_IN, MUSE_USD_CACHED, MUSE_USD_OUT = 4.00e-6, 0.20e-6, 20.00e-6
 DIAGNOSED_BY = {"target_lost": "control_remap", "body_changed": "body_remap"}
 KINDS = ("eyes_swapped", "body_changed", "target_lost")
 CONDITIONS = ("gated+SAM", "no-gate+SAM", "gated+colour", "rules-only+SAM", "gated+truth")
@@ -34,7 +35,7 @@ KILL_CONDITIONS = CONDITIONS[:3]
 KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's kill rule
 History = Sequence[dict[int, Vec]]
 Pairs = frozenset[tuple[int, int]]
-KILL_SEEDS = range(1000, 1020)  # EVAL.md: chosen before any run on them
+KILL_SEEDS = range(1010, 1020)  # EVAL.md: chosen before any run on them
 KILL_RANGE = f"seeds {KILL_SEEDS[0]}-{KILL_SEEDS[-1]}"
 
 
@@ -235,10 +236,17 @@ def billed_frames(log: EpisodeLog) -> int:
     return sum(max(SAM_MIN_FRAMES, len(b.actions) + 1) for b in log.blocks) if sam else 0
 
 
+def muse_usd(input_tokens: float, cached_tokens: float, output_tokens: float) -> float:
+    """Muse spend: the input tokens at the input price except the cached ones, which are part of
+    them and cost the cached price; reasoning tokens are part of the output count."""
+    uncached = input_tokens - cached_tokens
+    return uncached * MUSE_USD_IN + cached_tokens * MUSE_USD_CACHED + output_tokens * MUSE_USD_OUT
+
+
 def dollars(log: EpisodeLog) -> float:
     """All Muse and SAM spend of the episode."""
     u = log.usage
-    muse = u.get("input_tokens", 0) * MUSE_USD_IN + u.get("output_tokens", 0) * MUSE_USD_OUT
+    muse = muse_usd(u.get("input_tokens", 0), u.get("cached_tokens", 0), u.get("output_tokens", 0))
     return muse + billed_frames(log) * SAM_USD_PER_FRAME
 
 

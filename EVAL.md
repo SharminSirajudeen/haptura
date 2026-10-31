@@ -1,23 +1,29 @@
 # EVAL.md: the pre-registered evaluation. Written 28 Oct 2026; frozen at the commit that starts the kill test (not
 # yet frozen), and never edited afterwards. Revised on 30 Oct, while no paid condition had completed (a launch on 29 Oct was paused
 # after 1 of 120 episodes): the kill seeds moved from 0–19 to 1000–1019, and a larger final run was dropped.
+# Revised on 1 Nov, still before any paid condition completed: the agent is Muse Wonder, not Muse Spark, and the kill
+# test is half size, on seeds 1010–1019.
 
 ## What is measured, exactly
 Each condition that runs uses the same episodes: each **seed** runs **all six cases**, one episode per (seed, case).
-- **Kill test:** seeds 1000–1019 → 120 episodes per condition: n = 100 for the five-case headline and n = 20
+- **Kill test:** seeds 1010–1019 → 60 episodes per condition: n = 50 for the five-case headline and n = 10
   for feasible, reported with every number. It is the arena's one paid run, so its numbers are the ones reported,
   and the seeds were chosen before any run on them (development ran all six cases up to seed 399 and blocked up to
   999; `docs/pilot-runs.md`, run 30). No code changes because of what these seeds show: before the kill test they
-  are run only by run 30's free check and the kill-line test.
+  are run only by run 30's free check and the kill-line test. Seed 1000 is not in the test because a paid Wonder
+  probe ran on it on 1 Nov (`docs/pilot-runs.md`, run 39); the test is half size by a spend ruling of 1 Nov (#59),
+  which leaves 1001–1009 unrun. The agent is Muse Wonder (`muse-wonder-1.0`) at low reasoning effort with
+  a cap of 2,000 output tokens per reply, and every turn is sent the whole conversation as input items,
+  without the model's reasoning items.
 
 ### Conditions
 | Condition | Agent | Gate (check, diagnosis, advice line) | Tracker |
 |---|---|---|---|
-| gated+SAM | Muse Spark | on | `sam_tracker` |
-| no-gate+SAM (baseline a) | Muse Spark | off: the same three tools; `run_experiment` returns per element its mean displacement per action, no p, no label, no advice; `act` unchecked and steers with those means; no diagnosis | `sam_tracker` |
-| gated+colour (baseline b) | Muse Spark | on | `colour_tracker` |
+| gated+SAM | Muse Wonder | on | `sam_tracker` |
+| no-gate+SAM (baseline a) | Muse Wonder | off: the same three tools; `run_experiment` returns per element its mean displacement per action, no p, no label, no advice; `act` unchecked and steers with those means; no diagnosis | `sam_tracker` |
+| gated+colour (baseline b) | Muse Wonder | on | `colour_tracker` |
 | rules-only+SAM | none: the rule policy decides, `design_block` probes with `n=BLOCK_STEPS, p_noop=P_NOOP`, all directions (`usage.muse_calls` counts the rule policy's decisions, at 0 tokens; `MAX_MUSE_CALLS` caps them) | on | `sam_tracker` |
-| gated+truth (upper bound) | Muse Spark | on | `truth_tracker` |
+| gated+truth (upper bound) | Muse Wonder | on | `truth_tracker` |
 
 Only the kill test's three conditions run (below); rules-only+SAM and gated+truth are defined, not run.
 
@@ -62,12 +68,12 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
 - how often Muse overruled the rule policy's advice, and how often the overrule was right against this table;
 - input tokens, output tokens and SAM frames per episode, and **dollars per correct decision** (all Muse and SAM
   spend of the condition / its episodes that pass the table), with input and output tokens per correct decision
-  beside it (the API measurements found about 6 input tokens per output token, so output alone would understate it). SAM frames
+  beside it (the pilot found 6.0 input tokens per output token, `docs/pilot-runs.md` run 42, so output alone would understate it). SAM frames
   are billed at a 50-frame minimum per call; the eval reports billed frames.
 
 ### Kill rule, numeric
 The kill test runs three conditions only: gated+SAM, no-gate+SAM and gated+colour. Rethink if either holds on seeds
-1000–1019:
+1010–1019:
 1. the mean paired difference (gated+SAM − no-gate+SAM) on the six-case score is ≤ 0.10;
 2. SAM's identities-kept-through-occlusion rate beats the colour tracker's by less than 0.20.
 
@@ -75,15 +81,16 @@ No run follows the kill test, so its verdict is reported with its numbers: on a 
 arena's claim did not hold on these seeds.
 
 ### Cost, printed before every paid run and refused above `RUN_BUDGET_USD`
-SAM: $0.20 per 1k frames, 50-frame minimum per call, one call per block. Muse Spark: $1.25 / $4.25 per million
-input / output tokens (`docs/api.md`). Projection = episodes × blocks per episode (from the rules-only runs with perfect tracking)
-× ($0.01 + Muse tokens per turn × price).
+SAM: $0.20 per 1k frames, 50-frame minimum per call, one call per block. Muse Wonder: $4.00 / $0.20 / $20.00 per
+million input / cached input / output tokens (`docs/api.md`), the cached tokens being part of the input count.
+Projection = episodes × blocks per episode (from the rules-only runs with perfect tracking) × ($0.01 + Muse tokens
+per turn × price), with tokens per turn and seconds per block measured in the pilot (`docs/pilot-runs.md`, run 42).
 
 ## Constants frozen with this file (`gate/constants.py`)
 BLOCK_STEPS=30; FPS=10; W=H=128; CELL_PX=2; ELEMENT_PX=8; MAX_LAG=4; PERMS=9999; PROBE_STEPS=15; P_NOOP=0.3;
 ELEMENTS_MAX=8; BLOCK_BUDGET=6; ALPHA_ACT=0.01/(ELEMENTS_MAX*BLOCK_BUDGET); ALPHA_PROBE=0.2; EARLY_LOOKS=3;
 EFFECT_MIN=0.5*CELL_PX; STALE_TOL=1.5*CELL_PX; JUMP_TOL=2.5*CELL_PX; MAX_MUSE_CALLS=12;
-MAX_FRAMES=(BLOCK_BUDGET+4)*(BLOCK_STEPS+1); SAM_PROMPT="colored object"; MUSE_EFFORT="low"; MUSE_MAX_OUTPUT_TOKENS=400.
+MAX_FRAMES=(BLOCK_BUDGET+4)*(BLOCK_STEPS+1); SAM_PROMPT="colored object"; MUSE_EFFORT="low"; MUSE_MAX_OUTPUT_TOKENS=2000.
 A test (`tests/test_eval.py`) fails if this list and `gate/constants.py` disagree.
 
 ## Reproduce

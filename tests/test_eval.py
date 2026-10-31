@@ -5,7 +5,7 @@ name.
 import re
 from pathlib import Path
 
-from gate import constants
+from gate import constants, meta_api
 from gate import eval as ev
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +30,10 @@ def test_eval_md_freezes_every_constant_at_its_current_value() -> None:
     frozen = frozen_constants()
     live = {k: v for k, v in vars(constants).items() if k.isupper()}
     assert frozen == live
+
+
+def test_eval_md_names_the_model_the_arena_runs() -> None:
+    assert f"`{meta_api.MUSE_MODEL}`" in (ROOT / "EVAL.md").read_text()
 
 
 def test_eval_md_names_the_kill_seeds() -> None:
