@@ -62,4 +62,7 @@ module.exports = [
     'test_the_agents_call_is_capped_at_low_effort_and_shows_the_elements'),
   m('muse: the agent\'s call caps its output', 'phone/muse.py', ', "max_output_tokens": STEP_MAX_OUTPUT_TOKENS}', '}',
     'test_the_agents_call_is_capped_at_low_effort_and_shows_the_elements'),
+  m('muse: the agent is told to answer done once its steps show the task done', 'phone/muse.py',
+    '    "When the steps so far show every part of the task done, answer done; do not reopen apps to "\n    "check.\\n"\n', '',
+    'test_the_agents_call_is_capped_at_low_effort_and_shows_the_elements'),
 ];

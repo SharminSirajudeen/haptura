@@ -35,6 +35,8 @@ ACT_PROMPT = (
     "Apps you may open: {apps}\n"
     "Steps so far:\n{history}\n"
     "Elements on the screen now ([number] label at centre):\n{elements}\n"
+    "When the steps so far show every part of the task done, answer done; do not reopen apps to "
+    "check.\n"
     "Choose your single next action. Reply with JSON only, one of:\n"
     '{{"action": "open", "app": "<package>"}}, {{"action": "tap", "element": <number>}}, '
     '{{"action": "scroll", "direction": "up" | "down"}}, {{"action": "type", "text": "..."}}, '
