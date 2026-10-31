@@ -178,6 +178,7 @@ def test_the_agents_call_is_capped_at_low_effort_and_shows_the_elements(
     assert (a.kind, a.reason, a.tokens_in) == ("done", "ok", 5)
     assert calls[0][1] == {"reasoning": {"effort": "low"}, "max_output_tokens": 2000}
     assert "[0] 'Install' at (513, 739)" in calls[0][0] and "(none yet)" in calls[0][0]
+    assert "answer done; do not reopen apps" in calls[0][0]
 
 
 def test_the_installed_packages_are_read_from_the_package_list(mp: pytest.MonkeyPatch) -> None:
