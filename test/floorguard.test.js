@@ -3,6 +3,8 @@
 'use strict';
 const { walk, scan } = require('./floorguard.js');
 const { check, done } = require('./check.js')();
+const { execFileSync, spawnSync } = require('child_process');
+const fs = require('fs'), os = require('os'), path = require('path');
 
 // A unified diff, written out by hand so the expected finding is derived from the text and not from the guard itself.
 const diff = (lines) => { const d = { added:[], removed:[], deleted:[] }; walk(lines.join('\n'), d); return d; };
@@ -34,4 +36,19 @@ check(found(hunk('test/floorguard.js', ['+// eslint-disable-next-line complexity
 check(found(hunk('test/floorguard.test.js', ['+it.skip("x", () => {});'])) === '', 'the guard does not report its own test fixtures');
 check(found(hunk('test/mutants/arena.js', ["-  { from:'a', file:'x' }", "+  { from:'a', file:'x' },"])) === '', 'a reformatted mutant entry is not a removal');
 
-done(23, n => 'floorguard: all ' + n + ' checks passed');
+// The guard as the gate runs it, in a throwaway repo whose last commit adds a 2 MiB line and a silenced checker. A
+// results commit (342 logs, 10 MiB of diff) once made it exit 2: execFileSync's default buffer is 1 MiB.
+const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'floorguard-'));
+const git = (...args) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', '-c', 'commit.gpgsign=false',
+  '-c', 'core.hooksPath=/dev/null', ...args], { cwd:repo, stdio:'ignore' });
+git('init', '-q');
+fs.writeFileSync(path.join(repo, 'a.py'), 'x = 1\n');
+git('add', '.'); git('commit', '-qm', 'base');
+fs.writeFileSync(path.join(repo, 'a.py'), 'x = 1  # noqa: E501\n');
+fs.writeFileSync(path.join(repo, 'data.json'), '"' + 'y'.repeat(2 * 1024 * 1024) + '"\n');
+git('add', '.'); git('commit', '-qm', 'change');
+const run = spawnSync(process.execPath, [path.join(__dirname, 'floorguard.js'), '--base', 'HEAD~1'], { cwd:repo, encoding:'utf8' });
+fs.rmSync(repo, { recursive:true, force:true });
+check(run.status === 1 && /a checker silenced in a\.py/.test(run.stdout), 'a loosening is found in a diff larger than 1 MiB');
+
+done(24, n => 'floorguard: all ' + n + ' checks passed');

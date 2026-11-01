@@ -6,8 +6,9 @@ stop, probe or decline when it cannot.**
 An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). Status: in progress. The phone and
 desktop owner gates run and are measured (below), and a multi-step Muse agent runs behind the phone gate (a bench
 of 72 scored runs on Muse Spark and Muse Wonder, below). The arena, its agent loop, its evaluation and its runner are built
-and tested offline. The arena's one paid run (the kill test) has not been completed: a launch on 29 Oct was paused
-after one episode, about $0.05.
+and tested offline. The arena's one paid evaluation run (the kill test) finished on 1 Nov 2026. EVAL.md's verdict on
+it is Rethink: the arena's claim did not hold on these seeds. The gate's effect passed, 0.42 against a bar of 0.10;
+SAM's lead over a colour tracker did not clear its bar (below).
 
 ## The model proposes each touch; the gate grants it
 
@@ -185,8 +186,8 @@ not a benchmark number. `uv run python -m mac.owner` reruns it (needs the Access
 
 ## The arena gate: prove control before acting
 
-The main product. It is built and tested offline. Its one paid run has not happened yet, so no Muse Wonder number is
-claimed here.
+The main product. It is built and tested offline. Its one paid evaluation run, the kill test, finished on 1 Nov
+2026; its result and its verdict are below.
 
 **The world** (`gate/arena.py`): a 128×128 arena. The agent has one actuator, `noop | up | down | left | right`, and
 at most one of up to 8 elements obeys it. The others are:
@@ -216,7 +217,7 @@ here to proving control.
 - **Muse Wonder** (`muse-wonder-1.0`, temperature 0, low reasoning effort) is the agent. It reads the evidence table and
   the gate's advice line, then calls `run_experiment`, `act` or `decline`.
 - **SAM 3.1** is the tracker, with one video call per block and the prompt "colored object". In the API measurements it
-  kept the ids of 3 shapes through a crossing (`docs/api.md`). It has not yet run on an arena clip.
+  kept the ids of 3 shapes through a crossing (`docs/api.md`). In the kill test it ran on arena clips (below).
 - The statistics, the gate and its advice are plain code, with no model.
 
 **The conditions** (EVAL.md):
@@ -227,7 +228,57 @@ here to proving control.
 - `rules-only+SAM` replaces Muse with the gate's own rule policy. Defined, not run.
 - `gated+truth` gives the gate perfect eyes: an upper bound. Defined, not run.
 
-**Measured so far, at no cost** (`docs/pilot-runs.md`, runs 22, 23, 26 and 27):
+**The kill test** (1 Nov 2026, issue #59): Muse Wonder at low effort, seeds 1001–1019, all six cases, so 114
+episodes a condition, each condition run once. `results/table.md`, written by `gate.eval` from the 342 logs in
+`results/logs/`, is:
+
+| | gated+SAM | no-gate+SAM | gated+colour |
+|---|---|---|---|
+| episodes | 114 | 114 | 114 |
+| headline 1: right on blocked and remap cases | 72/95 = 0.76 [0.66, 0.83] | 22/95 = 0.23 [0.16, 0.33] | 55/95 = 0.58 [0.48, 0.67] |
+| headline 2: success on feasible | 8/19 = 0.42 [0.23, 0.64] | 10/19 = 0.53 [0.32, 0.73] | 7/19 = 0.37 [0.19, 0.59] |
+| six-case score | 80/114 = 0.70 | 32/114 = 0.28 | 62/114 = 0.54 |
+| false-action rate | 27/114 = 0.24 | 74/114 = 0.65 | 31/114 = 0.27 |
+| act steps to recover, control remap | 13.3 steps, 32 of 38 recovered | none, 0 of 38 recovered | 14.2 steps, 18 of 38 recovered |
+| act steps to recover, body remap | 13.4 steps, 8 of 19 recovered | none, 0 of 19 recovered | 40.0 steps, 1 of 19 recovered |
+| diagnosis accuracy, eyes_swapped | 16/18 = 0.89 | 0/0 | 32/34 = 0.94 |
+| diagnosis accuracy, body_changed | 8/11 = 0.73 | 0/0 | 0/2 = 0.00 |
+| diagnosis accuracy, target_lost | 32/45 = 0.71 | 0/0 | 18/45 = 0.40 |
+| correct declines on body_blocked | 18/19 = 0.95 | 13/19 = 0.68 | 17/19 = 0.89 |
+| identities kept through occlusion, probe blocks | 772/1269 = 0.61; 399 unscored | 1103/1599 = 0.69; 65 unscored | 892/1629 = 0.55; 301 unscored |
+| identities kept through occlusion, act blocks | 407/588 = 0.69; 97 unscored | 377/728 = 0.52; 226 unscored | 188/425 = 0.44; 71 unscored |
+| advice overruled (in right episodes) | 25 (23) | 0 (0) | 22 (10) |
+| blocks per episode | 4.24 | 5.18 | 4.57 |
+| input / output tokens per episode | 8248 / 1372 | 10806 / 2922 | 9634 / 1657 |
+| billed SAM frames per episode | 212 | 259 | 0 |
+| dollars per correct decision | $0.1155 | $0.4471 | $0.0867 |
+| input / output tokens per correct decision | 11753 / 1954 | 38497 / 10411 | 17714 / 3047 |
+
+Kill rule, seeds 1001-1019: paired difference (gated+SAM - no-gate+SAM) = 0.421 over 114 pairs (rethink at <= 0.1); identities kept through occlusion, SAM 0.635 - colour 0.526 = 0.109 (rethink below 0.2). **Rethink.**
+
+**In plain words.** EVAL.md fixed the kill rule before the run (it is unchanged since 6bb0dcd, the commit all three
+conditions ran from; its header's "not yet frozen" predates the run): Rethink if the gate lifts the six-case score by 0.10 or
+less over the same agent without it, or if SAM keeps identities through occlusion less than 0.20 more often than the
+colour tracker does. **The verdict is Rethink: the arena's claim did not hold on these seeds**, the sentence EVAL.md
+says the README must state. One arm of the rule passed and one failed:
+- **The gate's effect passed.** The six-case score is 0.70 with the gate and 0.28 without it, a paired difference
+  of 0.421 over 114 pairs against a bar of 0.10. Episodes that ended in a false action fell from 74
+  of 114 to 27.
+- **SAM's lead over the colour tracker did not clear its bar.** Identities kept through occlusion, probe and act blocks
+  together: gated+SAM 1179 of 1857 = 0.635, gated+colour 1080 of 2054 = 0.526, a lead of 0.109 against a bar of 0.20.
+  The six-case score is 0.70 with SAM and 0.54 with the colour tracker; a correct decision cost $0.1155 with SAM and
+  $0.0867 with the colour tracker at the runner's count ($0.1014 and $0.0698 from the cache files).
+- **The feasible case came out lower with the gate:** 8 of 19 episodes succeeded (0.42), against 10 of 19 without it
+  (0.53) and 7 of 19 with the colour tracker (0.37). At n = 19 the intervals overlap widely and two episodes separate
+  the first two, so the table does not settle whether the gate costs feasible successes.
+- **The weakest case is body_remap:** with gated+SAM 3 of 19 episodes were right by EVAL.md (4 reached the goal, one
+  without the body_changed diagnosis EVAL.md requires) and 13 ended in a false act.
+- **The cost:** the runner counted $9.24, $14.31 and $5.38, $28.93 in all, with every call at full price, the ones
+  served from `cache/` too. The requests that reached the API come to $23.87, computed from the cache files by
+  `results/kill-cache/count.py`. Neither figure is a bill. No-gate+SAM's budget was raised from $13 to $16 when it
+  was restarted: it cost more than $13 (run 55).
+
+**Measured before the kill test, at no cost** (`docs/pilot-runs.md`, runs 22, 23, 26 and 27):
 - **The offline floor.** The rule policy with perfect tracking scores 120 of 120 right by EVAL.md's table, on
   seeds 0–19 of all six cases. Getting there found two defects. One was in the arena: a goal the agent's own probe
   could make unreachable, now fixed. One was in the gate: the first wall rule dropped every step of an
@@ -238,7 +289,7 @@ here to proving control.
   in 1,000 seeds. The remap_feasible misses left were a scoring defect: two elements on one pixel at the end, a tie
   the scorer broke by id. With that fixed, remap_feasible is wrong in 0 of 400 (run 27). The rule was chosen on
   seeds 200–399 and the colour tracker's error at a wall; 0–199 were measured for each candidate first, so they
-  are not a clean hold-out. The kill test therefore runs on seeds 1001–1019. Seeds 1000–1019 were chosen on 30 Oct,
+  are not a clean hold-out. The kill test therefore ran on seeds 1001–1019. Seeds 1000–1019 were chosen on 30 Oct,
   and all twenty have been run free and offline, with the rule policy and perfect tracking (runs 30 and 47); no code
   changed because of what they showed. Seed 1000 is left out because a paid probe ran it too (run 42).
   There the rule policy with perfect tracking is right in 113 of 114: body_remap seed 1008 reaches the goal but
@@ -254,28 +305,29 @@ uv run --locked python -m gate.eval results/logs results/table.md 1001-1019
 ```
 
 `gate.run` writes one EpisodeLog per episode to `results/logs/<condition>/` and resumes a stopped run. Every model
-response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
-`cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
-all. The runner's projection on 1 Nov, from a Wonder pilot's means, is $8.654, $8.654 and $3.914 for the kill test's
-three conditions, $21.22 in all (`docs/pilot-runs.md`, runs 45 and 48). It is the arena's one paid run. Each figure is
-an estimate from the rule policy's block counts: Muse may use more blocks or fewer, and a longer episode carries a
-longer conversation than the pilot's.
+response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so the same
+`gate.run` command rebuilds a paid run's logs from its `cache/` with no network. `gate.eval` makes no request at all.
 
-The paid run is three commands, one per condition, each with its own budget, about 1.5 times its projection:
-
-```bash
-uv run --locked python -m gate.run --condition gated+SAM --seeds 1001-1019 --budget 13
-uv run --locked python -m gate.run --condition no-gate+SAM --seeds 1001-1019 --budget 13
-uv run --locked python -m gate.run --condition gated+colour --seeds 1001-1019 --budget 6
-```
-
-A run stops before an episode that would pass its budget, and can end one episode over it (the output cap alone
-allows $0.48 an episode). The three budgets total $32.
+**Reproducing the kill test.** Each condition's cache is `results/kill-cache/<condition>.tar.gz`, with its SHA-256 and
+the replay command in `results/kill-cache/README.md`. There is one per condition because SAM 3.1 and Muse Wonder did
+not reliably repeat themselves: of the 178 requests that two or more conditions sent alike, 175 got replies that
+differ byte for byte, and 169 differ in content (118 of 121 SAM replies, 51 of 57 Muse replies), so one `cache/`
+cannot hold all three (`docs/api.md`; counted by `results/kill-cache/count.py`). Replaying all 114 episodes of each
+condition from its own archive rebuilt all 342 logs byte for byte, offline and with no key (`docs/pilot-runs.md`,
+run 57). The runner's projection was $8.654, $8.654 and $3.914, $21.22 in all (runs 45 and 48); the runs cost
+$9.24, $14.31 and $5.38 as the runner counts them (runs 54 to 56).
 
 **Limits:**
 - A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside
   them is claimed.
-- No Muse Wonder or SAM number exists for the arena until the kill test runs.
+- One run: 19 seeds, one episode per seed and case, each condition once. Muse Wonder at temperature 0, given the same
+  request, and SAM 3.1, given the same frames, often replied differently (`docs/api.md`), so the table is one
+  sample of each: the committed caches reproduce it, and a second paid run would not be expected to.
+- The 2,000-token output cap cut off 31 of no-gate+SAM's 426 Muse replies, 1 of gated+SAM's 376 and none of
+  gated+colour's 405 (`results/kill-cache/count.py`). A replay with that script places the 31 in 13 episodes (6
+  blocked, 7 body_blocked; named in `docs/pilot-runs.md`, run 57). Without those 13 episodes and their gated+SAM
+  partners the paired difference is 0.406 over 101 pairs; if the baseline had been right in all 13, it would still
+  be 0.351.
 - The diagnosis expects a tracker to read an element at a wall within STALE_TOL (3 px) of where the arena holds it.
   The colour tracker reads it 0.5 px off (run 26); SAM's error at a wall is not measured.
 
