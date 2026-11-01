@@ -27,8 +27,10 @@ Settings reopened on its search page, left over from the lab runs, because the s
 One pair, one trial each. The pair was recorded with the first version of `phone/replay.py`, which found each tapped
 element by its label alone; after review it finds the element by its recorded number and stops if the label changed,
 skips steps the run refused, and stops on a refused scroll. Run 37's step 6 named element 2, *Cancel*, and the gate-off
-side's click event is *Cancel* in `com.example.myapplication`. A re-run with the merged code is owed once the emulator
-is free of the bench. The dialog holds focus here, so a focused-window check would also have blocked
+side's click event is *Cancel* in `com.example.myapplication`. **Re-run with the merged code** (1 Nov, after the
+benches; same command, out folder `run37-step6-rerun/`, recorded, 69.9 s): the same pair field for field: element
+*Cancel* at (206, 777), receiver uid 10217, owner `com.example.myapplication`, gate off sent with the click event in the
+helper, gate on refused with no click event. The dialog holds focus here, so a focused-window check would also have blocked
 (`focus_verdict` `block` on both sides); the case where only the receiver check refuses is the keyboard lab
 (`../lab/`).
 
