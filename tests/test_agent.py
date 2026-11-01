@@ -72,11 +72,12 @@ def world(maps: Any = IDENTITY, binding: Any = ((0, 0),), goal: Any = GOAL) -> A
 
 
 class Muse:
-    """A scripted muse_turn: the next tool call per turn, none once the script runs out. It keeps
-    the transcript each turn was given, and hands back its call as an output item."""
+    """A scripted muse_turn: the next tool call per turn (a list of calls makes a reply with
+    several), none once the script runs out. It keeps the transcript each turn was given, and
+    hands back its calls as output items."""
 
-    def __init__(self, *calls: Call) -> None:
-        self.calls = calls
+    def __init__(self, *turns: Call | list[Call]) -> None:
+        self.turns = turns
         self.sent: list[tuple[str, list[dict[str, Any]]]] = []
 
     def __call__(
@@ -84,11 +85,14 @@ class Muse:
     ) -> MuseReply:
         k = len(self.sent)
         self.sent.append((instructions, transcript))
-        if k >= len(self.calls):
+        if k >= len(self.turns):
             return MuseReply("", (), (), USAGE)
-        name, args = self.calls[k]
-        item = {"type": "function_call", "call_id": f"c{k}", "name": name}
-        return MuseReply("", (ToolCall(name, args, f"c{k}"),), (item,), USAGE)
+        turn = self.turns[k]
+        calls = turn if isinstance(turn, list) else [turn]
+        ids = [f"c{k}" if len(calls) == 1 else f"c{k}.{i}" for i in range(len(calls))]
+        named = [(i, name, args) for i, (name, args) in zip(ids, calls)]
+        items = tuple({"type": "function_call", "call_id": i, "name": n} for i, n, _ in named)
+        return MuseReply("", tuple(ToolCall(n, a, i) for i, n, a in named), items, USAGE)
 
     def heard(self, turn: int) -> str:
         """What the executor sent on `turn`: the last item of the transcript that turn was given."""
@@ -203,6 +207,19 @@ def test_a_reply_with_no_tool_call_is_nudged_with_a_user_message() -> None:
     play(world(), muse, True)
     assert muse.sent[2][1][-1] == _user(NUDGE) and muse.heard(2) == NUDGE
     assert len(muse.sent) == MAX_MUSE_CALLS
+
+
+def test_a_reply_with_two_calls_is_answered_call_by_call_in_order() -> None:
+    # an experiment, then an act on object 2 that the gate refuses, in one reply
+    muse = Muse([EXPERIMENT, ("act", {"object_id": 2})], ("decline", {"reason": "no"}))
+    play(world(), muse, True)
+    # hand: the next turn is given the task, both calls, then both answers in the calls' order
+    sent = muse.sent[1][1]
+    both = ["function_call", "function_call", "function_call_output", "function_call_output"]
+    assert [o["type"] for o in sent] == ["message", *both]
+    assert [o.get("call_id") for o in sent] == [None, "c0.0", "c0.1", "c0.0", "c0.1"]
+    assert sent[3]["output"].startswith("goal centre (100,64); look 1 of 6; 30 steps")
+    assert sent[4]["output"] == "refused: object 2 is not mine; object 0 is"
 
 
 def test_an_eyes_swap_is_corrected_without_a_muse_turn() -> None:

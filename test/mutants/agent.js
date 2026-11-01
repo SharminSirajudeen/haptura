@@ -34,6 +34,7 @@ module.exports = [
   m('agent: the task opens the conversation as a user message', 'transcript = [_user(_task(scenario.goal))]', 'transcript = [_user("")]', TRANSCRIPT),
   m('agent: a user message is an input_text item', '"content": [{"type": "input_text", "text": text}]', '"content": [{"type": "text", "text": text}]', TRANSCRIPT),
   m('agent: a reply with no tool call is nudged', 'return [_user(NUDGE)]', 'return []', 'test_a_reply_with_no_tool_call_is_nudged_with_a_user_message'),
+  m('agent: every call of a reply is answered', '    return outputs\n', '    return outputs[:1]\n', 'test_a_reply_with_two_calls_is_answered_call_by_call_in_order'),
   m('agent: usage adds every turn', 'total["input_tokens"] += usage.get("input_tokens", 0)', 'total["input_tokens"] = usage.get("input_tokens", 0)', REFUSE),
   m('agent: MAX_MUSE_CALLS turns, not one more', 'for _ in range(MAX_MUSE_CALLS):', 'for _ in range(MAX_MUSE_CALLS + 1):', 'test_muse_turns_stop_at_max_muse_calls'),
   m('agent: MAX_FRAMES is reachable, not a bar below it', 'if run.frames + len(actions) + 1 > MAX_FRAMES:', 'if run.frames + len(actions) + 1 >= MAX_FRAMES:', 'test_frames_stop_at_max_frames'),
