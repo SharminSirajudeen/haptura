@@ -1,6 +1,6 @@
 // What the viewer plays is one real pair from the kill test, and it says so. Every name and number below comes from a file
 // the page was made from (the two logs, results/table.md), not from a second copy of the page's own words.
-const { test, expect, panes, ready, showFrame, endOf, EPISODES, PAIR, WINDOW_SECONDS } = require('./site');
+const { test, expect, panes, ready, shown, showFrame, endOf, EPISODES, PAIR, WINDOW_SECONDS } = require('./site');
 
 test('the banner names the pair the panes play, the rule that chose it and its place among the kill test', async ({ page, viewer }) => {
   const [baseline, gated] = PAIR.map(({ log }) => log);
@@ -39,4 +39,13 @@ test('the intro says what each agent was shown: the gated one the labels and adv
   const intro = page.locator('header .intro-p');
   await expect(intro).toContainText("The gated agent is shown that test's labels and advice.");
   await expect(intro).toContainText("returns only each element's mean displacement per action, with no p, no label and no advice");
+});
+
+test("each pane starts on its log's first frame, though its clip's first frame is not at media time 0", async ({ page, viewer }) => {
+  await page.goto(viewer);
+  await ready(page);
+  for (const pane of await panes(page).all()) {
+    expect((await shown(pane)).frame).toBe(0);
+    await expect(pane.locator('.where')).toHaveText(/^block 1 of \d+, /);
+  }
 });

@@ -64,9 +64,14 @@ const panes = (page) => page.locator('.pane');
 // Both panes have drawn their first frame.
 const ready = (page) => expect(page.locator('.pane[data-ready]')).toHaveCount(2);
 
-// Pause the pane's video on video frame `frame` (the middle of its time slot) and wait until the pane shows `where`;
-// the canvas is drawn in the same call that writes `.where`.
-async function showFrame(pane, frame, where) {
+// What the pane last drew (the page writes it beside every draw): the video frame it was for, the media time of the clip's
+// first frame, and the label rectangles in CSS pixels.
+const shown = async (pane) => JSON.parse(await pane.locator('canvas').getAttribute('data-labels'));
+
+// Pause the pane's video on video frame `frame` (the middle of its time slot, counted from the clip's first frame, which
+// an encoder's frame delay can put after media time 0) and wait for the seek; the page draws on it.
+async function seek(pane, frame) {
+  const { start } = await shown(pane);
   await pane.locator('video').evaluate(
     (v, at) =>
       new Promise((done) => {
@@ -74,8 +79,13 @@ async function showFrame(pane, frame, where) {
         v.addEventListener('seeked', done, { once: true });
         v.currentTime = at;
       }),
-    (frame + 0.5) / FPS,
+    start + (frame + 0.5) / FPS,
   );
+}
+
+// ... and wait until the pane shows `where`; the canvas is drawn in the same call that writes `.where`.
+async function showFrame(pane, frame, where) {
+  await seek(pane, frame);
   await expect(pane.locator('.where')).toHaveText(where);
 }
 
@@ -97,4 +107,4 @@ const endOf = (log) => ({
 // ACT is block 3's frame 5, where the three elements are far apart (before the occlusion gap at its frames 11 to 13).
 const FRAME = { probe1: 10, probe2: 40, act: 65 };
 
-module.exports = { test, expect, panes, ready, showFrame, playFixture, endOf, FRAME, LOG, PAIR, EPISODES, WINDOW_SECONDS };
+module.exports = { test, expect, panes, ready, seek, shown, showFrame, playFixture, endOf, FRAME, LOG, PAIR, EPISODES, WINDOW_SECONDS };

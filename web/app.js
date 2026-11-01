@@ -50,37 +50,51 @@ function itemsAt(blocks, starts, frame) {
   return { b, items };
 }
 
-function mark(ctx, width, k, { pt: [x, y], label }) {
+const LABEL_H = 16; // a label is this tall, in CSS pixels, and its text's width plus 8 wide
+const inside = (v, size, limit) => Math.min(Math.max(v, 0), limit - size); // v, moved so that `size` fits wholly in [0, limit]
+const touches = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+// An element's box, then its label, in track order. The label goes above the box (below it where there is no room above),
+// is moved below when above would touch a label already placed, and is left off the picture when below would too: the list
+// under the pane names every track. A label is always wholly on the canvas. `placed` gathers the rectangles drawn.
+function mark(ctx, [width, height], k, { id, pt: [x, y], label }, placed) {
   const half = (BOX * k) / 2;
   const px = x * k;
   const py = y * k;
   ctx.strokeStyle = COLOUR[label];
   ctx.strokeRect(px - half, py - half, 2 * half, 2 * half);
   const w = ctx.measureText(label).width + 8;
-  const cx = Math.min(Math.max(px - w / 2, 0), width - w);
-  const cy = py - half - 20 >= 0 ? py - half - 20 : py + half + 4;
+  const at = (cy) => ({ id, x: inside(px - w / 2, w, width), y: inside(cy, LABEL_H, height), w, h: LABEL_H });
+  const above = py - half - 20;
+  const below = py + half + 4;
+  const spot = (above >= 0 ? [above, below] : [below]).map(at).find((r) => !placed.some((p) => touches(p, r)));
+  if (!spot) return;
+  placed.push(spot);
   ctx.fillStyle = COLOUR[label];
-  ctx.fillRect(cx, cy, w, 16);
+  ctx.fillRect(spot.x, spot.y, w, LABEL_H);
   ctx.fillStyle = '#111';
-  ctx.fillText(label, cx + 4, cy + 12);
+  ctx.fillText(label, spot.x + 4, spot.y + 12);
 }
 
 function draw(canvas, video, items) {
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = video.clientWidth * dpr; // resizing the canvas also clears it
-  canvas.height = video.clientHeight * dpr;
+  const { clientWidth: width, clientHeight: height } = video;
+  canvas.width = width * dpr; // resizing the canvas also clears it
+  canvas.height = height * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
   ctx.lineWidth = 2;
   ctx.font = '600 12px system-ui, sans-serif';
-  const k = video.clientWidth / video.videoWidth; // CSS pixels per video pixel; the clips are square
-  items.filter((it) => it.pt[0] !== null).forEach((it) => mark(ctx, video.clientWidth, k, it));
+  const k = width / video.videoWidth; // CSS pixels per video pixel; the clips are square
+  const placed = [];
+  items.filter((it) => it.pt[0] !== null).sort((a, b) => a.id - b.id).forEach((it) => mark(ctx, [width, height], k, it, placed));
+  return placed;
 }
 
-function show(pane, log, starts) {
+function show(pane, log, starts, t0) {
   const video = pane.querySelector('video');
   if (!video.videoWidth) return; // no frame yet
-  const frame = Math.floor(video.currentTime * FPS + EPS);
+  const frame = Math.floor((video.currentTime - t0) * FPS + EPS);
   const { b, items } = itemsAt(log.blocks, starts, frame);
   const block = log.blocks[b];
   const put = (sel, text) => { pane.querySelector(sel).textContent = text; };
@@ -91,7 +105,8 @@ function show(pane, log, starts) {
   pane.querySelector('.labels').replaceChildren(
     ...items.map(({ id, label }) => Object.assign(document.createElement('li'), { textContent: `track ${id}: ${label}` })),
   );
-  draw(pane.querySelector('canvas'), video, items);
+  const canvas = pane.querySelector('canvas');
+  canvas.dataset.labels = JSON.stringify({ frame, start: t0, rects: draw(canvas, video, items) }); // what was drawn, for the specs
   pane.dataset.ready = '';
 }
 
@@ -110,13 +125,16 @@ async function mount({ log: logUrl, clip }) {
   const pane = document.getElementById('pane').content.firstElementChild.cloneNode(true);
   const video = pane.querySelector('video');
   document.querySelector('main').append(pane);
+  // The media time of the clip's first frame, where the browser starts it: an encoder that reorders frames puts it after 0.
+  let t0 = 0;
+  video.addEventListener('loadeddata', () => { t0 = video.currentTime; }, { once: true });
   video.src = clip;
   controls(pane, video);
   const log = await (await fetch(logUrl)).json();
   pane.querySelector('h2').textContent = log.condition;
   pane.querySelector('.tag').textContent = `kill test, seed ${log.scenario.seed}, ${log.scenario.case}, outcome ${log.outcome}`;
   const starts = startsOf(log.blocks);
-  const render = () => show(pane, log, starts);
+  const render = () => show(pane, log, starts, t0);
   const onFrame = () => { render(); video.requestVideoFrameCallback(onFrame); };
   video.requestVideoFrameCallback(onFrame); // every frame shown while it plays
   // A frame can be shown before a callback is registered (under parallel test load a pane was seen never drawing), so

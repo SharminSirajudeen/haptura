@@ -21,6 +21,9 @@ const BANNER = 'the banner names the pair the panes play, the rule that chose it
 const OWN = 'each pane plays its own run: named from its log, its clip, and ending where its log ends';
 const SHOWN = 'the intro says what each agent was shown: the gated one the labels and advice, the baseline one only the means';
 const PANE = (log, clip) => `{ log: 'episodes/${log}.json', clip: 'episodes/${clip}.mp4' }`;
+const PLACE = (width, on) => `labels stay on the canvas and clear of each other at ${width} px on ${on}`;
+const INTRO = 'the intro says a label with no free place is left off the picture, and the list names every track';
+const FIRST = "each pane starts on its log's first frame, though its clip's first frame is not at media time 0";
 module.exports = [
   m('web: the layout fills the screen', 'web/style.css', 'header p { max-width: 70ch; }', 'header, main { max-width: 64rem; margin: 0 auto; } header p { max-width: 70ch; }',
     'fill.spec.js', '6:3', 'the layout fills a 1440 px screen minus the gutter'),
@@ -85,4 +88,13 @@ module.exports = [
   m('pair: a pane names its seed', JS, 'seed ${log.scenario.seed}', 'seed ${log.scenario.case}', 'pair.spec.js', '23:1', OWN),
   m('pair: a pane names its case', JS, '${log.scenario.case}, outcome', '${log.scenario.seed}, outcome', 'pair.spec.js', '23:1', OWN),
   m('pair: a pane names how its run ended', JS, 'outcome ${log.outcome}', 'outcome ${log.condition}', 'pair.spec.js', '23:1', OWN),
+  m("clip: the frame counts from the clip's first frame", JS, '(video.currentTime - t0) * FPS', 'video.currentTime * FPS', 'pair.spec.js', '44:1', FIRST),
+  m("clip: the first frame's time is read once the clip has loaded", JS, 't0 = video.currentTime;', 't0 = 0;', 'pair.spec.js', '44:1', FIRST),
+  // Label placement (web/tests/place.spec.js): on the real pair, the synthetic episode and a hand-built crowd, at two widths.
+  m('labels: a label is pushed in from the sides of the canvas', JS, 'x: inside(px - w / 2, w, width)', 'x: px - w / 2', 'place.spec.js', '33:5', PLACE(390, 'the real pair')),
+  m('labels: a label is pushed up from the bottom of the canvas', JS, 'y: inside(cy, LABEL_H, height)', 'y: cy', 'place.spec.js', '33:5', PLACE(390, 'a crowd of tracks')),
+  m('labels: a label that would touch another goes below its box', JS, 'above >= 0 ? [above, below] : [below]', 'above >= 0 ? [above] : [below]', 'place.spec.js', '33:5', PLACE(390, 'a crowd of tracks')),
+  m('labels: a label with no free place is drawn anyway', JS, '.find((r) => !placed.some((p) => touches(p, r)));', '.find((r) => !placed.some((p) => touches(p, r))) ?? at(below);', 'place.spec.js', '33:5', PLACE(390, 'the real pair')),
+  m('labels: placed in track order', JS, '.sort((a, b) => a.id - b.id)', '.sort((a, b) => b.id - a.id)', 'place.spec.js', '33:5', PLACE(390, 'a crowd of tracks')),
+  m('labels: the intro drops what happens to a label with no place', ARENA, '; a label with no free place is left off the picture, and the list under each pane names every track', '', 'place.spec.js', '59:1', INTRO),
 ];
