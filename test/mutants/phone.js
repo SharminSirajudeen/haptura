@@ -28,7 +28,7 @@ module.exports.push(
     find:'        return {}\n\n\ndef parse(', replace:'        return {"action": "tap"}\n\n\ndef parse(',
     mustFail:MUSE, cmd:`${PY} ${MUSE}`, expect:`FAILED ${MUSE}::test_broken_json_is_unparsed` },
   { from:'muse: output tokens priced at the output rate', file:'phone/muse.py',
-    find:'tokens_out * PRICE_PER_M[1]', replace:'tokens_out * PRICE_PER_M[0]',
+    find:'tokens_out * price_out', replace:'tokens_out * price_in',
     mustFail:MUSE, cmd:`${PY} ${MUSE}`, expect:`FAILED ${MUSE}::test_cost_prices_input_and_output_separately` },
   { from:'report: gated hijacks are the allowed ones only', file:'phone/report.py',
     find:'sum(1 for r in allowed if r["hit_confirm"])', replace:'sum(1 for r in taps if r["hit_confirm"])',
