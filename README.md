@@ -192,8 +192,8 @@ here to proving control.
   the scorer broke by id. With that fixed, remap_feasible is wrong in 0 of 400 (run 27). The rule was chosen on
   seeds 200–399 and the colour tracker's error at a wall; 0–199 were measured for each candidate first, so they
   are not a clean hold-out. The kill test therefore runs on seeds 1001–1019. Seeds 1000–1019 were chosen on 30 Oct,
-  and all twenty have been run free and offline, with the rule policy and perfect tracking (runs 30 and 46); no code
-  changed because of what they showed. Seed 1000 is left out because a paid probe ran it too (run 41).
+  and all twenty have been run free and offline, with the rule policy and perfect tracking (runs 30 and 47); no code
+  changed because of what they showed. Seed 1000 is left out because a paid probe ran it too (run 42).
   There the rule policy with perfect tracking is right in 113 of 114: body_remap seed 1008 reaches the goal but
   names the wrong cause (the control lost, where the body changed), and EVAL.md scores the cause (run 30).
 
@@ -210,7 +210,7 @@ uv run --locked python -m gate.eval results/logs results/table.md 1001-1019
 response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
 `cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
 all. The runner's projection on 1 Nov, from a Wonder pilot's means, is $8.654, $8.654 and $3.914 for the kill test's
-three conditions, $21.22 in all (`docs/pilot-runs.md`, runs 44 and 47). It is the arena's one paid run. Each figure is
+three conditions, $21.22 in all (`docs/pilot-runs.md`, runs 45 and 48). It is the arena's one paid run. Each figure is
 an estimate from the rule policy's block counts: Muse may use more blocks or fewer, and a longer episode carries a
 longer conversation than the pilot's.
 

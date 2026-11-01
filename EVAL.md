@@ -11,9 +11,9 @@ Each condition that runs uses the same episodes: each **seed** runs **all six ca
   Seeds 1000–1019 were chosen on 30 Oct (development ran all six cases up to seed 399 and blocked up to 999;
   `docs/pilot-runs.md`, run 30). All twenty were run before, free and offline, with the rule policy and perfect
   tracking: by run 30 (30 Oct) and by the review of the 1 Nov change (120 episodes, one wrong: body_remap seed
-  1008; `docs/pilot-runs.md`, run 46). Every `gate.run` launch also runs them free, to project the cost. No code
+  1008; `docs/pilot-runs.md`, run 47). Every `gate.run` launch also runs them free, to project the cost. No code
   changed because of what they showed. Seed 1000 is left out because a paid Wonder probe ran on it on 1 Nov
-  (`docs/pilot-runs.md`, run 41). The agent is Muse Wonder (`muse-wonder-1.0`) at low reasoning effort with
+  (`docs/pilot-runs.md`, run 42). The agent is Muse Wonder (`muse-wonder-1.0`) at low reasoning effort with
   a cap of 2,000 output tokens per reply, and every turn is sent the whole conversation as input items,
   without the model's reasoning items.
 
@@ -69,7 +69,7 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
 - how often Muse overruled the rule policy's advice, and how often the overrule was right against this table;
 - input tokens, output tokens and SAM frames per episode, and **dollars per correct decision** (all Muse and SAM
   spend of the condition / its episodes that pass the table), with input and output tokens per correct decision
-  beside it (the pilot found 6.0 input tokens per output token, `docs/pilot-runs.md` run 44, so output alone would understate it). SAM frames
+  beside it (the pilot found 6.0 input tokens per output token, `docs/pilot-runs.md` run 45, so output alone would understate it). SAM frames
   are billed at a 50-frame minimum per call; the eval reports billed frames.
 
 ### Kill rule, numeric
@@ -85,7 +85,7 @@ arena's claim did not hold on these seeds.
 SAM: $0.20 per 1k frames, 50-frame minimum per call, one call per block. Muse Wonder: $4.00 / $0.20 / $20.00 per
 million input / cached input / output tokens (`docs/api.md`), the cached tokens being part of the input count.
 Projection = episodes × blocks per episode (from the rules-only runs with perfect tracking) × ($0.01 + Muse tokens
-per turn × price), with tokens per turn and seconds per block measured in the pilot (`docs/pilot-runs.md`, run 44).
+per turn × price), with tokens per turn and seconds per block measured in the pilot (`docs/pilot-runs.md`, run 45).
 
 ## Constants frozen with this file (`gate/constants.py`)
 BLOCK_STEPS=30; FPS=10; W=H=128; CELL_PX=2; ELEMENT_PX=8; MAX_LAG=4; PERMS=9999; PROBE_STEPS=15; P_NOOP=0.3;

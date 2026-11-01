@@ -124,7 +124,7 @@ class MuseReply:
     text: str
     tool_calls: tuple[ToolCall, ...]
     # the output items the next turn's input carries back: all but `reasoning`, which holds no text
-    # (`summary: []`); sent back, it changed the input count by 6 tokens (docs/api.md, run 43)
+    # (`summary: []`); sent back, it changed the input count by 6 tokens (docs/api.md, run 44)
     items: tuple[dict[str, Any], ...]
     usage: dict[str, Any]
 

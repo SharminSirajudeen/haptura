@@ -26,6 +26,6 @@ SAM_PROMPT = (
     "colored object"  # the one noun phrase SAM 3.1 matched on every flat shape (docs/api.md)
 )
 MUSE_EFFORT = "low"  # one step above "minimal"; the kill test says whether it keeps accuracy
-# a ceiling per reply, reasoning included: at 400, 6 of 11 Wonder replies were cut off (run 41);
-# at 2000 none of 17 was, and the longest used 763 (run 44)
+# a ceiling per reply, reasoning included: at 400, 6 of 11 Wonder replies were cut off (run 42);
+# at 2000 none of 17 was, and the longest used 763 (run 45)
 MUSE_MAX_OUTPUT_TOKENS = 2000
