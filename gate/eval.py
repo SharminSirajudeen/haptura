@@ -35,7 +35,7 @@ KILL_CONDITIONS = CONDITIONS[:3]
 KILL_DIFF, KILL_OCCLUSION = 0.10, 0.20  # EVAL.md's kill rule
 History = Sequence[dict[int, Vec]]
 Pairs = frozenset[tuple[int, int]]
-KILL_SEEDS = range(1010, 1020)  # EVAL.md: chosen before any run on them
+KILL_SEEDS = range(1001, 1020)  # EVAL.md: 1000-1019 less seed 1000, which a paid probe ran
 KILL_RANGE = f"seeds {KILL_SEEDS[0]}-{KILL_SEEDS[-1]}"
 
 

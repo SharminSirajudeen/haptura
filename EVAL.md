@@ -2,17 +2,18 @@
 # yet frozen), and never edited afterwards. Revised on 30 Oct, while no paid condition had completed (a launch on 29 Oct was paused
 # after 1 of 120 episodes): the kill seeds moved from 0–19 to 1000–1019, and a larger final run was dropped.
 # Revised on 1 Nov, still before any paid condition completed: the agent is Muse Wonder, not Muse Spark, and the kill
-# test is half size, on seeds 1010–1019.
+# test leaves out seed 1000, which a paid probe ran: seeds 1001–1019.
 
 ## What is measured, exactly
 Each condition that runs uses the same episodes: each **seed** runs **all six cases**, one episode per (seed, case).
-- **Kill test:** seeds 1010–1019 → 60 episodes per condition: n = 50 for the five-case headline and n = 10
-  for feasible, reported with every number. It is the arena's one paid run, so its numbers are the ones reported,
-  and the seeds were chosen before any run on them (development ran all six cases up to seed 399 and blocked up to
-  999; `docs/pilot-runs.md`, run 30). No code changes because of what these seeds show: before the kill test they
-  are run only by run 30's free check and the kill-line test. Seed 1000 is not in the test because a paid Wonder
-  probe ran on it on 1 Nov (`docs/pilot-runs.md`, run 41); the test is half size by a spend ruling of 1 Nov (#59),
-  which leaves 1001–1009 unrun. The agent is Muse Wonder (`muse-wonder-1.0`) at low reasoning effort with
+- **Kill test:** seeds 1001–1019 → 114 episodes per condition: n = 95 for the five-case headline and n = 19
+  for feasible, reported with every number. It is the arena's one paid run, so its numbers are the ones reported.
+  Seeds 1000–1019 were chosen on 30 Oct (development ran all six cases up to seed 399 and blocked up to 999;
+  `docs/pilot-runs.md`, run 30). All twenty were run before, free and offline, with the rule policy and perfect
+  tracking: by run 30 (30 Oct) and by the review of the 1 Nov change (120 episodes, one wrong: body_remap seed
+  1008; `docs/pilot-runs.md`, run 46). Every `gate.run` launch also runs them free, to project the cost. No code
+  changed because of what they showed. Seed 1000 is left out because a paid Wonder probe ran on it on 1 Nov
+  (`docs/pilot-runs.md`, run 41). The agent is Muse Wonder (`muse-wonder-1.0`) at low reasoning effort with
   a cap of 2,000 output tokens per reply, and every turn is sent the whole conversation as input items,
   without the model's reasoning items.
 
@@ -73,7 +74,7 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
 
 ### Kill rule, numeric
 The kill test runs three conditions only: gated+SAM, no-gate+SAM and gated+colour. Rethink if either holds on seeds
-1010–1019:
+1001–1019:
 1. the mean paired difference (gated+SAM − no-gate+SAM) on the six-case score is ≤ 0.10;
 2. SAM's identities-kept-through-occlusion rate beats the colour tracker's by less than 0.20.
 

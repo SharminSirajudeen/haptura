@@ -1,6 +1,6 @@
 """The kill test: one condition over seeds x all six cases (EVAL.md, "Cost").
 
-`python -m gate.run --condition gated+SAM --seeds 1010-1019 --budget 25 [--push]`
+`python -m gate.run --condition gated+SAM --seeds 1001-1019 --budget 12 [--push]`
 
 It first prints EVAL.md's projection, an estimate, and refuses above the budget: episodes x blocks
 per episode (the rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per
@@ -147,7 +147,7 @@ def _push(message: str, out: Path) -> None:
 def main(argv: Sequence[str]) -> None:
     parser = argparse.ArgumentParser(prog="python -m gate.run", description=__doc__.split("\n")[0])
     parser.add_argument("--condition", required=True, choices=sorted(SETUP))
-    parser.add_argument("--seeds", required=True, help="first-last, e.g. 1010-1019")
+    parser.add_argument("--seeds", required=True, help="first-last, e.g. 1001-1019")
     parser.add_argument("--budget", type=float, required=True, help="RUN_BUDGET_USD for this run")
     parser.add_argument("--push", action="store_true")
     args = parser.parse_args(argv)
