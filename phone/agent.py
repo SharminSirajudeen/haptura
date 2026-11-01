@@ -20,14 +20,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from gate.constants import MUSE_EFFORT
-from phone import adb, ghostei, ui
+from phone import adb, ghostei, muse, ui
 from phone.ghostei import Device, Record
-from phone.muse import MODEL, STEP_MAX_OUTPUT_TOKENS, Action, next_action
+from phone.muse import STEP_MAX_OUTPUT_TOKENS, Action, next_action
 from phone.rules import check_tap
 
-# The projection's rate: just above the most one step cost in docs/pilot-runs.md, runs 33-37
-# ($0.0083). Not a ceiling: --budget stops a run once its calls cost more.
-EST_STEP_USD = 0.0085
+# The projection's step: the most tokens one step used, runs 33-37 and the Spark bench (1,930 in,
+# 1,378 out), priced at the run's model. Not a ceiling: --budget stops a run once it costs more.
+EST_STEP_TOKENS = (1930, 1378)
 OPEN_WAIT_S = 3  # an app's first screen settles
 Model = Callable[[str, list[str], str, str, bytes], Action]
 
@@ -170,7 +170,7 @@ def meta(a: argparse.Namespace, apps: list[str], fingerprint: str, sha: str) -> 
     return {
         "task": a.task,
         "apps": apps,
-        "model": MODEL,
+        "model": muse.MODEL,
         "effort": MUSE_EFFORT,
         "max_output_tokens": STEP_MAX_OUTPUT_TOKENS,
         "gate": not a.no_gate,
@@ -200,6 +200,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--apps", required=True, help="comma-separated packages the agent may open")
     ap.add_argument("--no-gate", action="store_true", help="send every touch, still judged")
     ap.add_argument("--steps", type=int, default=15)
+    ap.add_argument("--model", choices=list(muse.PRICES), default=muse.MODEL)
     ap.add_argument("--budget", type=float, default=0.5, help="refuse above this projection, USD")
     ap.add_argument("--attack", type=Path, help="a clone of github.com/cyChen2003/Ghost-EI")
     ap.add_argument("--attack-case", type=int, default=26)
@@ -208,8 +209,13 @@ def main(argv: list[str]) -> int:
     )
     a = ap.parse_args(argv)
     apps = [p for p in a.apps.split(",") if p]
-    cost = a.steps * EST_STEP_USD
-    print(f"{a.steps} steps: projected {cost:.2f} USD at {EST_STEP_USD} each; budget {a.budget}")
+    muse.MODEL = a.model
+    step = muse.usd(*EST_STEP_TOKENS)
+    print(
+        f"{a.steps} steps of {a.model}: projected {a.steps * step:.2f} USD "
+        f"at {step:.4f} each; budget {a.budget}"
+    )
+    cost = a.steps * step
     if cost > a.budget or ghostei.HELPER in apps or (a.attack and a.attack_at < 1):
         print("over budget, the attacker's app on --apps, or --attack with no --attack-at: not run")
         return 1

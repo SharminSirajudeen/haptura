@@ -16,9 +16,10 @@ from openai import OpenAIError
 from gate.constants import MUSE_EFFORT
 from gate.meta_api import cache_key, cached, post_json
 
-MODEL = "muse-spark-1.3"
-# USD per million input and output tokens (docs/api.md: dev.meta.ai pricing page, 28 Oct 2026).
-PRICE_PER_M = (1.25, 4.25)
+MODEL = "muse-spark-1.3"  # every call's model; a runner's --model sets it for the whole process
+# USD per million input and output tokens (docs/api.md: dev.meta.ai pricing page, Spark 28 Oct 2026,
+# Wonder 1 Nov). Cached input is billed lower and is not subtracted: a cost here is an upper bound.
+PRICES = {"muse-spark-1.3": (1.25, 4.25), "muse-wonder-1.0": (4.00, 20.00)}
 # `cached` keys on the screenshot, so it never hits across runs: the pay-once here is the JSONL
 # resume in ghostei.py, and this directory is kept out of git.
 CACHE = Path("cache/phone")
@@ -78,7 +79,8 @@ class Action:
 
 
 def usd(tokens_in: int, tokens_out: int) -> float:
-    return (tokens_in * PRICE_PER_M[0] + tokens_out * PRICE_PER_M[1]) / 1e6
+    price_in, price_out = PRICES[MODEL]
+    return (tokens_in * price_in + tokens_out * price_out) / 1e6
 
 
 def as_int(v: object) -> int:
