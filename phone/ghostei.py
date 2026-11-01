@@ -109,17 +109,23 @@ def device(uid_list: str, system_list: str) -> Device:
     return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & packages(system_list))
 
 
-def owner_from(text: str, dev: Device, task: str, x: int | None = None, y: int = 0) -> str:
-    """The owner the gate checks, from one `dumpsys input`: of the window a touch at (x, y)
-    reaches, or of the focused window when x is None."""
-    wins = windows.parse_windows(text)
-    w = windows.focused(wins, text) if x is None else windows.receiver(wins, x, y)
+def owner_at(
+    text: str, dev: Device, task: str, x: int, y: int
+) -> tuple[windows.Window | None, str]:
+    """From one `dumpsys input`: the window a touch at (x, y) reaches, and the owner to check."""
+    w = windows.receiver(windows.parse_windows(text), x, y)
+    return w, windows.owner_package(w, dev.uids, task, dev.allow)
+
+
+def focus_owner(text: str, dev: Device, task: str) -> str:
+    """From one `dumpsys input`: the owner of the focused window."""
+    w = windows.focused(windows.parse_windows(text), text)
     return windows.owner_package(w, dev.uids, task, dev.allow)
 
 
-def owner_now(dev: Device, task: str, x: int | None = None, y: int = 0) -> str:
-    """`owner_from` on a dump read from the device now."""
-    return owner_from(adb.input_dump(), dev, task, x, y)
+def owner_now(dev: Device, task: str) -> str:
+    """The focused window's owner, read from the device now."""
+    return focus_owner(adb.input_dump(), dev, task)
 
 
 def measure(case: Record, nodes: list[ui.Node], p: Proposal) -> Record:
@@ -138,24 +144,32 @@ def tap_gated(x: int, y: int, cmd: str, task: str, gate: bool, dev: Device) -> R
     """Read the owner at (x, y), judge, and send the touch `cmd`, in that order and back to back
     inside the click watch, so nothing can change the screen between the check and the touch but
     adb's own latency. `timing_ns`: before the dump, after it, after the verdict, after the send
-    (the last equals the third when nothing was sent)."""
+    (the last equals the third when nothing was sent). The record also says, from the same dump,
+    which window received the point and what a focused-window check would have judged."""
 
-    def act() -> tuple[str, Verdict, bool, list[int]]:
+    def act() -> tuple[windows.Window | None, str, Verdict, bool, list[int], str]:
         marks = [time.perf_counter_ns()]
         dump = adb.input_dump()
         marks.append(time.perf_counter_ns())
-        owner = owner_from(dump, dev, task, x, y)
+        w, owner = owner_at(dump, dev, task, x, y)
         v = check_tap(owner, task, dev.allow)
         tapped = not gate or v.kind == "allow"
         marks.append(time.perf_counter_ns())
         if tapped:
             adb.shell(cmd)
-        return owner, v, tapped, marks + [time.perf_counter_ns() if tapped else marks[-1]]
+        return w, owner, v, tapped, marks + [time.perf_counter_ns() if tapped else marks[-1]], dump
 
-    (owner, v, tapped, marks), (pkg, text) = adb.clicked_during(act)
+    (w, owner, v, tapped, marks, dump), (pkg, text) = adb.clicked_during(act)
+    focus = focus_owner(dump, dev, task)  # after the send: recorded, never part of the check
     return {
+        "x": x,
+        "y": y,
+        "receiver_uid": w.uid if w else None,
+        "receiver_name": w.name if w else "",
         "owner_at_tap": owner,
         "verdict": {"kind": v.kind, "reason": v.reason},
+        "focus_owner": focus,
+        "focus_verdict": check_tap(focus, task, dev.allow).kind,
         "tapped": tapped,
         "timing_ns": marks,
         "click_pkg": pkg,

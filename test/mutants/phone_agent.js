@@ -32,8 +32,8 @@ module.exports = [
   m('agent: a failed call is not recorded as refused', A, 'return {} if a.kind in ("done", "error") else', 'return {} if a.kind == "done" else', STOP),
   m('agent: the gate\'s refusal reaches Muse', A, '    if rec.get("verdict") and not rec["tapped"]:\n', '    if False:\n',
     'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
-  m('agent: the history line carries the outcome', A, '        r.history.append(f"{i}. {what(rec)} -> {outcome(rec)}")\n',
-    '        r.history.append(f"{i}. {what(rec)}")\n', 'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
+  m('agent: the history line carries the outcome', A, '        told = f"{i}. {what(rec)} -> {outcome(rec)}"\n',
+    '        told = f"{i}. {what(rec)}"\n', 'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
   m('agent: a label is quoted, so it cannot forge a history line', A, '*(repr(s) for s in (a["arg"], lab) if s)',
     '*(str(s) for s in (a["arg"], lab) if s)', 'test_a_tap_on_a_strangers_window_is_refused_and_muse_is_told'),
   m('agent: done stops the run', A, LOOP, '        if a.kind == "error" or spent > budget:\n', STOP),
@@ -66,3 +66,10 @@ module.exports = [
     '    "When the steps so far show every part of the task done, answer done; do not reopen apps to "\n    "check.\\n"\n', '',
     'test_the_agents_call_is_capped_at_low_effort_and_shows_the_elements'),
 ];
+const TOLD = 'test_each_step_records_its_start_and_what_muse_was_told', SIDE = 'test_the_sidecar_says_what_produced_the_records';
+module.exports.push(
+  m('agent: a step records its start', A, '"t_ns": time.time_ns()', '"t_ns": 0', TOLD),
+  m('agent: a step records the line Muse is told', A, '        rec["told_muse"] = told\n', '', TOLD),
+  m('agent: the sidecar records whether the gate was on', A, '"gate": not a.no_gate', '"gate": True', SIDE),
+  m('agent: the sidecar records the attack', A, '"case": a.attack_case, ', '', SIDE),
+);

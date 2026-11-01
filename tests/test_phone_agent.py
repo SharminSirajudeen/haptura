@@ -5,6 +5,7 @@ opens only the person's apps, a refusal reaches Muse in the next step's history,
 `done`, a failed call or its budget. No device, no model.
 """
 
+import argparse
 import time
 from pathlib import Path
 
@@ -85,7 +86,7 @@ def test_typing_into_a_strangers_window_is_refused(mp: pytest.MonkeyPatch) -> No
 
 
 def test_typing_into_an_allowlisted_system_window_is_refused(mp: pytest.MonkeyPatch) -> None:
-    mp.setattr(ghostei, "owner_now", lambda dev, task, x=None, y=0: "com.android.systemui")
+    mp.setattr(ghostei, "owner_now", lambda dev, task: "com.android.systemui")
     recs, sent, _ = go(mp, "settings", step("open", SETTINGS), step("type", "1234"), step("done"))
     assert recs[1]["verdict"]["kind"] == "block" and not recs[1]["tapped"]
     assert not any(s.startswith("input text") for s in sent)
@@ -212,3 +213,18 @@ def test_an_existing_record_file_stops_the_run_before_the_device(
 @pytest.fixture
 def mp(monkeypatch: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
     return monkeypatch
+
+
+def test_each_step_records_its_start_and_what_muse_was_told(mp: pytest.MonkeyPatch) -> None:
+    before = time.time_ns()
+    recs, _, seen = go(mp, "overlay", step("open", SETTINGS), step("tap", "0"), step("done"))
+    assert before <= recs[0]["t_ns"] <= recs[1]["t_ns"] <= recs[2]["t_ns"] <= time.time_ns()
+    assert [r["told_muse"] for r in recs[:2]] == seen[2].split("\n")
+
+
+def test_the_sidecar_says_what_produced_the_records() -> None:
+    a = argparse.Namespace(task="t", attack=Path("g"), attack_case=26, attack_at=6, no_gate=True)
+    side = agent.meta(a, [SETTINGS], "fp\n", "abc\n")
+    assert side["gate"] is False and side["attack"] == {"repo": "g", "case": 26, "at": 6}
+    assert (side["fingerprint"], side["git_sha"], side["apps"]) == ("fp", "abc", [SETTINGS])
+    assert (side["model"], side["max_output_tokens"]) == (muse.MODEL, muse.STEP_MAX_OUTPUT_TOKENS)
