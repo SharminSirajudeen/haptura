@@ -11,7 +11,7 @@
 |---|---|---|---|---|---|
 | `muse-spark-1.3` | $0.15 /M | $1.25 /M | $4.25 /M | 3,000 | 4,000,000 |
 | `muse-spark-1.3-contributor` ("used to improve our products") | $0.002 /M | $0.10 /M | $0.20 /M | 150 | 3,000,000 |
-| `muse-wonder-1.0` ("in preview", Standard mode only; read 1 Nov by the Mac session) | $0.20 /M | $4.00 /M | $20.00 /M | not recorded | not recorded |
+| `muse-wonder-1.0` ("in preview", Standard mode only; read 1 Nov) | $0.20 /M | $4.00 /M | $20.00 /M | not recorded | not recorded |
 | `sam-3.1` | | $2.50 per 1k images; **$0.20 per 1k video frames, 50-frame minimum per video request** | | 3,000 | none |
 
 Reasoning tokens are billed as output tokens (docs/reasoning). Rate limits are per team.
@@ -111,7 +111,7 @@ prices a reply as (input − cached) × $4/M + cached × $0.20/M + output × $20
   accepted and made the call the full reply makes (run 46).
 - **A stored response can be lost.** With `previous_response_id`, call 3 of an episode at a 1,500-token cap failed with
   `400 {'error': {'code': None, 'message': 'referenced response not found or expired', 'param': None, 'type':
-  'invalid_request_error'}}`, seconds after call 2's response was created (the Mac session's reading), and every response
+  'invalid_request_error'}}`, seconds after call 2's response was created (measured in a scratch run), and every response
   had `store: true`. A rerun (calls 1–2 from a scratch cache) failed the same way at call 3, in a script that, by its
   code and its traceback, retried a failed call twice, 3 s apart (run 43; the lines are in
   `results/api/wonder-probes-1-nov.txt`). The 11-call chain at a 400-token cap had no such failure, so it did not happen
@@ -126,7 +126,7 @@ prices a reply as (input − cached) × $4/M + cached × $0.20/M + output × $20
   tokens (59%) and 20,500 of run 42's 27,043 (76%) were cached.
 - **Latency.** The pilot's Muse requests took 2.24–7.34 s, mean 3.44 s over 17; its SAM requests mean 3.15 s over 20,
   longest 3.87 s. The probes of run 42, at a 400-token cap with `previous_response_id`, took 2.5–16.4 s a call, mostly
-  11–14 s (the Mac session's record). What made the difference was not isolated.
+  11–14 s (measured in a scratch run). What made the difference was not isolated.
 
 ## Repeatability: the same request, different replies (the kill test, 1 Nov 2026; docs/pilot-runs.md, runs 54–57)
 A cache file is named by the SHA-256 of its request (for SAM, of the model, the prompt and the frames), so a name that

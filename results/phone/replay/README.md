@@ -25,9 +25,9 @@ Settings reopened on its search page, left over from the lab runs, because the s
 | gate on | a new instance of the same window: uid 10217, the same activity (window `b3436b0`; gate off was `e9526b2`) | block: `window owned by com.example.myapplication, not the task app com.google.android.deskclock` | no | none |
 
 One pair, one trial each. The pair was recorded with the first version of `phone/replay.py`, which found each tapped
-element by its label alone; after review it finds the element by its recorded number and stops if the label changed,
+element by its label alone; the current version finds the element by its recorded number and stops if the label changed,
 skips steps the run refused, and stops on a refused scroll. Run 37's step 6 named element 2, *Cancel*, and the gate-off
-side's click event is *Cancel* in `com.example.myapplication`. **Re-run with the merged code** (1 Nov, after the
+side's click event is *Cancel* in `com.example.myapplication`. **Re-run with the current code** (1 Nov, after the
 benches; same command, out folder `run37-step6-rerun/`, recorded, 69.9 s): the same pair field for field: element
 *Cancel* at (206, 777), receiver uid 10217, owner `com.example.myapplication`, gate off sent with the click event in the
 helper, gate on refused with no click event. The dialog holds focus here, so a focused-window check would also have blocked

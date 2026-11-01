@@ -71,7 +71,7 @@ Spend: $1.3896 scored plus $0.7047 set aside, $2.0943 in all.
   that field was added).
 - `<run>.jsonl`: the agent's step records (each touch's point, receiver uid and window, owner, verdict, focus
   comparator, timing marks, click event; the line Muse was told). `<run>.meta.json`: model, effort, cap, gate, attack,
-  fingerprint, revision (the runs were made from uncommitted code on top of the revision named; this PR commits it).
+  fingerprint, revision (the runs were made from uncommitted code on top of the revision named; it was committed afterwards).
 - `uids.txt`: `cmd package list packages -U` at the start.
 - `invalid-check/`: the 12 runs scored with the wrong timer check.
 - Every attack run was screen-recorded; the 720×1280 recordings are kept outside the repository.

@@ -1,4 +1,4 @@
-// Issue #58's lab records (phone/lab.py, results/phone/lab): one entry per guarded line.
+// The lab records (phone/lab.py, results/phone/lab): one entry per guarded line.
 const PY = 'uv run --locked python -m pytest -q';
 const T = 'tests/test_phone_lab.py';
 const m = (from, find, replace, test) =>

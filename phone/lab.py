@@ -1,4 +1,4 @@
-"""Issue #58's lab runs: a not-focusable window of another app (the keyboard) over the task app.
+"""The lab runs: a not-focusable window of another app (the keyboard) over the task app.
 
     ADB=<adb> ANDROID_SERIAL=emulator-5554 uv run --locked python -m phone.lab <arrangement> [--n N]
     ADB=<adb> ANDROID_SERIAL=emulator-5554 uv run --locked python -m phone.lab race [--n N]

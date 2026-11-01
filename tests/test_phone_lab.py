@@ -1,4 +1,4 @@
-"""Issue #58's lab records, recomputed (results/phone/lab, emulator, API 36, 1 Nov 2026).
+"""The lab records, recomputed (results/phone/lab, emulator, API 36, 1 Nov 2026).
 
 Every verdict is re-derived from the `dumpsys input` saved with its trial, and each arrangement's
 required outcome is checked trial by trial against the ground truths the gate never reads: the
