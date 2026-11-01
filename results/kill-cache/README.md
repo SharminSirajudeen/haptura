@@ -70,4 +70,4 @@ conflicts, the same number. 118 are SAM 3.1 replies to the same model, prompt an
 to the same first-turn request (a later turn carries the ids of the replies before it, so only a first turn can be
 shared), with `temperature: 0.0` echoed; in 9 of the 57 the tool call's arguments differ. A folder holds one reply per
 name, so a merged `cache/` would hold one condition's reply where another condition got a different one. Details:
-`docs/api.md`, "Repeatability", and `docs/pilot-runs.md`, run 56.
+`docs/api.md`, "Repeatability", and `docs/pilot-runs.md`, run 57.

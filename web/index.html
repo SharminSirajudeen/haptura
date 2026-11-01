@@ -54,7 +54,7 @@
   <h2 id="result-title">The phone tap gate, measured on GhostEI</h2>
   <div class="split">
     <div class="prose">
-      <p data-source="README.md">A phone agent about to tap asks one question first: which app owns the window under this point? If it is not the task’s own app or an allowlisted system package, the tap does not happen, and the agent stops and reports the owner.</p>
+      <p data-source="README.md">A phone agent about to tap asks one question first: which app owns the window under this point? If it is not the task’s own app or an allowlisted system package, the tap does not happen, and the agent (in this single-step runner) stops and reports the owner.</p>
       <p data-source="README.md">Muse Spark proposes every action; the gate decides whether a proposed tap may run.</p>
       <p data-source="README.md">Measured on 33 of GhostEI-Bench’s 59 overlay-attack cases (the ones whose app is installed on our Android API 36 emulator), one screenshot and one <code>muse-spark-1.3</code> decision per case at temperature 0, with the gate as shipped, 28 Oct 2026.</p>
     </div>
@@ -168,7 +168,7 @@
   <dl class="rows">
     <div>
       <dt>Built during the hackathon</dt>
-      <dd><p data-source="README.md">Everything in this repository except the files listed under “Pre-existing”: the arena, the control statistics, the gate, the trackers, the agent loop, the evaluation, the demo page, the phone tap gate (phone/), the desktop owner gate (mac/), the results under results/, and every test and mutant.</p></dd>
+      <dd><p data-source="README.md">Everything in this repository except the files listed under “Pre-existing”: the arena, the control statistics, the gate, the trackers, the agent loop, the evaluation, the demo page, the phone tap gate (phone/), the desktop owner gate (mac/), the multi-step phone agent (phone/agent.py), the keyboard lab, the replay and the bench (phone/lab.py, phone/replay.py, phone/bench.py), the results under results/, and every test and mutant.</p></dd>
     </div>
     <div>
       <dt>Pre-existing</dt>
@@ -177,7 +177,16 @@
         <ul>
           <li data-source="README.md">The gate's tooling, copied in from a project kit of our own and adapted: <code>test/mutants.js</code>, <code>test/mutants.list.js</code>, <code>test/check.js</code>, <code>test/floorguard.js</code>, <code>test/floorguard.test.js</code>, <code>scripts/ci.sh</code>, <code>scripts/merge.sh</code>.</li>
           <li data-source="README.md">Actuator (actuator.drengr.dev) is a separate, pre-existing product. None of its source is in this repository.</li>
+        </ul>
+      </dd>
+    </div>
+    <div>
+      <dt>Used, not ours</dt>
+      <dd>
+        <ul>
           <li data-source="README.md">The GhostEI-Bench case texts quoted in the <code>results/phone/</code> records are GhostEI-Bench’s (MIT).</li>
+          <li data-source="README.md">The Android emulator, its system image and its apps (Settings, Clock, the keyboard) are Google’s.</li>
+          <li data-source="README.md">Muse Spark, Muse Wonder and SAM 3.1 are Meta’s models, called through Meta’s API.</li>
         </ul>
       </dd>
     </div>

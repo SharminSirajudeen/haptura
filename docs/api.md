@@ -128,7 +128,7 @@ prices a reply as (input − cached) × $4/M + cached × $0.20/M + output × $20
   longest 3.87 s. The probes of run 42, at a 400-token cap with `previous_response_id`, took 2.5–16.4 s a call, mostly
   11–14 s (the Mac session's record). What made the difference was not isolated.
 
-## Repeatability: the same request, different replies (the kill test, 1 Nov 2026; docs/pilot-runs.md, runs 53–56)
+## Repeatability: the same request, different replies (the kill test, 1 Nov 2026; docs/pilot-runs.md, runs 54–57)
 A cache file is named by the SHA-256 of its request (for SAM, of the model, the prompt and the frames), so a name that
 two conditions' caches both hold is a request they sent alike. The kill test's three caches (`results/kill-cache/`)
 hold 813, 905 and 405 files, 1,888 distinct names, and 178 names are in two or more caches. Of those 178, **175 hold
@@ -147,14 +147,14 @@ different replies** and 3 the same. A merge of the three result branches reporte
   replies is 60.
 
 A cache folder holds one reply per request name, so it can hold only one of the replies the conditions got. The kill
-test keeps one archive per condition, and a replay of each rebuilds its logs byte for byte (run 56).
+test keeps one archive per condition, and a replay of each rebuilds its logs byte for byte (run 57).
 
 ## What follows for the arena
 1. **A 31-frame block is billed as 50 frames** (`video_frames_processed: 50`). A 49-step block would cost the same,
    but the arena cannot build a scenario with it (`docs/pilot-runs.md`, run 30), so blocks stay at 30 steps.
 2. **One SAM call per block with the prompt "colored object"** (`sam-6` confirmed it on video): $0.01 per block.
    The kill test on Muse Wonder (114 episodes a condition, seeds 1001–1019) is projected at $21.22 from the rule policy's
-   block counts (`docs/pilot-runs.md`, run 48); the runner counted $28.93 for it (runs 53–55).
+   block counts (`docs/pilot-runs.md`, run 48); the runner counted $28.93 for it (runs 54–56).
 3. Muse Spark per turn (28 Oct): ~1k input + ~160 output tokens, ~8 turns ≈ $0.016 per episode; latency 1.3–12 s per
    turn. Muse Wonder per turn (the pilot, run 45): 1,629 input tokens (968 cached) + 271 output, $0.0083, 3.44 s, and
    one Muse turn per block (22 turns, 22 blocks).
