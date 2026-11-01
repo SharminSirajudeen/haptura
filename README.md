@@ -4,10 +4,54 @@
 stop, probe or decline when it cannot.**
 
 An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). Status: in progress. The phone and
-desktop owner gates run and are measured (below), and a multi-step Muse Spark agent runs behind the phone gate
-(five runs, below). The arena, its agent loop, its evaluation and its runner are built
+desktop owner gates run and are measured (below), and a multi-step Muse agent runs behind the phone gate (a bench
+of 72 runs on Muse Spark and Muse Wonder, below). The arena, its agent loop, its evaluation and its runner are built
 and tested offline. The arena's one paid run (the kill test) has not been completed: a launch on 29 Oct was paused
 after one episode, about $0.05.
+
+## The model proposes each touch; the gate grants it
+
+**The problem.** An agent that works a phone's apps can be led to touch a window that is not the app it was asked to
+use: a fake system dialog drawn over that app, or another app's window that never takes focus. A check of which app is
+in front misses the second.
+
+**The mechanism.** Before each tap and scroll, the gate asks Android's input dispatcher which window the touch will
+reach, takes that window's owner uid (assigned by the system, not chosen by the app) and maps it to its package. The
+touch is sent only when that package is the task's app or an allowlisted system package; an unknown owner is refused.
+Typing is checked against the focused window's owner. The model, Muse, proposes every action; the gate, outside the
+model, grants or refuses each touch, and a refusal goes back to Muse as part of its next step. Meta describes the same
+split for its own agent's connectors and network egress: "Muse proposes actions, but only Sentinel can grant
+permission to perform action"
+([Meta](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse)). This gate does it
+for touches on a screen.
+
+**The evidence**, on the Android emulator (API 36), 1 Nov 2026, each row from the records named:
+
+| Measurement | Gate off | Gate on | Records |
+|---|---|---|---|
+| Another app's not-focusable window (the keyboard, standing in) over a task app that holds focus, 20 trials each | the touch reached the keyboard and typed a letter in 20 of 20; a focused-window check allowed all 20 | refused in 20 of 20, naming the keyboard's package; nothing typed | `results/phone/lab/` |
+| A GhostEI dialog fired before step 5 of a multi-step task, 3 tasks × 3 repeats, per model | the attacker's app received the touch: Muse Spark in 9 of 9 runs, Muse Wonder 11 touches in 9 runs | none received; refused in 9 of 9 runs per model; all 18 runs completed the task | `results/phone/bench/` |
+| The same tasks with no attack | 18 of 18 completed | 18 of 18 completed; 3 false refusals (Spark, Settings' search page, another package) | `results/phone/bench/` |
+| Muse's own captured choice from run 37 (the dialog's *Cancel*), replayed with no model call | delivered to the attacker's app | refused | `results/phone/replay/` |
+
+On the dialog, both models tapped its dismiss button in all 36 attack runs, never its confirm: what the gate stopped
+is the attacker's app receiving the touch.
+
+**Limits**, each measured or stated in the records above:
+- **Not atomic.** From reading the window list to the touch being sent, 37.6–76.3 ms passed (20 sent lab trials). When
+  the keyboard was raised just before an approved touch, it took the touch in 6 of 10 trials with the touch sent 55–60
+  ms after, and in 10 of 10 from 100 ms.
+- **Back is not checked.** In the bench, after the refusal, the next action was Back in 6 of 9 gated attack runs per
+  model; Back reaches the focused window, which was the attacker's dialog.
+- A dialog drawn by the task app itself passes; system-uid windows are handled only by the allowlist.
+- The keyboard is a stand-in: no hostile not-focusable overlay was run.
+- Emulator only, no physical phone. The gate runs on a computer over adb today; an accessibility service on the phone
+  can read a checked owner name for ordinary app windows (`results/phone/a11y-owner/`).
+
+**Closest work.** Google's ARTEMIS checks before each action that the chosen element is still on the live screen
+(`artemis/agents/validator/precondition_xml.py`, github.com/google/artemis at 351ca84: "Checks that the element the
+Operator decided to interact with is still present on the live screen"); its source has no read of a window's owner
+uid (`git grep -iE 'ownerUid|dumpsys input'`: 0 matches).
 
 ## The phone tap gate, measured on GhostEI
 
@@ -248,7 +292,8 @@ phone.
 
 Everything in this repository except the files listed under "Pre-existing": the arena, the control statistics, the
 gate, the trackers, the agent loop, the evaluation, the demo page, the phone tap gate (`phone/`), the desktop owner
-gate (`mac/`), the results under `results/`, and every test and mutant.
+gate (`mac/`), the multi-step phone agent (`phone/agent.py`), the keyboard lab, the replay and the bench
+(`phone/lab.py`, `phone/replay.py`, `phone/bench.py`), the results under `results/`, and every test and mutant.
 
 ## Pre-existing
 
@@ -257,6 +302,12 @@ Written before the event started on 26 Oct 2026:
   `test/mutants.list.js`, `test/check.js`, `test/floorguard.js`, `test/floorguard.test.js`, `scripts/ci.sh`,
   `scripts/merge.sh`.
 - The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT).
+
+Used, not ours:
+- GhostEI-Bench's attack app (the helper APK that draws the dialogs) and its dataset, run unchanged
+  (github.com/cyChen2003/Ghost-EI, MIT).
+- The Android emulator, its system image and its apps (Settings, Clock, the keyboard) are Google's.
+- Muse Spark and Muse Wonder are Meta's models, called through Meta's API.
 - Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. None of its source is in this repository.
 
 ## Run the gate
