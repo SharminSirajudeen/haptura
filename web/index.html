@@ -150,7 +150,7 @@
       <dt>Which model does what</dt>
       <dd>
         <p><span data-source="README.md">Muse Spark proposes every action</span> on the phone. In the arena, <span data-source="README.md">Muse Wonder (muse-wonder-1.0, temperature 0, low reasoning effort) is the agent.</span></p>
-        <p><span data-source="README.md">SAM 3.1 is the tracker, with one video call per block and the prompt “colored object”.</span> <span data-source="README.md">It has not yet run on an arena clip.</span></p>
+        <p><span data-source="README.md">SAM 3.1 is the tracker, with one video call per block and the prompt “colored object”.</span> <span data-source="README.md">In the kill test it ran on arena clips.</span></p>
         <p data-source="README.md">The statistics, the gate and its advice are plain code, with no model.</p>
       </dd>
     </div>
@@ -159,8 +159,8 @@
 
 <section id="arena" class="band alt" aria-labelledby="arena-title">
   <h2 id="arena-title">The arena</h2>
-  <p class="intro-p">In a 128×128 arena, <span data-source="README.md">the agent has one actuator, <code>noop | up | down | left | right</code>, and at most one of up to 8 elements obeys it</span>; the others are decoys, echoes, replays and two look-alikes. <span data-source="README.md">Control, or the map, can change at a secret step after the agent starts acting.</span> <span data-source="README.md">No Muse Wonder or SAM number exists for the arena until the kill test runs.</span></p>
-  <p class="actions"><a class="more" href="arena.html">Arena viewer (a placeholder episode until the arena runs)</a></p>
+  <p class="intro-p">In a 128×128 arena, <span data-source="README.md">the agent has one actuator, <code>noop | up | down | left | right</code>, and at most one of up to 8 elements obeys it</span>; the others are decoys, echoes, replays and two look-alikes. <span data-source="README.md">Control, or the map, can change at a secret step after the agent starts acting.</span> In the kill test, <span data-source="README.md">the gate's effect passed by a wide margin; SAM's lead over a colour tracker did not clear its bar</span>.</p>
+  <p class="actions"><a class="more" href="arena.html">Arena viewer (a placeholder episode, not a result)</a></p>
 </section>
 
 <section id="built" class="band" aria-labelledby="built-title">
@@ -183,7 +183,7 @@
     </div>
     <div>
       <dt>Status</dt>
-      <dd><p>In progress. <span data-source="README.md">The phone and desktop owner gates run and are measured</span>. <span data-source="README.md">The arena, its agent loop, its evaluation and its runner are built and tested offline.</span> <span data-source="README.md">The arena's one paid run (the kill test) has not been completed</span>.</p></dd>
+      <dd><p>In progress. <span data-source="README.md">The phone and desktop owner gates run and are measured</span>. <span data-source="README.md">The arena, its agent loop, its evaluation and its runner are built and tested offline.</span> <span data-source="README.md">The arena's one paid run (the kill test) finished on 1 Nov 2026</span>. <span data-source="README.md">EVAL.md's verdict on it is Rethink: the arena's claim did not hold on these seeds</span>.</p></dd>
     </div>
     <div>
       <dt>Source</dt>

@@ -45,9 +45,9 @@ module.exports = [
   m('layout: the panes stack on a phone', 'web/style.css', 'grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));', 'grid-template-columns: 1fr 1fr;', 'layout.spec.js', '5:1', LAYOUT),
   // The landing page (web/index.html) and the arena viewer's own page (web/arena.html).
   m('landing: a quoted sentence edited', HTML, 'the gate decides whether a proposed tap may run.', 'the gate decides whether any tap may run.', 'landing.spec.js', '13:1', SOURCED),
-  m('arena page: a quoted sentence edited', ARENA, 'exists for the arena until the kill test runs.</span>', 'exists for the arena yet.</span>', 'landing.spec.js', '13:1', SOURCED),
+  m('arena page: a quoted sentence edited', ARENA, 'did not hold on these seeds.</span>', 'held on these seeds.</span>', 'landing.spec.js', '13:1', SOURCED),
   m('landing: a results-table cell edited', HTML, '<td>0 of 18</td>', '<td>0 of 19</td>', 'landing.spec.js', '24:1', 'the results table is the README table, its runs shown as columns'),
-  m('landing: the viewer link loses its placeholder label', HTML, 'Arena viewer (a placeholder episode until the arena runs)', 'Arena viewer', 'landing.spec.js', '33:1', PLACEHOLDER),
+  m('landing: the viewer link loses its placeholder label', HTML, 'Arena viewer (a placeholder episode, not a result)', 'Arena viewer', 'landing.spec.js', '33:1', PLACEHOLDER),
   m('arena page: the placeholder banner removed', ARENA, '<p class="placeholder"><strong class="tag">Placeholder data</strong>', '<p class="placeholder"><strong class="tag">Demo</strong>', 'landing.spec.js', '33:1', PLACEHOLDER),
   m('arena page: a pane without its placeholder label', ARENA, '<div class="pane-head"><h2></h2><p class="tag">Placeholder data</p></div>', '<div class="pane-head"><h2></h2></div>', 'landing.spec.js', '33:1', PLACEHOLDER),
   m('landing: the viewer back on the landing page', HTML, '<main id="main">', '<main id="main"><div class="stage"></div>', 'landing.spec.js', '33:1', PLACEHOLDER),
