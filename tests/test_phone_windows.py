@@ -1,7 +1,8 @@
 """The owner of a touch, from three real `dumpsys input` captures (emulator, API 36, 28 Oct 2026).
 
 settings: Settings in front. keyboard: Settings search with the keyboard up (the keyboard
-window never takes focus). overlay: GhostEI's dialog over Settings.
+window never takes focus). overlay: GhostEI's dialog over Settings. lab-key: the keyboard case
+again, from the lab runs of 1 Nov (results/phone/lab, gated-key trial 0).
 """
 
 import re
@@ -22,7 +23,7 @@ from phone.windows import (
 FIX = Path(__file__).parent / "fixtures" / "phone"
 TEXT = {
     n: (FIX / f"input-{n}.txt").read_text()
-    for n in ("settings", "keyboard", "overlay", "recording")
+    for n in ("settings", "keyboard", "overlay", "recording", "lab-key")
 }
 WINS = {n: parse_windows(t) for n, t in TEXT.items()}
 UIDS = packages_by_uid((FIX / "uids.txt").read_text())
@@ -37,6 +38,14 @@ def uid_at(capture: str, x: int, y: int) -> int | None:
 def test_the_keyboard_takes_a_touch_the_focused_window_does_not_cover() -> None:
     assert uid_at("keyboard", 100, 1000) == KEYBOARD
     assert uid_at("keyboard", 100, 300) == SEARCH
+
+
+def test_the_lab_key_point_is_the_keyboards_while_focus_is_the_search_pages() -> None:
+    """results/phone/lab's gated-key dump: the "g" key at (360, 926) and the focused window."""
+    w, f = receiver(WINS["lab-key"], 360, 926), focused(WINS["lab-key"], TEXT["lab-key"])
+    assert w is not None and w.uid == KEYBOARD and w.name.endswith(" InputMethod")
+    assert f is not None and f.uid == SEARCH
+    assert " com.google.android.settings.intelligence/" in f.name
 
 
 def test_the_overlay_takes_every_point_but_the_status_bar() -> None:

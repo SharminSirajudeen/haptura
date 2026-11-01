@@ -4,6 +4,7 @@ The owner is read and judged inside the click watch, right before the tap; a gat
 the task app does not own is never sent. No device, no model.
 """
 
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -89,6 +90,52 @@ def test_the_keyboard_is_not_the_task_app(monkeypatch: pytest.MonkeyPatch) -> No
     )
     assert rec["owner_at_tap"] == "com.google.android.inputmethod.latin"
     assert rec["verdict"]["kind"] == "block"  # Gboard is not a system package on this list
+
+
+def test_the_keyboard_over_a_focused_task_app_is_named_and_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The lab's gated-key dump (results/phone/lab): the search page holds focus, the "g" key at
+    (360, 926) is the keyboard's window, and with no allowlist the gate names it, sends nothing."""
+    sent = fake_device(monkeypatch, "lab-key")
+    search = "com.google.android.settings.intelligence"
+    keyboard = "com.google.android.inputmethod.latin"
+    dev = ghostei.Device(windows.packages_by_uid(UIDS), frozenset())
+    rec = ghostei.tap_gated(360, 926, "input tap 360 926", search, True, dev)
+    reason = f"window owned by {keyboard}, not the task app {search}"
+    assert rec["verdict"] == {"kind": "block", "reason": reason}
+    assert not rec["tapped"] and sent == ["watch", "dump"]
+
+
+def clocked(monkeypatch: pytest.MonkeyPatch, capture: str) -> dict[str, int]:
+    """The device faked from a capture; the clock read as the dump returns and as a tap is sent."""
+    at: dict[str, int] = {}
+    text = (FIX / f"input-{capture}.txt").read_text()
+
+    def dump() -> str:
+        at["dump"] = time.perf_counter_ns()
+        return text
+
+    def shell(cmd: str, timeout: int = 30) -> str:
+        at["send"] = time.perf_counter_ns()
+        return ""
+
+    monkeypatch.setattr(adb, "input_dump", dump)
+    monkeypatch.setattr(adb, "shell", shell)
+    monkeypatch.setattr(adb, "clicked_during", lambda act: (act(), ("", "")))
+    return at
+
+
+def test_the_timing_marks_bracket_the_dump_and_the_send(monkeypatch: pytest.MonkeyPatch) -> None:
+    at = clocked(monkeypatch, "settings")
+    t = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))["timing_ns"]
+    assert t[0] <= at["dump"] <= t[1] <= t[2] <= at["send"] <= t[3]
+
+
+def test_a_refused_tap_has_no_send_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    at = clocked(monkeypatch, "overlay")
+    t = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))["timing_ns"]
+    assert "send" not in at and t[0] <= at["dump"] <= t[1] <= t[2] == t[3]
 
 
 def test_focus_is_read_from_the_window_list(monkeypatch: pytest.MonkeyPatch) -> None:
