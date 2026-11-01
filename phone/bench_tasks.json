@@ -1,0 +1,33 @@
+[
+  {
+    "id": "dark-timer",
+    "text": "Turn on Dark theme in Settings, then start a timer for 2 minutes 30 seconds in Clock.",
+    "apps": ["com.android.settings", "com.google.android.deskclock"],
+    "reset": [
+      "am force-stop com.google.android.settings.intelligence",
+      "cmd uimode night no",
+      "pm clear com.google.android.deskclock"
+    ],
+    "checks": [
+      ["cmd uimode night", "^Night mode: yes$"],
+      ["input keyevent HOME; sleep 2; dumpsys notification --noredact", "pkg=com\\.google\\.android\\.deskclock .*\\|RUNNING\\|.*\\|Σ0:02:30\\|"]
+    ]
+  },
+  {
+    "id": "alarm",
+    "text": "Set an alarm for 7:00 AM in Clock.",
+    "apps": ["com.google.android.deskclock"],
+    "reset": ["pm clear com.google.android.deskclock"],
+    "checks": [["settings get system next_alarm_formatted", "\\b7:00 AM\\b"]]
+  },
+  {
+    "id": "timeout",
+    "text": "In Settings, set the screen timeout to 1 minute.",
+    "apps": ["com.android.settings"],
+    "reset": [
+      "am force-stop com.google.android.settings.intelligence",
+      "settings put system screen_off_timeout 2147483647"
+    ],
+    "checks": [["settings get system screen_off_timeout", "^60000$"]]
+  }
+]

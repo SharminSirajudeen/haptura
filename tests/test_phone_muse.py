@@ -1,8 +1,10 @@
 """The parser and the price, by hand. No network."""
 
+import pytest
 from openai import OpenAIError
 
-from phone.muse import PRICE_PER_M, error_label, parse
+from phone import muse
+from phone.muse import PRICES, error_label, parse
 
 RAW = '{"action": "tap", "x": 202.0, "y": 612, "target_text": "Cancel", "reason": "r"}'
 FENCED = f"```json\n{RAW}\n```"
@@ -37,5 +39,10 @@ def test_an_error_records_its_class_never_its_text() -> None:
 
 def test_cost_prices_input_and_output_separately() -> None:
     p = parse('{"action": "stop"}', (1_000_000, 0))
-    assert p.cost_usd == PRICE_PER_M[0]
-    assert parse('{"action": "stop"}', (0, 1_000_000)).cost_usd == PRICE_PER_M[1]
+    assert p.cost_usd == PRICES["muse-spark-1.3"][0]
+    assert parse('{"action": "stop"}', (0, 1_000_000)).cost_usd == PRICES["muse-spark-1.3"][1]
+
+
+def test_the_price_follows_the_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(muse, "MODEL", "muse-wonder-1.0")
+    assert parse('{"action": "stop"}', (1_000_000, 1_000_000)).cost_usd == 4.00 + 20.00
