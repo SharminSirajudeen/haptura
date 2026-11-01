@@ -107,6 +107,25 @@ def test_the_keyboard_over_a_focused_task_app_is_named_and_refused(
     assert not rec["tapped"] and sent == ["watch", "dump"]
 
 
+def test_the_record_names_the_receiver_and_what_a_focus_check_would_say(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """From the dump the gate read: the keyboard's window received the point, while the focused
+    window was the search page's, which a focused-window check would have allowed."""
+    fake_device(monkeypatch, "lab-key")
+    search = "com.google.android.settings.intelligence"
+    dev = ghostei.Device(windows.packages_by_uid(UIDS), frozenset())
+    rec = ghostei.tap_gated(360, 926, "input tap 360 926", search, True, dev)
+    assert (rec["receiver_uid"], rec["receiver_name"]) == (10160, "db3b19c InputMethod")
+    assert (rec["focus_owner"], rec["focus_verdict"]) == (search, "allow")
+
+
+def test_the_record_carries_the_tap_point(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_device(monkeypatch, "overlay")
+    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    assert (rec["x"], rec["y"]) == (TAP.x, TAP.y)
+
+
 def clocked(monkeypatch: pytest.MonkeyPatch, capture: str) -> dict[str, int]:
     """The device faked from a capture; the clock read as the dump returns and as a tap is sent."""
     at: dict[str, int] = {}

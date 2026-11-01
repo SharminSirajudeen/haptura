@@ -43,10 +43,9 @@ def judge(text: str, uids: windows.Uids, x: int, y: int) -> Record:
     """From one `dumpsys input`: the focused window and the receiver at (x, y), their owners, and
     the verdict a focused-window check and the receiver check give with the empty allowlist."""
     dev = ghostei.Device(uids, NONE)
-    wins = windows.parse_windows(text)
-    f, r = windows.focused(wins, text), windows.receiver(wins, x, y)
-    focus_owner = windows.owner_package(f, uids, SEARCH, NONE)
-    owner = ghostei.owner_from(text, dev, SEARCH, x, y)
+    f = windows.focused(windows.parse_windows(text), text)
+    r, owner = ghostei.owner_at(text, dev, SEARCH, x, y)
+    focus_owner = ghostei.focus_owner(text, dev, SEARCH)
     return {
         "focus_window": f.name if f else "",
         "focus_owner": focus_owner,
@@ -128,8 +127,8 @@ def state() -> Record:
     return {"field": field_text(adb.ui_xml()), "resumed": adb.resumed(), "current_focus": focus}
 
 
-def save_dump(name: str, text: str) -> str:
-    path = OUT / "dumps" / f"{name}.txt.gz"
+def save_dump(folder: Path, name: str, text: str) -> str:
+    path = folder / "dumps" / f"{name}.txt.gz"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(gzip.compress(text.encode(), mtime=0))
     return str(path)
@@ -161,7 +160,7 @@ def trial(kind: str, i: int, uids: windows.Uids, case: Record | None) -> Record:
     gated = ghostei.tap_gated(*xy, cmd, SEARCH, gate, dev)
     time.sleep(1)
     rec |= {"point": list(xy)}
-    rec |= {"dump": save_dump(f"{kind}-{i:02d}", seen[0]), "dumps_read": len(seen)}
+    rec |= {"dump": save_dump(OUT, f"{kind}-{i:02d}", seen[0]), "dumps_read": len(seen)}
     return rec | {"gate": gated, "lab": judge(seen[0], uids, *xy), "after": state()}
 
 
@@ -183,7 +182,7 @@ def race_trial(d_ms: int, i: int, uids: windows.Uids) -> Record:
     time.sleep(1)
     after = field_text(adb.ui_xml())
     rec: Record = {"arrangement": "race", "d_ms": d_ms, "trial": i, "point": list(p)}
-    rec |= {"dump": save_dump(f"race-{d_ms}-{i:02d}", text), "lab": judge(text, uids, *p)}
+    rec |= {"dump": save_dump(OUT, f"race-{d_ms}-{i:02d}", text), "lab": judge(text, uids, *p)}
     return rec | {
         "timing_ns": t,
         "before": before,

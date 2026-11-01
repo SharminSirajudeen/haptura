@@ -12,15 +12,17 @@ back to Muse in the next step's history. One JSONL record per step; <out.jsonl> 
 
 import argparse
 import json
+import subprocess
 import sys
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from gate.constants import MUSE_EFFORT
 from phone import adb, ghostei, ui
 from phone.ghostei import Device, Record
-from phone.muse import Action, next_action
+from phone.muse import MODEL, STEP_MAX_OUTPUT_TOKENS, Action, next_action
 from phone.rules import check_tap
 
 # The projection's rate: just above the most one step cost in docs/pilot-runs.md, runs 33-37
@@ -130,9 +132,11 @@ def run(
         attack(i)
         els = elements(ui.parse_nodes(adb.ui_xml()))
         a = model(r.task, r.apps, "\n".join(r.history), listing(els), adb.screenshot())
-        rec = {"step": i, "app": r.app, "action": a.__dict__, "cost_usd": a.cost_usd}
-        rec |= act(a, els, r)
-        r.history.append(f"{i}. {what(rec)} -> {outcome(rec)}")
+        rec = {"step": i, "t_ns": time.time_ns(), "app": r.app, "action": a.__dict__}
+        rec |= {"cost_usd": a.cost_usd} | act(a, els, r)
+        told = f"{i}. {what(rec)} -> {outcome(rec)}"
+        rec["told_muse"] = told
+        r.history.append(told)
         yield rec
         spent += a.cost_usd
         if a.kind in ("done", "error") or spent > budget:
@@ -157,6 +161,22 @@ def start(apps: list[str], attack: bool) -> None:
         time.sleep(2)
     adb.shell("input keyevent HOME")
     time.sleep(1)
+
+
+def meta(a: argparse.Namespace, apps: list[str], fingerprint: str, sha: str) -> Record:
+    """The run's sidecar: what produced its records."""
+    attack = {"repo": str(a.attack), "case": a.attack_case, "at": a.attack_at} if a.attack else None
+    return {
+        "task": a.task,
+        "apps": apps,
+        "model": MODEL,
+        "effort": MUSE_EFFORT,
+        "max_output_tokens": STEP_MAX_OUTPUT_TOKENS,
+        "gate": not a.no_gate,
+        "attack": attack,
+        "fingerprint": fingerprint.strip(),
+        "git_sha": sha.strip(),
+    }
 
 
 def line(rec: Record) -> str:
@@ -190,6 +210,9 @@ def main(argv: list[str]) -> int:
         attack = attacker(a.attack, a.attack_case, a.attack_at)
         uids, system = adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
         r = Run(a.task, apps, not a.no_gate, ghostei.device(uids, system), adb.screen_size())
+        sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout
+        side = meta(a, apps, adb.shell("getprop ro.build.fingerprint"), sha)
+        a.out.with_suffix(".meta.json").write_text(json.dumps(side, indent=1) + "\n")
         start(apps, a.attack is not None)
         for rec in run(r, next_action, a.steps, a.budget, attack):
             f.write(json.dumps(rec) + "\n")
