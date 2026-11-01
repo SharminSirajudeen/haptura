@@ -66,12 +66,14 @@ search field is not in the accessibility tree, so the click event is the ground 
 `tap_gated` takes four marks (`time.perf_counter_ns()` on the computer): before the dump, after it, after the
 verdict, after the send. Over the 45 gated trials (key 20, beside 20, dialog 5):
 
-| Span | Trials | Median | p95 | Max |
-|---|---|---|---|---|
-| reading the dump (t1 − t0) | 45 | 45.7 ms | 48.5 ms | 49.4 ms |
-| parsing and judging (t2 − t1) | 45 | 1.24 ms | 1.35 ms | 1.40 ms |
-| sending the tap (t3 − t2) | 20 sent | 24.8 ms | 27.7 ms | 28.6 ms |
-| dump start to send done (t3 − t0) | 20 sent | 68.2 ms | 75.8 ms | 76.3 ms |
+| Span | Trials | Min | Median | p95 | Max |
+|---|---|---|---|---|---|
+| reading the dump (t1 − t0) | 45 | 17.7 ms | 45.7 ms | 48.5 ms | 49.4 ms |
+| parsing and judging (t2 − t1) | 45 | 0.66 ms | 1.24 ms | 1.35 ms | 1.40 ms |
+| sending the tap (t3 − t2) | 20 sent | 18.3 ms | 24.8 ms | 27.7 ms | 28.6 ms |
+| dump start to send done (t3 − t0) | 20 sent | 37.6 ms | 68.2 ms | 75.8 ms | 76.3 ms |
+
+The dump read has two modes: 11 of the 45 took 17.7–19.1 ms, 28 took 43–49.4 ms, the other 6 lay between.
 
 The screen can change between the moment the dump was taken and the moment the touch lands: at least t2 − t1, at
 most t3 − t0, measured on the computer's clock, not the phone's. **The check is not atomic.**
@@ -91,17 +93,21 @@ raise the keyboard, wait d, then send the touch at the point where the `g` key w
 | 1000 ms | 10 | 10 | 1,055 ms |
 
 **Keyboard rise** (10 trials): polling `dumpsys input` after the field tap returned, the keyboard's window was first
-listed 81–99 ms later (each poll takes about 25 ms, so that is the resolution). A window that appears after the
-dump and before the touch takes a touch the gate approved. Here the touch reached the keyboard in 6 of 10 trials
-sent about 79 ms after the trigger returned (d = 50 ms), and in 10 of 10 from d = 100 ms; the gate's own span from
-dump to send was 68–76 ms in the 20 sent trials.
+listed 81–99 ms later (the first poll returned about 26 ms after the tap, later polls 17–21 ms apart, so that is
+the resolution). A window that appears after the check and before the touch takes a touch the check approved. Here
+the touch, started 55–60 ms after the field tap returned (d = 50 ms), reached the keyboard in 6 of 10 trials, and in
+10 of 10 from d = 100 ms; the gate's own span from dump start to send done was 37.6–76.3 ms (median 68.2) in the
+20 sent trials.
 
 ## Recorded for the video (`video/`, clips in `../demo/`)
 
-One `ungated-key` and one `gated-key` trial, run the same way with the output folder set to `video/` and
-`show_touches` on (set back to 0 after), recorded with `adb shell screenrecord`. The 720×1280 originals are kept
-outside the repository; `../demo/lab-ungated-key-360x640.mp4` and `../demo/lab-gated-key-360x640.mp4` are seconds
-5.0–19.4 of each, scaled. The records are `video/trials.jsonl` (ungated: `g` typed; gated: block naming the keyboard,
+One `ungated-key` and one `gated-key` trial, run the same way with `show_touches` on (set back to 0 after) and
+recorded with `adb shell screenrecord`; the runner's output folder was set from the command line:
+```
+uv run --locked python -c "from pathlib import Path; from phone import lab; lab.OUT = Path('results/phone/lab/video'); lab.main(['gated-key', '--n', '1'])"
+```
+The 720×1280 originals are kept outside the repository; `../demo/lab-ungated-key-360x640.mp4` (14.1 s) and
+`../demo/lab-gated-key-360x640.mp4` (14.1 s) are each recording from second 5.0 to its end, scaled. The records are `video/trials.jsonl` (ungated: `g` typed; gated: block naming the keyboard,
 `tapped` false, field empty).
 
 ## Files
@@ -115,8 +121,9 @@ outside the repository; `../demo/lab-ungated-key-360x640.mp4` and `../demo/lab-g
 | `dumps/` | the `dumpsys input` of every trial, gzipped |
 | `video/` | the two recorded trials |
 
-`tests/test_phone_lab.py` re-parses every saved dump and asserts the recorded verdicts and each arrangement's
-required outcome; `tests/fixtures/phone/input-lab-key.txt` is `dumps/gated-key-00`, used by the unit tests on
+`tests/test_phone_lab.py` re-parses every saved dump (`trials.jsonl`, `race.jsonl`, `video/`) and asserts the
+recorded verdicts, that each dump is the trial's own (its focused window's token is the one the trial read before
+the touch), and each arrangement's required outcome; `tests/fixtures/phone/input-lab-key.txt` is `dumps/gated-key-00`, used by the unit tests on
 `windows` and `tap_gated`.
 
 ## Limits

@@ -8,4 +8,6 @@ module.exports = [
     'test_every_verdict_recomputes_from_its_saved_dump'),
   m('lab: a field showing its hint reads empty', 'return "" if text == el.get("hint") else text', 'return text',
     'test_the_field_reads_empty_when_it_shows_its_hint'),
+  m('lab: the key sits a fixed row below the keyboard window\'s top', 'x, y = KEY_X, w.region[0][1] + KEY_ROW', 'x, y = KEY_X, KEY_ROW',
+    'test_the_key_point_is_the_g_key_below_the_keyboards_top'),
 ];

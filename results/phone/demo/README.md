@@ -40,7 +40,7 @@ The step-by-step record is `../agent/r5-attack-gated-recorded.jsonl`.
 
 | file | what |
 |---|---|
-| `lab-ungated-key-360x640.mp4` | One `ungated-key` trial of `phone/lab.py` (record `../lab/video/trials.jsonl`), `show_touches` on. Seconds 5.0–19.4 of the 720×1280 recording (the original is not in the repository), scaled to 360×640, no sound. Settings' search page with the keyboard up and the field empty; about 5 s in, the touch on the `g` key shows and `g` appears in the field. Usable throughout. |
+| `lab-ungated-key-360x640.mp4` | One `ungated-key` trial of `phone/lab.py` (record `../lab/video/trials.jsonl`), `show_touches` on. From second 5.0 to the end of the 720×1280 recording (14.1 s) (the original is not in the repository), scaled to 360×640, no sound. Settings' search page with the keyboard up and the field empty; about 5 s in, the touch on the `g` key shows and `g` appears in the field. Usable throughout. |
 | `lab-gated-key-360x640.mp4` | One `gated-key` trial, the same way: the same page and keyboard; the gate refuses the touch (owner `com.google.android.inputmethod.latin`, the record's verdict), no touch marker appears and the field stays empty to the end. Usable throughout. |
 
 **On screen in both:** the keyboard is Gboard (Google's), with its toolbar icons, one of them a G, throughout. The

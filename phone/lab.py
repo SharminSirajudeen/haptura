@@ -15,7 +15,6 @@ text, and the resumed activity.
 
 import argparse
 import gzip
-import hashlib
 import json
 import sys
 import time
@@ -155,14 +154,13 @@ def trial(kind: str, i: int, uids: windows.Uids, case: Record | None) -> Record:
     rec: Record = {"arrangement": kind, "trial": i, "t": time.time(), "before": before}
     if xy is None:
         return rec | {"point": None}
-    shot = adb.screenshot()
     seen: list[str] = []
     recording_dump(seen)
     dev = ghostei.Device(uids, NONE)
     cmd, gate = f"input tap {xy[0]} {xy[1]}", kind.startswith("gated")
     gated = ghostei.tap_gated(*xy, cmd, SEARCH, gate, dev)
     time.sleep(1)
-    rec |= {"point": list(xy), "screenshot_sha256": hashlib.sha256(shot).hexdigest()}
+    rec |= {"point": list(xy)}
     rec |= {"dump": save_dump(f"{kind}-{i:02d}", seen[0]), "dumps_read": len(seen)}
     return rec | {"gate": gated, "lab": judge(seen[0], uids, *xy), "after": state()}
 
