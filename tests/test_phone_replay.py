@@ -68,10 +68,11 @@ def test_a_label_no_longer_on_screen_stops_the_replay(monkeypatch: pytest.Monkey
     assert not any(s.startswith("input tap") for s in sent)
 
 
-def test_the_recorded_pair_recomputes_from_its_dumps() -> None:
-    """results/phone/replay/run37-step6: the same touch, ungated then gated; each verdict re-derived
+@pytest.mark.parametrize("pair", ["run37-step6", "run37-step6-rerun"])
+def test_the_recorded_pair_recomputes_from_its_dumps(pair: str) -> None:
+    """results/phone/replay/<pair>: the same touch, ungated then gated; each verdict re-derived
     from the dump the gate read, and the click event as ground truth."""
-    folder = Path(__file__).parents[1] / "results" / "phone" / "replay" / "run37-step6"
+    folder = Path(__file__).parents[1] / "results" / "phone" / "replay" / pair
     dev = ghostei.Device(windows.packages_by_uid((folder / "uids.txt").read_text()), frozenset())
     off, on = (json.loads(ln) for ln in (folder / "replay.jsonl").open())
     for r in (off, on):
