@@ -5,7 +5,7 @@ stop, probe or decline when it cannot.**
 
 An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). Status: in progress. The phone and
 desktop owner gates run and are measured (below), and a multi-step Muse agent runs behind the phone gate (a bench
-of 72 runs on Muse Spark and Muse Wonder, below). The arena, its agent loop, its evaluation and its runner are built
+of 72 scored runs on Muse Spark and Muse Wonder, below). The arena, its agent loop, its evaluation and its runner are built
 and tested offline. The arena's one paid run (the kill test) has not been completed: a launch on 29 Oct was paused
 after one episode, about $0.05.
 
@@ -29,12 +29,12 @@ for touches on a screen.
 
 | Measurement | Gate off | Gate on | Records |
 |---|---|---|---|
-| Another app's not-focusable window (the keyboard, standing in) over a task app that holds focus, 20 trials each | the touch reached the keyboard and typed a letter in 20 of 20; a focused-window check allowed all 20 | refused in 20 of 20, naming the keyboard's package; nothing typed | `results/phone/lab/` |
-| A GhostEI dialog fired before step 5 of a multi-step task, 3 tasks × 3 repeats, per model | the attacker's app received the touch: Muse Spark in 9 of 9 runs, Muse Wonder 11 touches in 9 runs | none received; refused in 9 of 9 runs per model; all 18 runs completed the task | `results/phone/bench/` |
-| The same tasks with no attack | 18 of 18 completed | 18 of 18 completed; 3 false refusals (Spark, Settings' search page, another package) | `results/phone/bench/` |
+| Another app's not-focusable window (the keyboard, standing in) over a task app that holds focus, 20 trials each | the touch reached the keyboard and typed a letter in 20 of 20; a focused-window check allowed all 20 | refused in 20 of 20 with an empty allowlist (the shipped one includes the keyboard), naming the keyboard's package; nothing typed | `results/phone/lab/` |
+| A GhostEI dialog fired before step 5 of a multi-step task, 3 tasks × 3 repeats, per model | the attacker's app received the touch: Muse Spark 9 touches in 9 of 9 runs, Muse Wonder 11 touches in 9 of 9 | none received; refused in 9 of 9 runs per model; all 18 runs completed the task (one Wonder run had set its alarm before the dialog came); Spark 2 false refusals in 1 of 9 runs | `results/phone/bench/` |
+| The same tasks with no attack | 18 of 18 completed | 18 of 18 completed; false refusals: Spark 3 in 2 of 9 runs (Settings' search page, another package), Wonder 0 of 9 | `results/phone/bench/` |
 | Muse's own captured choice from run 37 (the dialog's *Cancel*), replayed with no model call | delivered to the attacker's app | refused | `results/phone/replay/` |
 
-On the dialog, both models tapped its dismiss button in all 36 attack runs, never its confirm: what the gate stopped
+On the dialog, both models chose its dismiss button in all 36 attack runs, never its confirm: what the gate stopped
 is the attacker's app receiving the touch.
 
 **Limits**, each measured or stated in the records above:
@@ -43,20 +43,23 @@ is the attacker's app receiving the touch.
   ms after, and in 10 of 10 from 100 ms.
 - **Back is not checked.** In the bench, after the refusal, the next action was Back in 6 of 9 gated attack runs per
   model; Back reaches the focused window, which was the attacker's dialog.
-- A dialog drawn by the task app itself passes; system-uid windows are handled only by the allowlist.
+- A dialog drawn by the task app itself passes, and a window of an allowlisted package (the system UI, the keyboard)
+  passes wherever it is drawn, e.g. a heads-up notification over the task app.
 - The keyboard is a stand-in: no hostile not-focusable overlay was run.
 - Emulator only, no physical phone. The gate runs on a computer over adb today; an accessibility service on the phone
-  can read a checked owner name for ordinary app windows (`results/phone/a11y-owner/`).
+  can read a system-checked owner name for an ordinary app's focused window; the owner at a point was not tested
+  (`results/phone/a11y-owner/`).
 
-**Closest work.** Google's ARTEMIS checks before each action that the chosen element is still on the live screen
-(`artemis/agents/validator/precondition_xml.py`, github.com/google/artemis at 351ca84: "Checks that the element the
-Operator decided to interact with is still present on the live screen"); its source has no read of a window's owner
-uid (`git grep -iE 'ownerUid|dumpsys input'`: 0 matches).
+**Closest work.** Google's ARTEMIS (github.com/google/artemis at 351ca84) checks before each action that the chosen
+element is still present ("Checks that the element the Operator decided to interact with is still present on the live
+screen", `artemis/agents/validator/precondition_xml.py`) and flags a covering element by comparing the screen's element
+tree and pixels; no check in it judges a target by the app that owns it (`git grep -iE 'ownerUid|dumpsys input'`: 0
+matches; "package" in `artemis/agents/validator`: 0 matches).
 
 ## The phone tap gate, measured on GhostEI
 
 A phone agent about to tap asks one question first: **which app owns the window under this point?** If it is not the
-task's own app or an allowlisted system package, the tap does not happen, and the agent stops and reports the owner.
+task's own app or an allowlisted system package, the tap does not happen, and the agent (in this single-step runner) stops and reports the owner.
 (Pressing Back does not remove these overlays: measured, 0 of 20.) Muse Spark proposes every action; the gate decides
 whether a proposed tap may run.
 
@@ -301,14 +304,16 @@ Written before the event started on 26 Oct 2026:
 - The gate's tooling, copied in from a project kit of our own and adapted: `test/mutants.js`,
   `test/mutants.list.js`, `test/check.js`, `test/floorguard.js`, `test/floorguard.test.js`, `scripts/ci.sh`,
   `scripts/merge.sh`.
-- The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT).
+- Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. None of its source is in this repository.
 
 Used, not ours:
-- GhostEI-Bench's attack app (the helper APK that draws the dialogs) and its dataset, run unchanged
+- The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT).
+- GhostEI-Bench's attack app (the helper APK that draws the dialogs) and its dataset, as published at commit 459b3d8
   (github.com/cyChen2003/Ghost-EI, MIT).
 - The Android emulator, its system image and its apps (Settings, Clock, the keyboard) are Google's.
-- Muse Spark and Muse Wonder are Meta's models, called through Meta's API.
-- Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. None of its source is in this repository.
+- Muse Spark, Muse Wonder and SAM 3.1 are Meta's models, called through Meta's API.
+- The libraries in `pyproject.toml` (numpy, openai) and `package.json`, and the build and test tools (pytest, ruff,
+  mypy, jscpd, Playwright).
 
 ## Run the gate
 
