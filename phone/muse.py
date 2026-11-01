@@ -147,7 +147,7 @@ def call(text: str, png: bytes, **extra: object) -> tuple[str, tuple[int, int]]:
 
 def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") -> Proposal:
     """One call, one proposed tap in pixels; a failed call becomes an `error` proposal."""
-    # here, not at the top: a process that calls no model skips the import
+    # here, not at the top: a process that never proposes or acts skips the import
     from openai import OpenAIError
 
     try:

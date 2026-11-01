@@ -10,7 +10,7 @@ uv sync --locked --quiet
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv run --locked mypy
-npx --no jscpd
+node_modules/.bin/jscpd
 node test/floorguard.test.js
 node test/floorguard.js
 # The test files that run whole episodes run only when the change can reach them: through gate/, the file itself, a
