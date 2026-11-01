@@ -2,7 +2,7 @@
 // and not on the page, or the other way round, turns this red.
 const fs = require('node:fs');
 const path = require('node:path');
-const { test, expect, panes, ready } = require('./site');
+const { test, expect, panes, ready, EPISODES } = require('./site');
 
 const REPO = path.join(__dirname, '..', '..');
 const read = (file) => fs.readFileSync(path.join(REPO, file), 'utf8');
@@ -30,14 +30,14 @@ test('the results table is the README table, its runs shown as columns', async (
   expect(shown[0].map((_, c) => shown.map((row) => plain(row[c])))).toEqual(runs);
 });
 
-test('the viewer stays off the landing page, and says it plays a placeholder on its link, its page and each pane', async ({ page, site, viewer }) => {
+test('the viewer stays off the landing page, and says on its link, its page and each pane that it plays one pair from the kill test, not the result', async ({ page, site, viewer }) => {
   await page.goto(site);
   await expect(page.locator('.pane, .stage')).toHaveCount(0);
-  await expect(page.locator('a[href="arena.html"]')).toContainText('placeholder');
+  await expect(page.locator('a[href="arena.html"]')).toContainText(`one kill-test pair of ${EPISODES}, picked by a fixed rule, not the result`);
   await page.goto(viewer);
   await ready(page);
-  await expect(page.locator('header .placeholder')).toContainText('Placeholder data');
-  for (const pane of await panes(page).all()) await expect(pane.locator('.tag')).toHaveText('Placeholder data');
+  await expect(page.locator('header .provenance')).toContainText('One pair from the kill test');
+  for (const pane of await panes(page).all()) await expect(pane.locator('.tag')).toContainText('kill test');
 });
 
 test('the demo clip waits for the visitor: its own controls, no autoplay, loaded from this site', async ({ page, site }) => {

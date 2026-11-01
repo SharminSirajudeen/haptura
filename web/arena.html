@@ -16,14 +16,14 @@
 </nav>
 <header class="page-head band">
   <h1>Arena viewer</h1>
-  <p class="placeholder"><strong class="tag">Placeholder data</strong> A hand-written episode over a test pattern, not a result. The kill test ran on 1 Nov 2026. <span data-source="README.md">EVAL.md's verdict on it is Rethink: the arena's claim did not hold on these seeds.</span> Its episodes are not played here.</p>
-  <p class="intro-p">Two panes play one episode. Each box is a tracked element and says what the agent believes about it. Both panes play the same placeholder.</p>
+  <p class="provenance"><strong class="tag">One pair from the kill test</strong> Muse Wonder, gated+SAM against no-gate+SAM, seed 1003, case blocked. A fixed rule chose it: the first pair on the list from <code>python -m gate.demo</code>, which keeps the pairs where, in the first 20 seconds of its clip, the baseline commits to an element it does not control while the gated run, right by EVAL.md, has not acted yet. It is one pair of 114, not the result. The kill test ran on 1 Nov 2026. <span data-source="README.md">EVAL.md's verdict on it is Rethink: the arena's claim did not hold on these seeds.</span> The full table is in the <a href="https://github.com/SharminSirajudeen/control-gate#readme">README</a>.</p>
+  <p class="intro-p">Each pane plays one run of that pair. Each box is a tracked element, labelled by the gate's control test at the end of the block now playing. The gated agent is shown that test's labels and advice. The baseline agent's <code>run_experiment</code> <span data-source="README.md">returns only each element's mean displacement per action, with no p, no label and no advice</span>, so on its pane the labels are the gate's reading of its probes, not what it believed.</p>
 </header>
 <noscript><p>This page needs JavaScript to draw its labels.</p></noscript>
 <main id="main" class="panes band alt"></main>
 <template id="pane">
   <section class="pane">
-    <div class="pane-head"><h2></h2><p class="tag">Placeholder data</p></div>
+    <div class="pane-head"><h2></h2><p class="tag"></p></div>
     <div class="stage">
       <video muted playsinline preload="auto"></video>
       <canvas aria-hidden="true"></canvas>

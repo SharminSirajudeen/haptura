@@ -5,9 +5,10 @@
 const FPS = 10; // gate/constants.py FPS; web/tests/labels.spec.js fails when the two differ
 const BOX = 12; // overlay box in video pixels; an element is ELEMENT_PX = 8 wide
 const EPS = 1e-6; // a time on a frame boundary must not round down to the frame before
+// The kill-test pair gate.demo wrote to web/episodes/: the baseline run, then the gated run. Each pane is named from its log.
 const PANES = [
-  { title: 'baseline', log: 'fixtures/episode.json', clip: 'fixtures/clip.mp4' },
-  { title: 'gated', log: 'fixtures/episode.json', clip: 'fixtures/clip.mp4' },
+  { log: 'episodes/baseline.json', clip: 'episodes/baseline.mp4' },
+  { log: 'episodes/gated.json', clip: 'episodes/gated.mp4' },
 ];
 
 const UNSURE = 'unsure, checking';
@@ -105,14 +106,15 @@ function controls(pane, video) {
   scrub.addEventListener('input', () => { video.currentTime = Number(scrub.value); });
 }
 
-async function mount({ title, log: logUrl, clip }) {
+async function mount({ log: logUrl, clip }) {
   const pane = document.getElementById('pane').content.firstElementChild.cloneNode(true);
   const video = pane.querySelector('video');
-  pane.querySelector('h2').textContent = title;
   document.querySelector('main').append(pane);
   video.src = clip;
   controls(pane, video);
   const log = await (await fetch(logUrl)).json();
+  pane.querySelector('h2').textContent = log.condition;
+  pane.querySelector('.tag').textContent = `kill test, seed ${log.scenario.seed}, ${log.scenario.case}, outcome ${log.outcome}`;
   const starts = startsOf(log.blocks);
   const render = () => show(pane, log, starts);
   const onFrame = () => { render(); video.requestVideoFrameCallback(onFrame); };

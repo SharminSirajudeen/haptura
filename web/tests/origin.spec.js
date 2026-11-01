@@ -16,7 +16,7 @@ test('the page makes no request to another origin', async ({ page, site, viewer 
   expect(outside).toEqual([]);
   // a page that loaded nothing would pass the line above: the files both pages are made of were asked for here
   const asked = urls.filter(network).filter((u) => new URL(u).origin === home.origin).map((u) => new URL(u).pathname.slice(home.pathname.length));
-  expect(asked).toEqual(expect.arrayContaining(['', 'style.css', 'media/case26-dialog.mp4', 'arena.html', 'app.js', 'fixtures/episode.json', 'fixtures/clip.mp4']));
+  expect(asked).toEqual(expect.arrayContaining(['', 'style.css', 'media/case26-dialog.mp4', 'arena.html', 'app.js', 'episodes/baseline.json', 'episodes/baseline.mp4', 'episodes/gated.json', 'episodes/gated.mp4']));
 });
 
 test('the page runs under a sub-path because every path in it is relative', async ({ page, viewer }) => {

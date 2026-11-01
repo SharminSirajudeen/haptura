@@ -1,4 +1,4 @@
-const { test, expect, panes, ready, showFrame, FRAME, LOG } = require('./site');
+const { test, expect, panes, ready, showFrame, playFixture, FRAME, LOG } = require('./site');
 
 const EYES_SWAPPED = 'my eyes swapped two objects, corrected';
 
@@ -13,6 +13,7 @@ function ink(canvas, { points, r }) {
 }
 
 test('the overlay draws and the caption names the eyes swap', async ({ page, viewer }) => {
+  await playFixture(page);
   await page.goto(viewer);
   await ready(page);
   const tracked = Object.values(LOG.blocks[2].tracks).map((pts) => pts[FRAME.act - 60]);

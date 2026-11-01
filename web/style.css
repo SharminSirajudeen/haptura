@@ -3,7 +3,7 @@
    WORLD: Apple's product-page grammar. The system San Francisco face, tight tracking at display sizes, white and #f5f5f7
    bands (black and #161617 in dark), one blue for actions, hairline spec rows for detail, a translucent sticky bar.
    STORY: a reader sees what the gate does, sees 5 of 33 become 0 of 33 beside its scope, plays the clip, checks the table
-   and its caveats, sees how it works and that the arena is placeholder, and finds what was built when.
+   and its caveats, sees how it works and one kill-test arena pair labelled as one of 114, and finds what was built when.
    LAYOUT: every band fills the screen minus the gutter; only running text is held to a reading width (70ch). */
 :root {
   color-scheme: light dark;
@@ -53,7 +53,7 @@ h1, h2, h3 { margin: 0; text-wrap: balance; }
 p { margin: 0; }
 p, li, dd, figcaption, caption { text-wrap: pretty; }
 a { color: var(--link); text-decoration: none; }
-a:hover, dd a { text-decoration: underline; text-underline-offset: 0.18em; }
+a:hover, dd a, .provenance a { text-decoration: underline; text-underline-offset: 0.18em; }
 code { font: 0.88em/1.4 var(--mono); overflow-wrap: anywhere; }
 :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 4px; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -190,11 +190,11 @@ tbody td { font-weight: 600; }
   .flow { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* The arena viewer (arena.html): placeholder until real episodes exist, and it says so on the page and on every pane. */
+/* The arena viewer (arena.html): one real kill-test pair, and it says what pair and why on the page and on every pane. */
 .page-head { padding-block: clamp(32px, 5vw, 64px); }
 .page-head h1 { margin: 0; font-size: clamp(2rem, 1.4rem + 2.4vw, 3.5rem); line-height: 1.07; letter-spacing: -0.028em; }
-.placeholder { width: fit-content; max-width: 100%; margin-top: 24px; padding: 14px 18px; border-radius: 14px; background: var(--caution-bg); }
-.placeholder .tag { margin-right: 6px; }
+.provenance { width: fit-content; max-width: 100%; margin-top: 24px; padding: 14px 18px; border-radius: 14px; background: var(--caution-bg); }
+.provenance .tag { margin-right: 6px; }
 .tag { color: var(--caution); font-weight: 600; }
 .panes {
   display: grid;
@@ -204,7 +204,7 @@ tbody td { font-weight: 600; }
 }
 .pane { min-width: 0; padding: clamp(16px, 2vw, 24px); border-radius: 18px; background: var(--card); }
 .pane-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 16px; }
-.pane h2 { font-size: 1.3125rem; font-weight: 600; text-transform: capitalize; }
+.pane h2 { font-size: 1.3125rem; font-weight: 600; }
 .pane .tag { font-size: 0.875rem; }
 .stage { position: relative; width: min(100%, 75vh); margin: 0 auto; background: #000; } /* the square clip fits the viewport's height */
 .stage video, .stage canvas { display: block; width: 100%; aspect-ratio: 1; image-rendering: pixelated; }

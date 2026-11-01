@@ -1,9 +1,10 @@
-const { test, expect, panes, ready, showFrame, FRAME, LOG } = require('./site');
+const { test, expect, panes, ready, showFrame, playFixture, FRAME, LOG } = require('./site');
 
 const EYES_SWAPPED = 'my eyes swapped two objects, corrected';
 const legend = (pane) => pane.locator('.labels li');
 
 test('the labels follow the time', async ({ page, viewer }) => {
+  await playFixture(page);
   await page.goto(viewer);
   await ready(page);
   for (const pane of await panes(page).all()) {
@@ -22,6 +23,7 @@ test('the labels follow the time', async ({ page, viewer }) => {
 });
 
 test('the block changes on the frame the log starts it, at the rate in gate/constants.py', async ({ page, viewer }) => {
+  await playFixture(page);
   await page.goto(viewer);
   await ready(page);
   const pane = panes(page).first();
@@ -43,7 +45,7 @@ for (const [name, change, line] of LINES) {
   test(`a ${name} block says "${line}"`, async ({ page, viewer }) => {
     const log = structuredClone(LOG);
     Object.assign(log.blocks[2], change);
-    await page.route('**/fixtures/episode.json', (route) => route.fulfill({ json: log }));
+    await playFixture(page, log);
     await page.goto(viewer);
     await ready(page);
     await showFrame(panes(page).first(), FRAME.act, 'block 3 of 3, act');

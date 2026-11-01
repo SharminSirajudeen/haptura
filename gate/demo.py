@@ -6,8 +6,11 @@ It lists every (seed, case) where the rule for the video's first 20 seconds hold
 baseline commits to an element it does not control within those 20 seconds, while the gated run,
 right by EVAL.md's table, has not acted yet. Given one of them, it writes that pair's logs and
 clips to web/episodes/, each clip the run's own arena replayed and rendered, one frame per step, as
-web/app.js reads it. The pair is chosen from the results, by eye; one the rule does not pick is
-refused, so none is staged. The page reads web/fixtures/ until the kill test's logs give a pair.
+web/app.js reads it. A pair is named on the command line; one the rule does not pick is refused,
+so none is staged. web/episodes/ holds the first pair this lists for the kill test (Muse Wonder,
+results/logs/gated+SAM against results/logs/no-gate+SAM): seed 1003, case blocked, which
+web/arena.html plays. It is one pair of 114, picked by the rule and not for how it looks; EVAL.md's
+verdict on the kill test is Rethink, and the README has the full table.
 """
 
 from __future__ import annotations
