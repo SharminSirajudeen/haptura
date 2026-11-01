@@ -31,6 +31,7 @@ module.exports.push(
     'marks + [time.perf_counter_ns() if tapped else marks[-1]]', 'marks + [time.perf_counter_ns()]', G, 'test_a_refused_tap_has_no_send_time'),
 );
 module.exports.push(
+  m('runner: the record names the receiving window', 'phone/ghostei.py', '"receiver_uid": w.uid if w else None,', '"receiver_uid": None,', G, 'test_the_record_names_the_receiver_and_what_a_focus_check_would_say'),
   m('runner: the record carries the tap point', 'phone/ghostei.py', '        "x": x,\n        "y": y,\n', '', G, 'test_the_record_carries_the_tap_point'),
   m('runner: the focus comparator reads the focused window', 'phone/ghostei.py',
     'focus = focus_owner(dump, dev, task)', 'focus = owner', G, 'test_the_record_names_the_receiver_and_what_a_focus_check_would_say'),

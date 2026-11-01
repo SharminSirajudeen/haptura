@@ -4,10 +4,12 @@
         <out-dir> --apps PKG,PKG --attack <ghostei-repo> --reset CMD [--attack-case 26]
 
 Each side restores the run's start (`agent.start`), re-executes the recorded steps before <step>
-(open by package, tap by label, scroll, type, Back), fires the same attack before <step>, finds the
-recorded element by its label, and sends the touch through `tap_gated`: ungated, then gated. It is
-a replay of a captured model action, never a second live decision. One JSONL line per side in
-<out-dir>/replay.jsonl, and the `dumpsys input` the gate read in <out-dir>/dumps/.
+(open by package, tap by element number and label, scroll, type, Back; a step the run refused is
+skipped), fires the same attack before <step> (so <step> is the step the attack hit), finds the
+recorded element by its number, stopping if its label changed, and sends the touch through
+`tap_gated`: ungated, then gated. It is a replay of a captured model action, never a second live
+decision. One JSONL line per side in <out-dir>/replay.jsonl, and the `dumpsys input` the gate
+read in <out-dir>/dumps/.
 """
 
 import argparse
@@ -21,26 +23,28 @@ from phone import adb, agent, ghostei, lab, ui
 from phone.ghostei import Record
 
 
-def find(label: str) -> ui.Node | None:
-    """The element on screen now whose label is the recorded one."""
+def find(rec: Record) -> ui.Node | None:
+    """The element the step named, by its recorded number, while its label is the recorded one."""
     els = agent.elements(ui.parse_nodes(adb.ui_xml()))
-    return next((n for n in els if agent.label(n) == label), None)
+    i = int(rec["action"]["arg"])
+    return els[i] if i < len(els) and agent.label(els[i]) == rec["label"] else None
 
 
 def redo(rec: Record, r: agent.Run) -> str:
-    """Re-execute one recorded step without the gate; "" when done, else why it could not be."""
+    """Re-execute one recorded step; "" when done, else why it could not be. Taps go out plain;
+    a scroll goes through the side's gate, as the agent's did, and stops the replay if refused."""
     a = rec["action"]
     if a["kind"] == "open":
         adb.launch(a["arg"])
         time.sleep(agent.OPEN_WAIT_S)
         r.app = a["arg"]
     elif a["kind"] == "tap":
-        n = find(rec["label"])
+        n = find(rec)
         if n is None:
-            return f"step {rec['step']}: no element {rec['label']!r} on screen"
+            return f"step {rec['step']}: element {a['arg']} is not {rec['label']!r}"
         adb.shell("input tap {} {}".format(*agent.centre(n)))
-    elif a["kind"] == "scroll":
-        agent.scroll(a["arg"], r)
+    elif a["kind"] == "scroll" and not agent.scroll(a["arg"], r)["tapped"]:
+        return f"step {rec['step']}: the scroll was refused"
     elif a["kind"] == "type":
         adb.shell(f"input text {ghostei.q(a['arg'].replace(' ', '%s'))}")
     elif a["kind"] == "back":
@@ -52,14 +56,15 @@ def redo(rec: Record, r: agent.Run) -> str:
 def side(recs: list[Record], step: int, r: agent.Run, fire: Callable[[int], None]) -> Record:
     """One side of the pair: the run up to <step>, the attack, then the recorded touch."""
     agent.start(r.apps, True)
-    r.app = ""
     for rec in recs[: step - 1]:
+        if "refused" in rec or rec.get("tapped") is False:
+            continue  # the original run did not carry this step out
         why = redo(rec, r)
         if why:
             return {"gate": r.gate, "replayed": False, "why": why}
     fire(step)
     label = recs[step - 1]["label"]
-    n = find(label)
+    n = find(recs[step - 1])
     if n is None:
         return {"gate": r.gate, "replayed": False, "why": f"no element {label!r} at step {step}"}
     x, y = agent.centre(n)

@@ -86,7 +86,7 @@ def test_typing_into_a_strangers_window_is_refused(mp: pytest.MonkeyPatch) -> No
 
 
 def test_typing_into_an_allowlisted_system_window_is_refused(mp: pytest.MonkeyPatch) -> None:
-    mp.setattr(ghostei, "owner_now", lambda dev, task, x=None, y=0: "com.android.systemui")
+    mp.setattr(ghostei, "owner_now", lambda dev, task: "com.android.systemui")
     recs, sent, _ = go(mp, "settings", step("open", SETTINGS), step("type", "1234"), step("done"))
     assert recs[1]["verdict"]["kind"] == "block" and not recs[1]["tapped"]
     assert not any(s.startswith("input text") for s in sent)

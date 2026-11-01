@@ -132,6 +132,7 @@ def run(
         attack(i)
         els = elements(ui.parse_nodes(adb.ui_xml()))
         a = model(r.task, r.apps, "\n".join(r.history), listing(els), adb.screenshot())
+        # t_ns: after the model's reply, before the action; recovery is timed between actions
         rec = {"step": i, "t_ns": time.time_ns(), "app": r.app, "action": a.__dict__}
         rec |= {"cost_usd": a.cost_usd} | act(a, els, r)
         told = f"{i}. {what(rec)} -> {outcome(rec)}"
@@ -179,6 +180,12 @@ def meta(a: argparse.Namespace, apps: list[str], fingerprint: str, sha: str) -> 
     }
 
 
+def revision() -> str:
+    """The commit the code ran from, marked -dirty when the checkout had uncommitted changes."""
+    cmd = ["git", "describe", "--always", "--dirty"]
+    return subprocess.run(cmd, capture_output=True, text=True, check=False).stdout
+
+
 def line(rec: Record) -> str:
     """One console line per step."""
     reason = rec["action"]["reason"]
@@ -210,8 +217,7 @@ def main(argv: list[str]) -> int:
         attack = attacker(a.attack, a.attack_case, a.attack_at)
         uids, system = adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
         r = Run(a.task, apps, not a.no_gate, ghostei.device(uids, system), adb.screen_size())
-        sha = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout
-        side = meta(a, apps, adb.shell("getprop ro.build.fingerprint"), sha)
+        side = meta(a, apps, adb.shell("getprop ro.build.fingerprint"), revision())
         a.out.with_suffix(".meta.json").write_text(json.dumps(side, indent=1) + "\n")
         start(apps, a.attack is not None)
         for rec in run(r, next_action, a.steps, a.budget, attack):

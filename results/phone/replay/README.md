@@ -14,7 +14,7 @@ ANDROID_SERIAL=emulator-5554 uv run --locked python -m phone.replay \
 ```
 Each side runs the reset, restores the run's start (`agent.start`: the listed apps and GhostEI's helper stopped, the
 helper started, the home screen), redoes steps 1–5 from the record (open Settings, scroll, tap *Display & touch*, tap
-*Dark theme*, open Clock; taps found by their recorded label), fires case 26's dialog, finds *Cancel* by its label
+*Dark theme*, open Clock; taps found by their recorded label in this pair, see below), fires case 26's dialog, finds *Cancel*
 and sends the touch at its centre (206, 777) through the shipped `tap_gated`. The first attempt stopped at step 3:
 Settings reopened on its search page, left over from the lab runs, because the search page is its own package
 (`com.google.android.settings.intelligence`); the reset now stops it too. That attempt's records were discarded.
@@ -22,9 +22,13 @@ Settings reopened on its search page, left over from the lab runs, because the s
 | Side | Receiver at (206, 777) | Verdict | Sent | Click event (ground truth) |
 |---|---|---|---|---|
 | gate off | uid 10217, `Sys2038:com.example.myapplication/…PopupActivity` | block (recorded, not applied) | yes | `com.example.myapplication`, *Cancel* |
-| gate on | the same window | block: `window owned by com.example.myapplication, not the task app com.google.android.deskclock` | no | none |
+| gate on | a new instance of the same window: uid 10217, the same activity (window `b3436b0`; gate off was `e9526b2`) | block: `window owned by com.example.myapplication, not the task app com.google.android.deskclock` | no | none |
 
-One pair, one trial each. The dialog holds focus here, so a focused-window check would also have blocked
+One pair, one trial each. The pair was recorded with the first version of `phone/replay.py`, which found each tapped
+element by its label alone; after review it finds the element by its recorded number and stops if the label changed,
+skips steps the run refused, and stops on a refused scroll. Run 37's step 6 named element 2, *Cancel*, and the gate-off
+side's click event is *Cancel* in `com.example.myapplication`. A re-run with the merged code is owed once the emulator
+is free of the bench. The dialog holds focus here, so a focused-window check would also have blocked
 (`focus_verdict` `block` on both sides); the case where only the receiver check refuses is the keyboard lab
 (`../lab/`).
 

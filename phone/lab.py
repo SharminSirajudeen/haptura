@@ -136,7 +136,7 @@ def save_dump(folder: Path, name: str, text: str) -> str:
 
 def recording_dump(seen: list[str]) -> None:
     """Make every `dumpsys input` the gate reads land in `seen` too: the lab saves the very dump
-    the verdict came from. Lab only; the gate's own code is unchanged."""
+    the verdict came from. Lab and replay only; the gate's own code is unchanged."""
     read = adb.shell
 
     def dump() -> str:
