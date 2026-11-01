@@ -269,7 +269,9 @@ scripts/gate.sh
 
 `scripts/gate.sh` runs, in order: the lockfile check, ruff (complexity ≤ 10, nesting ≤ 3, statements ≤ 40), ruff
 format, mypy strict, jscpd at zero duplication, floorguard (nothing in the change lowers the bar), pytest, and every
-mutant in `test/mutants/`. `scripts/ci.sh` runs the same in a fresh clone of the pushed commit.
+mutant in `test/mutants/`, each running only the test it names. The five test files that run whole episodes run only
+when the change touches `gate/`, the file itself, `EVAL.md`, `pyproject.toml` or `uv.lock`. `scripts/ci.sh` runs
+the same in a fresh clone of the pushed commit.
 
 ## Licence
 
