@@ -269,7 +269,13 @@ scripts/gate.sh
 
 `scripts/gate.sh` runs, in order: the lockfile check, ruff (complexity ≤ 10, nesting ≤ 3, statements ≤ 40), ruff
 format, mypy strict, jscpd at zero duplication, floorguard (nothing in the change lowers the bar), pytest, and every
-mutant in `test/mutants/`. `scripts/ci.sh` runs the same in a fresh clone of the pushed commit.
+mutant in `test/mutants/`, one at a time unless `EG_MUTANT_SHARDS` asks for more; each Python and Playwright mutant
+runs only the test it names (a Playwright one: every test declared on that line). The five test files that run whole
+episodes (`test_e2e`, `test_eval_table`, `test_agent`, `test_demo`, `test_run`) run only when the change touches
+`gate/`, the file itself, a `conftest.py`, `EVAL.md`, `.python-version`, pytest's config (`pyproject.toml`,
+`pytest.ini`, `tox.ini`, `setup.cfg`), `uv.lock` or `scripts/gate.sh`; a moved file counts at both paths.
+`scripts/ci.sh` runs the same in a fresh clone of the pushed commit, and `scripts/merge.sh` merges a pull request
+only when that run passed on its head and the head contains main, so the merged tree is the tree the gate ran on.
 
 ## Licence
 

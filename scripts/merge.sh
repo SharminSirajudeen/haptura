@@ -10,5 +10,7 @@ state=$(gh api "repos/$repo/commits/$sha/statuses" -q '[.[] | select(.context=="
 mode=$(gh api "repos/$repo/contents/package.json?ref=$sha" -q .content | base64 -d | grep -m1 -oE '"gateMode": *"(development|live)"' | grep -oE 'development|live' || true)
 desc=$(gh api "repos/$repo/commits/$sha/statuses" -q '[.[] | select(.context=="gate/local")][0].description')
 [ "$mode" = live ] || ! grep -qE '^(fast|gate:fast) ' <<<"$desc" || { echo "PR $1: Gate is ${mode:-development}, but gate/local ran the fast gate — run scripts/ci.sh with GATE unset"; exit 1; }
+# the merged tree must be the gated tree: a head behind main would bring in code no gate ran with it
+[ "$(gh api "repos/$repo/compare/main...$sha" -q .behind_by)" = 0 ] || { echo "PR $1: head $sha is behind main: merge main in and rerun scripts/ci.sh"; exit 1; }
 gh api -X PUT "repos/$repo/pulls/$1/merge" -f merge_method=merge -f sha="$sha" >/dev/null
 echo "merged PR $1 at $sha"
