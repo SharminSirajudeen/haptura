@@ -13,16 +13,17 @@ uv run --locked mypy
 npx --no jscpd
 node test/floorguard.test.js
 node test/floorguard.js
-# The test files that run whole episodes run only when the change can reach them: through gate/, the file itself,
-# tests/conftest.py, EVAL.md, pyproject.toml or uv.lock, committed or not (Sharmin, 1 Nov, #66). With no origin/main
-# to compare against, every one runs.
+# The test files that run whole episodes run only when the change can reach them: through gate/, the file itself, a
+# conftest.py, EVAL.md, the Python version, pytest's config, uv.lock or this script, committed or not (Sharmin, 1 Nov,
+# #66). A moved file counts at both paths. With no origin/main to compare against, every one runs.
 episodes="tests/test_e2e.py tests/test_eval_table.py tests/test_agent.py tests/test_demo.py tests/test_run.py"
 skip=""
-if changed=$(git diff --name-only origin/main...HEAD 2>/dev/null && git diff --name-only HEAD); then
+if changed=$(git diff --no-renames --name-only origin/main...HEAD 2>/dev/null && git diff --no-renames --name-only HEAD); then
   for f in $episodes; do
-    grep -qxE "gate/.*|$f|tests/conftest\.py|EVAL\.md|pyproject\.toml|uv\.lock" <<<"$changed" || skip="$skip $f"
+    grep -qxE "gate/.*|$f|(.*/)?conftest\.py|EVAL\.md|\.python-version|pyproject\.toml|pytest\.ini|tox\.ini|setup\.cfg|uv\.lock|scripts/gate\.sh" \
+      <<<"$changed" || skip="$skip $f"
   done
-  echo "episode tests skipped:${skip:- none} (each runs when the change touches gate/, the file itself, tests/conftest.py, EVAL.md, pyproject.toml or uv.lock)"
+  echo "episode tests skipped:${skip:- none} (each runs when the change touches gate/, the file itself, a conftest.py, EVAL.md, .python-version, pyproject.toml, pytest.ini, tox.ini, setup.cfg, uv.lock or scripts/gate.sh)"
 else
   echo "episode tests: every one runs, there is no origin/main to compare with"
 fi

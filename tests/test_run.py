@@ -44,9 +44,10 @@ def test_the_projection_by_hand() -> None:
     assert run.projection(run.FREE, [3, 5])["usd"] == 0
 
 
-# The stand-in's log: seed 0's body_blocked as the free condition played it on 1 Nov, one probe
-# block and a decline, with that episode's usage (no tokens, and no frames billed without SAM). Its
-# track loses the element, so a resumed run reads an array and a NaN back from the JSON.
+# The stand-in's log: seed 0's body_blocked with the block count, phase, outcome and usage the free
+# condition gave it on 1 Nov (one probe block, a decline; no tokens, and no frames billed without
+# SAM). Its actions and its one track are made up: the track loses the element, so a resumed run
+# reads an array and a NaN back from the JSON.
 LOST = np.array([[64.0, 64.0], [np.nan, np.nan]])
 LOG = EpisodeLog(
     make_scenario(0, "body_blocked"),
