@@ -138,7 +138,7 @@ not a benchmark number. `uv run python -m mac.owner` reruns it (needs the Access
 
 ## The arena gate: prove control before acting
 
-The main product. It is built and tested offline. Its one paid run has not happened yet, so no Muse Spark number is
+The main product. It is built and tested offline. Its one paid run has not happened yet, so no Muse Wonder number is
 claimed here.
 
 **The world** (`gate/arena.py`): a 128×128 arena. The agent has one actuator, `noop | up | down | left | right`, and
@@ -166,14 +166,14 @@ inside the tool, the pattern Meta's own agent workshop teaches (`legal-agent-wor
 here to proving control.
 
 **Which model does what:**
-- **Muse Spark** (`muse-spark-1.3`, temperature 0, low reasoning effort) is the agent. It reads the evidence table and
+- **Muse Wonder** (`muse-wonder-1.0`, temperature 0, low reasoning effort) is the agent. It reads the evidence table and
   the gate's advice line, then calls `run_experiment`, `act` or `decline`.
 - **SAM 3.1** is the tracker, with one video call per block and the prompt "colored object". In the API measurements it
   kept the ids of 3 shapes through a crossing (`docs/api.md`). It has not yet run on an arena clip.
 - The statistics, the gate and its advice are plain code, with no model.
 
 **The conditions** (EVAL.md):
-- **`gated+SAM`** is the product: Muse Spark, the gate, and SAM 3.1.
+- **`gated+SAM`** is the product: Muse Wonder, the gate, and SAM 3.1.
 - **Baseline a** (`no-gate+SAM`) keeps the same three tools. `run_experiment` returns only each element's mean
   displacement per action, with no p, no label and no advice. `act` is unchecked and steers by those means. No diagnosis.
 - **Baseline b** (`gated+colour`) is the gate with a colour tracker, which can swap the look-alikes' ids where they cross.
@@ -191,31 +191,44 @@ here to proving control.
   in 1,000 seeds. The remap_feasible misses left were a scoring defect: two elements on one pixel at the end, a tie
   the scorer broke by id. With that fixed, remap_feasible is wrong in 0 of 400 (run 27). The rule was chosen on
   seeds 200–399 and the colour tracker's error at a wall; 0–199 were measured for each candidate first, so they
-  are not a clean hold-out. The kill test therefore runs on seeds 1000–1019, chosen before any run on them;
-  no code changes because of what they show.
-  There the rule policy with perfect tracking is right in 119 of 120: body_remap seed 1008 reaches the goal but
+  are not a clean hold-out. The kill test therefore runs on seeds 1001–1019. Seeds 1000–1019 were chosen on 30 Oct,
+  and all twenty have been run free and offline, with the rule policy and perfect tracking (runs 30 and 47); no code
+  changed because of what they showed. Seed 1000 is left out because a paid probe ran it too (run 42).
+  There the rule policy with perfect tracking is right in 113 of 114: body_remap seed 1008 reaches the goal but
   names the wrong cause (the control lost, where the body changed), and EVAL.md scores the cause (run 30).
 
 **Run it.** Every paid run prints its projected cost first and refuses above its budget:
 
 ```bash
 uv run --locked python -m pytest -q tests/test_e2e.py                                    # offline end to end, 1 to 2 minutes
-uv run --locked python -m gate.run --condition gated+SAM --seeds 1000-1019 --budget 0      # prints the projection, refuses
-uv run --locked python -m gate.run --condition rules-only+truth --seeds 1000-1019 --budget 0  # free: no model is called
-uv run --locked python -m gate.eval results/logs results/table.md 1000-1019
+uv run --locked python -m gate.run --condition gated+SAM --seeds 1001-1019 --budget 0      # prints the projection, refuses
+uv run --locked python -m gate.run --condition rules-only+truth --seeds 1001-1019 --budget 0  # free: no model is called
+uv run --locked python -m gate.eval results/logs results/table.md 1001-1019
 ```
 
 `gate.run` writes one EpisodeLog per episode to `results/logs/<condition>/` and resumes a stopped run. Every model
 response is cached under `cache/`. With `REPLAY=1` a cache miss is an error instead of a request, so once a paid run's
 `cache/` is committed, the same `gate.run` command rebuilds its logs with no network. `gate.eval` makes no request at
-all. The runner's projection on 30 Oct is $5.953, $5.953 and $0.963 for the kill test's three conditions, $12.87 in all
-(`docs/pilot-runs.md`, run 30). It is the arena's one paid run. Each figure is an estimate from the rule policy's block
-counts: Muse may use more blocks or fewer.
+all. The runner's projection on 1 Nov, from a Wonder pilot's means, is $8.654, $8.654 and $3.914 for the kill test's
+three conditions, $21.22 in all (`docs/pilot-runs.md`, runs 45 and 48). It is the arena's one paid run. Each figure is
+an estimate from the rule policy's block counts: Muse may use more blocks or fewer, and a longer episode carries a
+longer conversation than the pilot's.
+
+The paid run is three commands, one per condition, each with its own budget, about 1.5 times its projection:
+
+```bash
+uv run --locked python -m gate.run --condition gated+SAM --seeds 1001-1019 --budget 13
+uv run --locked python -m gate.run --condition no-gate+SAM --seeds 1001-1019 --budget 13
+uv run --locked python -m gate.run --condition gated+colour --seeds 1001-1019 --budget 6
+```
+
+A run stops before an episode that would pass its budget, and can end one episode over it (the output cap alone
+allows $0.48 an episode). The three budgets total $32.
 
 **Limits:**
 - A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside
   them is claimed.
-- No Muse Spark or SAM number exists for the arena until the kill test runs.
+- No Muse Wonder or SAM number exists for the arena until the kill test runs.
 - The diagnosis expects a tracker to read an element at a wall within STALE_TOL (3 px) of where the arena holds it.
   The colour tracker reads it 0.5 px off (run 26); SAM's error at a wall is not measured.
 

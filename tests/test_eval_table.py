@@ -1,7 +1,7 @@
 """gate/eval.py on three hand-written EpisodeLogs whose metrics are worked out by hand in the
 comments, plus hand-written histories for the eyes and occlusion metrics, and one real episode for
 the replay. Prices are docs/api.md's: SAM $0.20 per 1k frames (50 at least per block), Muse
-$1.25 / $4.25 per million input / output tokens.
+Wonder $4.00 / $0.20 / $20.00 per million input / cached input / output tokens.
 """
 
 import functools
@@ -127,11 +127,18 @@ def test_the_column_of_the_three_logs_by_hand() -> None:
     assert cells["blocks per episode"] == "2.67"  # hand: (2 + 4 + 2) / 3
     # hand: billed frames 50 per block (each has 16 or 31 frames): 100, 200, 100; 400 / 3 = 133
     assert cells["billed SAM frames per episode"] == "133"
-    # hand: L1 $0.00125 + $0.00085 + $0.02; L2 $0.00375 + $0.001275 + $0.04; L3 $0.0025 +
-    # $0.000425 + $0.02; all $0.09005 over 2 right = $0.0450
-    assert cells["dollars per correct decision"] == "$0.0450"
+    # hand: L1 $0.004 + $0.004 + $0.02; L2 $0.012 + $0.006 + $0.04; L3 $0.008 + $0.002 + $0.02;
+    # all $0.116 over 2 right = $0.0580
+    assert cells["dollars per correct decision"] == "$0.0580"
     assert cells["input / output tokens per correct decision"] == "3000 / 300"  # 6000/2, 600/2
     assert cells["input / output tokens per episode"] == "2000 / 200"  # hand: 6000/3, 600/3
+
+
+def test_cached_input_tokens_cost_the_cached_price() -> None:
+    # hand: 10,000 input tokens of which 8,000 cached, and 500 output: 2,000 x $4/M = $0.008,
+    # 8,000 x $0.20/M = $0.0016, 500 x $20/M = $0.01; no blocks, so no SAM: $0.0196 in all
+    usage = {"input_tokens": 10_000, "cached_tokens": 8_000, "output_tokens": 500}
+    assert ev.dollars(replace(L1, blocks=(), usage=usage)) == pytest.approx(0.0196)
 
 
 def test_two_logs_of_one_episode_are_an_error() -> None:

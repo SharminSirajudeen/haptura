@@ -1,11 +1,11 @@
 """The kill test: one condition over seeds x all six cases (EVAL.md, "Cost").
 
-`python -m gate.run --condition gated+SAM --seeds 1000-1019 --budget 25 [--push]`
+`python -m gate.run --condition gated+SAM --seeds 1001-1019 --budget 12 [--push]`
 
 It first prints EVAL.md's projection, an estimate, and refuses above the budget: episodes x blocks
 per episode (the rules-only blocks on the same seeds, run here offline at no cost) x ($0.01 per
 SAM block + Muse tokens per turn x price), with tokens, frames and wall-clock from the measurements
-in docs/api.md. Each episode's EpisodeLog is then written to
+in docs/pilot-runs.md. Each episode's EpisodeLog is then written to
 results/logs/<condition>/<seed>-<case>.json the moment it ends; one already on disk is skipped and
 its spend counted, so a restarted container resumes. Before each episode it stops if that episode
 would take the spend past the budget, at the larger of the projected and the measured cost per
@@ -27,7 +27,7 @@ from pathlib import Path
 from gate.agent import rules_turn, run_episode
 from gate.arena import Arena, make_scenario
 from gate.episode import Tracker, run_block, truth_slice
-from gate.eval import MUSE_USD_IN, MUSE_USD_OUT, SAM_MIN_FRAMES, SAM_USD_PER_FRAME, dollars
+from gate.eval import SAM_MIN_FRAMES, SAM_USD_PER_FRAME, dollars, muse_usd
 from gate.gate import diagnose
 from gate.meta_api import muse_turn
 from gate.trackers import colour_tracker, sam_tracker, truth_tracker
@@ -43,8 +43,10 @@ SETUP = {  # condition: (gated, tracker, policy), EVAL.md's table plus the free 
     "rules-only+truth": (True, "truth", "rules"),
 }
 FREE = "rules-only+truth"
-MUSE_TOKENS_PER_TURN = (1000, 160)  # docs/api.md: about 1k input and 160 output tokens
-SECONDS_PER_BLOCK = {"sam": 2.5, "muse": 12.0}  # docs/api.md: SAM 2.2-2.5 s, Muse up to 12 s
+# docs/pilot-runs.md, run 45, the means over its 22 Muse calls: (input, of which cached, output)
+MUSE_TOKENS_PER_TURN = (1629, 968, 271)
+# the means over run 45's 20 SAM and 17 Muse requests; the projection counts one Muse turn a block
+SECONDS_PER_BLOCK = {"sam": 3.15, "muse": 3.44}
 LOGS = Path("results/logs")
 
 
@@ -72,15 +74,16 @@ def projection(condition: str, blocks: Sequence[int]) -> dict[str, float]:
     call and one Muse turn per block."""
     _, track, policy = SETUP[condition]
     n, sam, muse = sum(blocks), track == "sam", policy == "muse"
-    tin, tout = (t * n * muse for t in MUSE_TOKENS_PER_TURN)
+    tin, tcached, tout = (t * n * muse for t in MUSE_TOKENS_PER_TURN)
     frames = n * SAM_MIN_FRAMES * sam
     seconds = n * (SECONDS_PER_BLOCK["sam"] * sam + SECONDS_PER_BLOCK["muse"] * muse)
-    usd = frames * SAM_USD_PER_FRAME + tin * MUSE_USD_IN + tout * MUSE_USD_OUT
+    usd = frames * SAM_USD_PER_FRAME + muse_usd(tin, tcached, tout)
     return {
         "episodes": len(blocks),
         "blocks": n,
         "frames": frames,
         "input_tokens": tin,
+        "cached_tokens": tcached,
         "output_tokens": tout,
         "usd": usd,
         "hours": seconds / 3600,
@@ -144,7 +147,7 @@ def _push(message: str, out: Path) -> None:
 def main(argv: Sequence[str]) -> None:
     parser = argparse.ArgumentParser(prog="python -m gate.run", description=__doc__.split("\n")[0])
     parser.add_argument("--condition", required=True, choices=sorted(SETUP))
-    parser.add_argument("--seeds", required=True, help="first-last, e.g. 1000-1019")
+    parser.add_argument("--seeds", required=True, help="first-last, e.g. 1001-1019")
     parser.add_argument("--budget", type=float, required=True, help="RUN_BUDGET_USD for this run")
     parser.add_argument("--push", action="store_true")
     args = parser.parse_args(argv)

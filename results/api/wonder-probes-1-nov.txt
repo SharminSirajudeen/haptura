@@ -1,0 +1,27 @@
+# Muse Wonder probes of 1 Nov 2026, run by the Mac session in its scratchpad (docs/pilot-runs.md,
+# runs 42 and 43). One line per cached reply, oldest first: file prefix, time, response id, status,
+# incomplete_details, output item types, the cap sent, previous_response_id, store, usage.
+# The first 11 lines are probe A (cap 400, one gated+colour episode on seed 1000, feasible); the last
+# 2 are probe B (cap 1500, the same episode).
+
+7ee77fb6 02:06:49 resp_6ae66679f0b661946e4a4aa2 completed None ['reasoning', 'message', 'function_call'] cap 400 prev None store True usage {'input_tokens': 900, 'input_tokens_details': {'cached_tokens': 0}, 'output_tokens': 204, 'output_tokens_details': {'reasoning_tokens': 79}, 'total_tokens': 1104}
+2d620520 02:07:02 resp_6ae66680695b3ca4febb4a8c completed None ['reasoning', 'message', 'function_call'] cap 400 prev resp_6ae66679f0b661946e4a4aa2 store True usage {'input_tokens': 1415, 'input_tokens_details': {'cached_tokens': 0}, 'output_tokens': 293, 'output_tokens_details': {'reasoning_tokens': 198}, 'total_tokens': 1708}
+c25197ec 02:07:14 resp_6ae6668c54781c7fdba04b4a completed None ['reasoning', 'message', 'function_call'] cap 400 prev resp_6ae66680695b3ca4febb4a8c store True usage {'input_tokens': 1875, 'input_tokens_details': {'cached_tokens': 1396}, 'output_tokens': 182, 'output_tokens_details': {'reasoning_tokens': 56}, 'total_tokens': 2057}
+d177c216 02:07:27 resp_6ae66699bb4466690e8a42e9 completed None ['reasoning', 'function_call'] cap 400 prev resp_6ae6668c54781c7fdba04b4a store True usage {'input_tokens': 2379, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 399, 'output_tokens_details': {'reasoning_tokens': 307}, 'total_tokens': 2778}
+58001b10 02:07:41 resp_6ae666a654c26109b9c94d6a incomplete {'reason': 'max_output_tokens'} ['reasoning', 'message'] cap 400 prev resp_6ae66699bb4466690e8a42e9 store True usage {'input_tokens': 2849, 'input_tokens_details': {'cached_tokens': 1780}, 'output_tokens': 400, 'output_tokens_details': {'reasoning_tokens': 328}, 'total_tokens': 3249}
+0d3a42b9 02:07:57 resp_6ae666b554730addfbf44253 incomplete {'reason': 'max_output_tokens'} ['reasoning'] cap 400 prev resp_6ae666a654c26109b9c94d6a store True usage {'input_tokens': 2906, 'input_tokens_details': {'cached_tokens': 2292}, 'output_tokens': 400, 'output_tokens_details': {'reasoning_tokens': 398}, 'total_tokens': 3306}
+cf98ef59 02:08:06 resp_6ae666c3fa82851185b3441f incomplete {'reason': 'max_output_tokens'} ['reasoning'] cap 400 prev resp_6ae666b554730addfbf44253 store True usage {'input_tokens': 2917, 'input_tokens_details': {'cached_tokens': 2804}, 'output_tokens': 400, 'output_tokens_details': {'reasoning_tokens': 356}, 'total_tokens': 3317}
+f3a01db3 02:08:20 resp_6ae666ce1787debca04145c0 incomplete {'reason': 'max_output_tokens'} ['reasoning'] cap 400 prev resp_6ae666c3fa82851185b3441f store True usage {'input_tokens': 2928, 'input_tokens_details': {'cached_tokens': 2804}, 'output_tokens': 400, 'output_tokens_details': {'reasoning_tokens': 398}, 'total_tokens': 3328}
+7cbe962b 02:08:31 resp_6ae666dba275410bfe82488f incomplete {'reason': 'max_output_tokens'} ['reasoning'] cap 400 prev resp_6ae666ce1787debca04145c0 store True usage {'input_tokens': 2939, 'input_tokens_details': {'cached_tokens': 2804}, 'output_tokens': 400, 'output_tokens_details': {'reasoning_tokens': 325}, 'total_tokens': 3339}
+23740117 02:08:44 resp_6ae666e59e5c3a0f942c4044 incomplete {'reason': 'max_output_tokens'} ['reasoning', 'message'] cap 400 prev resp_6ae666dba275410bfe82488f store True usage {'input_tokens': 2950, 'input_tokens_details': {'cached_tokens': 2804}, 'output_tokens': 400, 'output_tokens_details': {'reasoning_tokens': 346}, 'total_tokens': 3350}
+0b69519c 02:08:55 resp_6ae666f1041fa65b29874aaf completed None ['reasoning', 'function_call'] cap 400 prev resp_6ae666e59e5c3a0f942c4044 store True usage {'input_tokens': 2985, 'input_tokens_details': {'cached_tokens': 2932}, 'output_tokens': 310, 'output_tokens_details': {'reasoning_tokens': 203}, 'total_tokens': 3295}
+b7161426 02:23:26 resp_6ae66a5ec9f1ca49b2064435 completed None ['reasoning', 'message', 'function_call'] cap 1500 prev None store True usage {'input_tokens': 900, 'input_tokens_details': {'cached_tokens': 884}, 'output_tokens': 204, 'output_tokens_details': {'reasoning_tokens': 79}, 'total_tokens': 1104}
+ff2b7cbb 02:23:42 resp_6ae66a6475ceb1bdc9384dbf completed None ['reasoning', 'message', 'function_call'] cap 1500 prev resp_6ae66a5ec9f1ca49b2064435 store True usage {'input_tokens': 1415, 'input_tokens_details': {'cached_tokens': 1396}, 'output_tokens': 339, 'output_tokens_details': {'reasoning_tokens': 260}, 'total_tokens': 1754}
+
+# Probe B, first run (cap1500.out): its last line, the API's answer to call 3
+openai.BadRequestError: Error code: 400 - {'error': {'code': None, 'message': 'referenced response not found or expired', 'param': None, 'type': 'invalid_request_error'}}
+
+# Probe B, rerun (cap1500b.out; calls 1 and 2 came from the scratch cache). Its traceback's line numbers
+# are those of the probe script after a retry loop was added (a failed call retried twice, 3 s apart, then
+# re-raised), so call 3 failed three times, by that reading, not by a count printed: its last line
+openai.BadRequestError: Error code: 400 - {'error': {'code': None, 'message': 'referenced response not found or expired', 'param': None, 'type': 'invalid_request_error'}}

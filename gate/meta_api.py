@@ -28,7 +28,8 @@ from gate.video import encode_mp4
 
 BASE_URL = "https://api.meta.ai/v1"
 SAM_MODEL = "sam-3.1"
-MUSE_MODEL = "muse-spark-1.3"
+# the arena's agent (EVAL.md); the phone agent keeps Spark (phone/muse.py)
+MUSE_MODEL = "muse-wonder-1.0"
 CACHE_DIR = Path("cache")
 # A SAM output line: a frame marker, then comma-separated records of `id<|box;...|><|mask;...|>`.
 FRAME = re.compile(r"^<(\d+)f>")
@@ -122,20 +123,24 @@ class ToolCall:
 class MuseReply:
     text: str
     tool_calls: tuple[ToolCall, ...]
-    response_id: str
+    # the output items the next turn's input carries back: all but `reasoning`, which holds no text
+    # (`summary: []`); sent back, it changed the input count by 6 tokens (docs/api.md, run 44)
+    items: tuple[dict[str, Any], ...]
     usage: dict[str, Any]
 
 
 def muse_turn(
     instructions: str,
-    input: str | list[dict[str, Any]],
+    input: list[dict[str, Any]],
     tools: list[dict[str, Any]],
-    previous_response_id: str | None = None,
     *,
     root: Path = CACHE_DIR,
     http: httpx.Client | None = None,
 ) -> MuseReply:
-    """One Muse Spark turn on the Responses API, temperature 0, the lowest reasoning effort."""
+    """One Muse Wonder turn on the Responses API, temperature 0, low reasoning effort. `input` is
+    the whole conversation so far, as items: Wonder answered a `previous_response_id` with 400
+    "referenced response not found or expired" seconds after that response was created, and took
+    the transcript instead (docs/api.md)."""
     body: dict[str, Any] = {
         "model": MUSE_MODEL,
         "instructions": instructions,
@@ -145,8 +150,6 @@ def muse_turn(
         "reasoning": {"effort": MUSE_EFFORT},
         "max_output_tokens": MUSE_MAX_OUTPUT_TOKENS,
     }
-    if previous_response_id is not None:
-        body["previous_response_id"] = previous_response_id
     key = cache_key(json.dumps(body, sort_keys=True))
     raw = cached(key, lambda: post_json("/responses", body, http=http), root)
     return _reply(raw)
@@ -176,4 +179,5 @@ def _reply(raw: dict[str, Any]) -> MuseReply:
         for o in output
         if o["type"] == "function_call"
     )
-    return MuseReply(text, calls, raw["id"], raw["usage"])
+    items = tuple(o for o in output if o["type"] != "reasoning")
+    return MuseReply(text, calls, items, raw["usage"])
