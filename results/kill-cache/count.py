@@ -37,7 +37,7 @@ assert BLOCK_STEPS + 1 <= SAM_MIN_FRAMES
 def archive(cond: str) -> dict[str, bytes]:
     """A condition's cached replies by file name, read from its archive in place."""
     with tarfile.open(HERE / f"{cond}.tar.gz") as tar:
-        return {Path(m.name).name: tar.extractfile(m).read() for m in tar if m.isfile()}  # type: ignore[union-attr]
+        return {Path(m.name).name: tar.extractfile(m).read() for m in tar if m.isfile()}
 
 
 def condition(cond: str, raw: dict[str, bytes]) -> str:
@@ -60,7 +60,7 @@ def boxes(lines: list[str]) -> dict[tuple[int, int], tuple[int, ...]]:
     """A SAM reply's boxes by (frame, object id), read with sam_track's own patterns."""
     out = {}
     for line in lines:
-        frame = int(api.FRAME.match(line).group(1))  # type: ignore[union-attr]
+        frame = int(api.FRAME.match(line).group(1))
         for oid, *xy in api.BOX.findall(line):
             out[frame, int(oid)] = tuple(map(int, xy))
     return out
