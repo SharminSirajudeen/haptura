@@ -11,8 +11,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
 
-from openai import OpenAIError
-
 from gate.constants import MUSE_EFFORT
 from gate.meta_api import cache_key, cached, post_json
 
@@ -149,6 +147,9 @@ def call(text: str, png: bytes, **extra: object) -> tuple[str, tuple[int, int]]:
 
 def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") -> Proposal:
     """One call, one proposed tap in pixels; a failed call becomes an `error` proposal."""
+    # here, not at the top: a process that calls no model skips the import
+    from openai import OpenAIError
+
     try:
         text, tokens = call(PROMPT.format(task=task, w=size[0], h=size[1]) + evidence, png)
     except OpenAIError as e:  # the class and status only: the API's text never reaches a record
@@ -158,6 +159,8 @@ def propose(task: str, png: bytes, size: tuple[int, int], evidence: str = "") ->
 
 def next_action(task: str, apps: list[str], history: str, elements: str, png: bytes) -> Action:
     """The agent's next step: one action naming an element number, never pixels, at low effort."""
+    from openai import OpenAIError
+
     text = ACT_PROMPT.format(
         task=task,
         apps=", ".join(apps),

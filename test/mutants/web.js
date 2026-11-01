@@ -2,7 +2,7 @@
 // `mustFail`, as test/mutants.js reads them): `cmd` runs the spec with Playwright's dot reporter, which prints nothing for a
 // passing test, and `expect` is the failing test's own header line as that reporter prints it (file:line:column › title).
 // Moving a test in a spec moves its entry's `expect` in the same change.
-const PW = 'npx playwright test -c web/playwright.config.js --reporter=dot --workers=1';
+const PW = 'node_modules/.bin/playwright test -c web/playwright.config.js --reporter=dot --workers=1';
 const m = (from, file, find, replace, spec, at, title) => ({
   from, file, find, replace, mustFail: `web/tests/${spec}`, cmd: `${PW} web/tests/${spec}`, expect: `web/tests/${spec}:${at} › ${title}`,
 });

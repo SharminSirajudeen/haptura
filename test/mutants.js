@@ -67,6 +67,9 @@ function shard(k, n){
     fs.cpSync(root, dir, { recursive:true, filter:src => !(skipRoot.has(path.relative(root, src)) || skipAny.test(path.basename(src))) });
     // read-only trees are shared, not copied: the API cache and the run records can be large and the tests only read them
     for (const d of ['node_modules', 'cache', 'results']) if (fs.existsSync(path.join(root, d))) fs.symlinkSync(path.join(root, d), path.join(dir, d), 'dir');
+    // third-party bytecode compiled once a shard; first-party code is still never compiled (PYTHONDONTWRITEBYTECODE)
+    const warm = Object.assign({}, process.env); delete warm.PYTHONDONTWRITEBYTECODE;
+    spawnSync('uv run --locked python -c "import numpy, pytest, httpx"', { cwd:dir, shell:true, timeout:LIMIT, env:warm });
     const test = m => m.cmd || m.mustFail;
     [...new Set(SELECTED.map(test))].forEach((t, i) => {
       if (i % n !== k) return;
