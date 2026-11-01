@@ -2,16 +2,16 @@
 // names must go red on the assertion it names. A survivor means the test does not bite; a find that does not match
 // exactly once means the list went stale. Both fail the gate.
 // Python entries run through `cmd: uv run --locked python -m pytest -q <file>` with `expect: FAILED <file>::<test>`.
-// Each mutant runs only the test it names: the last argument of `cmd`, the file, becomes the node `expect` names
-// (any [param] kept), or for a Playwright entry (`expect: <spec>:<line>:<col> › <title>`) `<spec>:<line>`, which runs
-// the tests declared on that line. Its control runs the same command.
+// An entry with a `cmd` runs only the test it names: the last argument of `cmd`, the file, becomes the node `expect`
+// names (any [param] kept), or for a Playwright entry (`expect: <spec>:<line>:<col> › <title>`) `<spec>:<line>`, which
+// runs the tests declared on that line. Its control runs the same command. An entry without one runs its file.
 // The copy leaves `.venv` behind and `uv run` builds a fresh one there: a copied venv keeps the original tree on its
 // path, and every mutant then survives.
 //   node test/mutants.js                     every mutant (the `development` gate, and the optional full run when live)
 //   EG_MUTANTS=changed node test/mutants.js  only those whose file or test differs from origin/main; every one when the
 //                                            list, runner or harness changed (the `live` gate: package.json's gateMode)
-// At most 6 shards run at once (EG_MUTANT_SHARDS sets another number): each is this file again, with its own copy
-// of the tree.
+// One shard by default, for quiet (Sharmin, 1 Nov); EG_MUTANT_SHARDS=n runs n at once, at most one a core. Each
+// shard is this file again, with its own copy of the tree.
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path');
 const { spawnSync, spawn } = require('child_process');
@@ -84,7 +84,7 @@ if (process.env.MUTANT_SHARD){
   const [k, n] = process.env.MUTANT_SHARD.split('/').map(Number);
   process.exit(shard(k, n) ? 1 : 0);
 }
-const N = Math.max(1, Math.min(parseInt(process.env.EG_MUTANT_SHARDS, 10) || 6, os.cpus().length, SELECTED.length));
+const N = Math.max(1, Math.min(parseInt(process.env.EG_MUTANT_SHARDS, 10) || 1, os.cpus().length, SELECTED.length));
 Promise.all(Array.from({ length:N }, (_, k) => new Promise(done => {
   const c = spawn(process.execPath, [__filename], { env:Object.assign({}, process.env, { MUTANT_SHARD:k + '/' + N }) });
   let out = ''; c.stdout.on('data', d => { out += d; }); c.stderr.on('data', d => { out += d; });
