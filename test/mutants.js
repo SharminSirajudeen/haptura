@@ -2,18 +2,25 @@
 // names must go red on the assertion it names. A survivor means the test does not bite; a find that does not match
 // exactly once means the list went stale. Both fail the gate.
 // Python entries run through `cmd: uv run --locked python -m pytest -q <file>` with `expect: FAILED <file>::<test>`.
+// An entry with a `cmd` runs only the test it names: the last argument of `cmd`, the file, becomes the node `expect`
+// names (any [param] kept), or for a Playwright entry (`expect: <spec>:<line>:<col> › <title>`) `<spec>:<line>`, which
+// runs the tests declared on that line. Its control runs the same command. An entry without one runs its file.
 // The copy leaves `.venv` behind and `uv run` builds a fresh one there: a copied venv keeps the original tree on its
 // path, and every mutant then survives.
 //   node test/mutants.js                     every mutant (the `development` gate, and the optional full run when live)
 //   EG_MUTANTS=changed node test/mutants.js  only those whose file or test differs from origin/main; every one when the
 //                                            list, runner or harness changed (the `live` gate: package.json's gateMode)
-// The run uses every core: each shard is this file again, with its own copy of the tree.
+// One shard by default, for quiet (Sharmin, 1 Nov); EG_MUTANT_SHARDS=n runs n at once, at most one a core. Each
+// shard is this file again, with its own copy of the tree.
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path');
 const { spawnSync, spawn } = require('child_process');
 const root = path.join(__dirname, '..'), LIST = 'test/mutants.list.js';
-const MUTANTS = require(path.join(root, LIST));
-const LIMIT = 300000;   // a runaway mutant is killed here; a shard per core runs each test about 2.5x slower than alone
+// the test an entry names: pytest's node after `FAILED `, or Playwright's `<spec>:<line>` before `:<col> › <title>`
+const named = m => m.expect.startsWith('FAILED ') ? m.expect.slice(7) : m.expect.replace(/:\d+ › .*$/, '');
+const MUTANTS = require(path.join(root, LIST))
+  .map(m => m.cmd ? Object.assign({}, m, { cmd:m.cmd.replace(/\S+$/, () => "'" + named(m) + "'") }) : m);
+const LIMIT = 300000;   // a runaway mutant is killed here
 
 const count = (text, s) => text.split(s).length - 1;
 // Python's bytecode cache is keyed on the source's size and whole-second mtime: a write with the size and mtime of
@@ -48,8 +55,8 @@ function changedOnly(){
 }
 const SELECTED = process.env.EG_MUTANTS === 'changed' ? changedOnly() : MUTANTS;
 
-/* one shard: every n-th selected mutant from k, in its own copy; the control (each named test green unmutated, after its
-   mutant's `before` step, since a test that needs a build is red without one) in shard 0 */
+/* one shard: every n-th selected mutant from k, in its own copy, after the control of every n-th named test from k (the
+   test green unmutated, after its mutant's `before` step, since a test that needs a build is red without one) */
 function shard(k, n){
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mutants-'));
   let fails = 0;
@@ -60,11 +67,13 @@ function shard(k, n){
     fs.cpSync(root, dir, { recursive:true, filter:src => !(skipRoot.has(path.relative(root, src)) || skipAny.test(path.basename(src))) });
     // read-only trees are shared, not copied: the API cache and the run records can be large and the tests only read them
     for (const d of ['node_modules', 'cache', 'results']) if (fs.existsSync(path.join(root, d))) fs.symlinkSync(path.join(root, d), path.join(dir, d), 'dir');
-    if (k === 0) [...new Set(SELECTED.map(m => m.mustFail))].forEach(t => {
-      const r = run(dir, SELECTED.find(m => m.mustFail === t));
+    const test = m => m.cmd || m.mustFail;
+    [...new Set(SELECTED.map(test))].forEach((t, i) => {
+      if (i % n !== k) return;
+      const r = run(dir, SELECTED.find(m => test(m) === t));
       if (r.status !== 0){ fails++; console.log('FAIL mutants: ' + t + ' is red before any mutation'); }
       // an `expect` that shows on a green run names no failure, so it cannot prove which test went red
-      SELECTED.filter(m => m.mustFail === t && failLine(r, m)).forEach(m => { fails++; console.log('FAIL mutants: ' + m.from + ' expects "' + m.expect + '", which a green run prints'); });
+      SELECTED.filter(m => test(m) === t && failLine(r, m)).forEach(m => { fails++; console.log('FAIL mutants: ' + m.from + ' expects "' + m.expect + '", which a green run prints'); });
     });
     SELECTED.forEach((m, i) => { if (i % n !== k) return; const f = mutate(dir, m); if (f){ fails++; console.log(f); } });
   } finally { fs.rmSync(dir, { recursive:true, force:true }); }
@@ -75,7 +84,7 @@ if (process.env.MUTANT_SHARD){
   const [k, n] = process.env.MUTANT_SHARD.split('/').map(Number);
   process.exit(shard(k, n) ? 1 : 0);
 }
-const N = Math.max(1, Math.min(os.cpus().length, SELECTED.length || 1));
+const N = Math.max(1, Math.min(parseInt(process.env.EG_MUTANT_SHARDS, 10) || 1, os.cpus().length, SELECTED.length));
 Promise.all(Array.from({ length:N }, (_, k) => new Promise(done => {
   const c = spawn(process.execPath, [__filename], { env:Object.assign({}, process.env, { MUTANT_SHARD:k + '/' + N }) });
   let out = ''; c.stdout.on('data', d => { out += d; }); c.stderr.on('data', d => { out += d; });

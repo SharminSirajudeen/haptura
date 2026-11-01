@@ -1,17 +1,22 @@
 """The kill-test runner, offline: the projection by hand, and the loop on the free rules-only+truth
-condition (no network). A paid condition is only ever projected here; its episodes are replaced by
-a stub that fails the test if it is called.
+condition (no network). The loop's bookkeeping tests get a stand-in for the episode that returns one
+small log built here with a real free episode's block count and usage, so none of them runs an
+episode. A paid condition is only ever projected here; the stand-in fails the test if one is run.
+One test runs the loop on the real episode, for one seed and one case.
 """
 
 import math
 import subprocess
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from gate import eval as ev
 from gate import run
-from gate.types import EpisodeLog
+from gate.agent import USAGE
+from gate.arena import make_scenario
+from gate.types import BlockRecord, EpisodeLog
 
 
 def test_every_eval_condition_has_a_setup() -> None:
@@ -39,15 +44,29 @@ def test_the_projection_by_hand() -> None:
     assert run.projection(run.FREE, [3, 5])["usd"] == 0
 
 
+# The stand-in's log: seed 0's body_blocked with the block count, phase, outcome and usage the free
+# condition gave it on 1 Nov (one probe block, a decline; no tokens, and no frames billed without
+# SAM). Its actions and its one track are made up: the track loses the element, so a resumed run
+# reads an array and a NaN back from the JSON.
+LOST = np.array([[64.0, 64.0], [np.nan, np.nan]])
+LOG = EpisodeLog(
+    make_scenario(0, "body_blocked"),
+    run.FREE,
+    (BlockRecord(0, "probe", ("noop",) * 30, "", {0: LOST}, (), None, None, None),),
+    "decline",
+    {},
+    dict.fromkeys(USAGE, 0) | {"muse_calls": 2, "frames": 31, "sam_calls": 1},
+)
+
+
 def no_paid_episode(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Paid episodes fail the test; free ones run for real. Returns the conditions run."""
+    """Paid episodes fail the test; free ones return the stand-in. Returns the conditions run."""
     ran: list[str] = []
-    real = run.episode
 
     def episode(seed: int, case: str, condition: str) -> EpisodeLog:
         assert condition == run.FREE, f"a paid episode ran: {condition}"
         ran.append(condition)
-        return real(seed, case, condition)
+        return LOG
 
     monkeypatch.setattr(run, "episode", episode)
     return ran
@@ -79,6 +98,7 @@ def test_a_paid_run_above_its_budget_is_refused_before_it_starts(
 def test_the_run_stops_before_an_episode_would_pass_the_budget(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    no_paid_episode(monkeypatch)
     monkeypatch.setattr(run, "dollars", lambda log: 1.0)  # each episode measured at $1
     said: list[str] = []
     # hand: projected $0 an episode, measured $1: after 3 episodes $3 + $1 > $3.5, so it stops
@@ -111,6 +131,7 @@ class Git:
 def test_push_commits_and_pushes_after_every_seed_and_at_the_end(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    no_paid_episode(monkeypatch)
     git = Git()
     monkeypatch.setattr(subprocess, "run", git)
     run.run(run.FREE, range(2), 0.0, out=tmp_path, push=True, say=lambda _: None)
@@ -127,6 +148,7 @@ def test_push_commits_and_pushes_after_every_seed_and_at_the_end(
 
 
 def test_a_failed_commit_stops_the_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    no_paid_episode(monkeypatch)
     monkeypatch.setattr(subprocess, "run", Git(fail="commit"))
     with pytest.raises(subprocess.CalledProcessError):
         run.run(run.FREE, range(1), 0.0, out=tmp_path, push=True, say=lambda _: None)
@@ -135,13 +157,13 @@ def test_a_failed_commit_stops_the_run(monkeypatch: pytest.MonkeyPatch, tmp_path
 def test_a_crash_mid_run_still_pushes_what_was_written(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    git, calls, real = Git(), [0], run.episode
+    git, calls = Git(), [0]
 
     def episode(seed: int, case: str, condition: str) -> EpisodeLog:
         calls[0] += 1
         if calls[0] == 9:  # hand: 6 projection episodes, 2 run episodes, then the crash
             raise RuntimeError("the API went away")
-        return real(seed, case, condition)
+        return LOG
 
     monkeypatch.setattr(run, "episode", episode)
     monkeypatch.setattr(subprocess, "run", git)
@@ -157,12 +179,16 @@ def test_a_nan_budget_refuses(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
     assert said[-1].startswith("refused: $")
 
 
-def test_a_log_cut_off_mid_write_is_not_read_as_done(tmp_path: Path) -> None:
+def test_a_log_cut_off_mid_write_is_not_read_as_done(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # the one test on the real episode, for one seed and one case: seed 0's body_blocked
+    monkeypatch.setattr(run, "CASES", ("body_blocked",))
     folder = tmp_path / run.FREE
     folder.mkdir()
-    (folder / "0-feasible.part").write_text('{"scenario": ')  # a killed write
+    (folder / "0-body_blocked.part").write_text('{"scenario": ')  # a killed write
     run.run(run.FREE, range(1), 0.0, out=tmp_path, say=lambda _: None)
-    assert sorted(p.suffix for p in folder.iterdir()) == [".json"] * 6
+    assert sorted(p.name for p in folder.iterdir()) == ["0-body_blocked.json"]
 
 
 def test_each_condition_runs_as_evals_table_says() -> None:

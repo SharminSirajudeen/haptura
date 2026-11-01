@@ -13,8 +13,22 @@ uv run --locked mypy
 npx --no jscpd
 node test/floorguard.test.js
 node test/floorguard.js
-uv run --locked python -m pytest -q
+# The test files that run whole episodes run only when the change can reach them: through gate/, the file itself, a
+# conftest.py, EVAL.md, the Python version, pytest's config, uv.lock or this script, committed or not (Sharmin, 1 Nov,
+# #66). A moved file counts at both paths. With no origin/main to compare against, every one runs.
+episodes="tests/test_e2e.py tests/test_eval_table.py tests/test_agent.py tests/test_demo.py tests/test_run.py"
+skip=""
+if changed=$(git diff --no-renames --name-only origin/main...HEAD 2>/dev/null && git diff --no-renames --name-only HEAD); then
+  for f in $episodes; do
+    grep -qxE "gate/.*|$f|(.*/)?conftest\.py|EVAL\.md|\.python-version|pyproject\.toml|pytest\.ini|tox\.ini|setup\.cfg|uv\.lock|scripts/gate\.sh" \
+      <<<"$changed" || skip="$skip $f"
+  done
+  echo "episode tests skipped:${skip:- none} (each runs when the change touches gate/, the file itself, a conftest.py, EVAL.md, .python-version, pyproject.toml, pytest.ini, tox.ini, setup.cfg, uv.lock or scripts/gate.sh)"
+else
+  echo "episode tests: every one runs, there is no origin/main to compare with"
+fi
+uv run --locked python -m pytest -q $(for f in $skip; do echo "--ignore=$f"; done)
 # Chromium comes from `npx playwright install chromium`, or from /opt/pw-browsers where a container ships it
 if [ -d /opt/pw-browsers ]; then export PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers; fi
-npx playwright test -c web/playwright.config.js --reporter=dot
+npx playwright test -c web/playwright.config.js --reporter=dot --workers=2
 node test/mutants.js
