@@ -1,5 +1,5 @@
 # Muse Wonder probes of 1 Nov 2026, run by the Mac session in its scratchpad (docs/pilot-runs.md,
-# runs 39 and 40). One line per cached reply, oldest first: file prefix, time, response id, status,
+# runs 41 and 42). One line per cached reply, oldest first: file prefix, time, response id, status,
 # incomplete_details, output item types, the cap sent, previous_response_id, store, usage.
 # The first 11 lines are probe A (cap 400, one gated+colour episode on seed 1000, feasible); the last
 # 2 are probe B (cap 1500, the same episode).

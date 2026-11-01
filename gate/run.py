@@ -43,9 +43,9 @@ SETUP = {  # condition: (gated, tracker, policy), EVAL.md's table plus the free 
     "rules-only+truth": (True, "truth", "rules"),
 }
 FREE = "rules-only+truth"
-# docs/pilot-runs.md, run 42, the means over its 22 Muse calls: (input, of which cached, output)
+# docs/pilot-runs.md, run 44, the means over its 22 Muse calls: (input, of which cached, output)
 MUSE_TOKENS_PER_TURN = (1629, 968, 271)
-# the means over run 42's 20 SAM and 17 Muse requests; the projection counts one Muse turn a block
+# the means over run 44's 20 SAM and 17 Muse requests; the projection counts one Muse turn a block
 SECONDS_PER_BLOCK = {"sam": 3.15, "muse": 3.44}
 LOGS = Path("results/logs")
 

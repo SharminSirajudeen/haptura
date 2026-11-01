@@ -11,7 +11,7 @@ Each condition that runs uses the same episodes: each **seed** runs **all six ca
   and the seeds were chosen before any run on them (development ran all six cases up to seed 399 and blocked up to
   999; `docs/pilot-runs.md`, run 30). No code changes because of what these seeds show: before the kill test they
   are run only by run 30's free check and the kill-line test. Seed 1000 is not in the test because a paid Wonder
-  probe ran on it on 1 Nov (`docs/pilot-runs.md`, run 39); the test is half size by a spend ruling of 1 Nov (#59),
+  probe ran on it on 1 Nov (`docs/pilot-runs.md`, run 41); the test is half size by a spend ruling of 1 Nov (#59),
   which leaves 1001–1009 unrun. The agent is Muse Wonder (`muse-wonder-1.0`) at low reasoning effort with
   a cap of 2,000 output tokens per reply, and every turn is sent the whole conversation as input items,
   without the model's reasoning items.
@@ -68,7 +68,7 @@ Two disjoint numbers, per condition, each with a 95% Wilson interval at the run'
 - how often Muse overruled the rule policy's advice, and how often the overrule was right against this table;
 - input tokens, output tokens and SAM frames per episode, and **dollars per correct decision** (all Muse and SAM
   spend of the condition / its episodes that pass the table), with input and output tokens per correct decision
-  beside it (the pilot found 6.0 input tokens per output token, `docs/pilot-runs.md` run 42, so output alone would understate it). SAM frames
+  beside it (the pilot found 6.0 input tokens per output token, `docs/pilot-runs.md` run 44, so output alone would understate it). SAM frames
   are billed at a 50-frame minimum per call; the eval reports billed frames.
 
 ### Kill rule, numeric
@@ -84,7 +84,7 @@ arena's claim did not hold on these seeds.
 SAM: $0.20 per 1k frames, 50-frame minimum per call, one call per block. Muse Wonder: $4.00 / $0.20 / $20.00 per
 million input / cached input / output tokens (`docs/api.md`), the cached tokens being part of the input count.
 Projection = episodes × blocks per episode (from the rules-only runs with perfect tracking) × ($0.01 + Muse tokens
-per turn × price), with tokens per turn and seconds per block measured in the pilot (`docs/pilot-runs.md`, run 42).
+per turn × price), with tokens per turn and seconds per block measured in the pilot (`docs/pilot-runs.md`, run 44).
 
 ## Constants frozen with this file (`gate/constants.py`)
 BLOCK_STEPS=30; FPS=10; W=H=128; CELL_PX=2; ELEMENT_PX=8; MAX_LAG=4; PERMS=9999; PROBE_STEPS=15; P_NOOP=0.3;
