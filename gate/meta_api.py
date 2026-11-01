@@ -20,7 +20,6 @@ from typing import Any, cast
 
 import httpx
 import numpy as np
-from openai import OpenAI, Stream
 
 from gate.constants import MUSE_EFFORT, MUSE_MAX_OUTPUT_TOKENS
 from gate.types import Frames, Tracks
@@ -46,6 +45,9 @@ def post_json(
     Returns the parsed JSON object, or with `stream=True` an iterator of the parsed `data:`
     events in order, ending at `[DONE]`. `http` lets a test substitute a transport.
     """
+    # here, not at the top: a process that calls no model skips the import
+    from openai import OpenAI, Stream
+
     client = OpenAI(api_key=os.environ["META_API_KEY"], base_url=BASE_URL, http_client=http)
     if not stream:
         return cast(dict[str, Any], client.post(path, cast_to=object, body=body))

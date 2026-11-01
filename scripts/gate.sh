@@ -10,7 +10,7 @@ uv sync --locked --quiet
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv run --locked mypy
-npx --no jscpd
+node_modules/.bin/jscpd
 node test/floorguard.test.js
 node test/floorguard.js
 # The test files that run whole episodes run only when the change can reach them: through gate/, the file itself, a
@@ -30,5 +30,5 @@ fi
 uv run --locked python -m pytest -q $(for f in $skip; do echo "--ignore=$f"; done)
 # Chromium comes from `npx playwright install chromium`, or from /opt/pw-browsers where a container ships it
 if [ -d /opt/pw-browsers ]; then export PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers; fi
-npx playwright test -c web/playwright.config.js --reporter=dot --workers=2
+node_modules/.bin/playwright test -c web/playwright.config.js --reporter=dot --workers=2
 node test/mutants.js

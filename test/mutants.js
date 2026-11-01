@@ -5,7 +5,7 @@
 // An entry with a `cmd` runs only the test it names: the last argument of `cmd`, the file, becomes the node `expect`
 // names (any [param] kept), or for a Playwright entry (`expect: <spec>:<line>:<col> › <title>`) `<spec>:<line>`, which
 // runs the tests declared on that line. Its control runs the same command. An entry without one runs its file.
-// The copy leaves `.venv` behind and `uv run` builds a fresh one there: a copied venv keeps the original tree on its
+// The copy leaves `.venv` behind and uv builds a fresh one there: a copied venv keeps the original tree on its
 // path, and every mutant then survives.
 //   node test/mutants.js                     every mutant (the `development` gate, and the optional full run when live)
 //   EG_MUTANTS=changed node test/mutants.js  only those whose file or test differs from origin/main; every one when the
@@ -24,8 +24,10 @@ const LIMIT = 300000;   // a runaway mutant is killed here
 
 const count = (text, s) => text.split(s).length - 1;
 // Python's bytecode cache is keyed on the source's size and whole-second mtime: a write with the size and mtime of
-// the last compiled version runs that version's code (a stale mutant or the original). Nothing is written, so
-// every run compiles the file on disk. A child started with a scrubbed environment would bring the defect back.
+// the last compiled version runs that version's code (a stale mutant or the original). Nothing of the tree is
+// written, so every run compiles the file on disk; the only bytecode written is third-party, by
+// `uv sync --compile-bytecode` into each shard's .venv. A child started with a scrubbed environment would bring
+// the defect back.
 const ENV = Object.assign({}, process.env, { PYTHONDONTWRITEBYTECODE:'1' });
 const sh = (dir, cmd) => spawnSync(cmd, { cwd:dir, shell:true, encoding:'utf8', timeout:LIMIT, env:ENV });
 const run = (dir, m) => { if (m.before) sh(dir, m.before); return m.cmd ? sh(dir, m.cmd) : spawnSync(process.execPath, [m.mustFail], { cwd:dir, encoding:'utf8', timeout:LIMIT, env:ENV }); };
@@ -67,6 +69,9 @@ function shard(k, n){
     fs.cpSync(root, dir, { recursive:true, filter:src => !(skipRoot.has(path.relative(root, src)) || skipAny.test(path.basename(src))) });
     // read-only trees are shared, not copied: the API cache and the run records can be large and the tests only read them
     for (const d of ['node_modules', 'cache', 'results']) if (fs.existsSync(path.join(root, d))) fs.symlinkSync(path.join(root, d), path.join(dir, d), 'dir');
+    // third-party bytecode, written once a shard by uv into .venv; the tree is installed editable, outside
+    // site-packages, so none of it is compiled
+    sh(dir, 'uv sync --locked --compile-bytecode --quiet');
     const test = m => m.cmd || m.mustFail;
     [...new Set(SELECTED.map(test))].forEach((t, i) => {
       if (i % n !== k) return;

@@ -1,7 +1,8 @@
 """The parser and the price, by hand. No network."""
 
+import httpx
 import pytest
-from openai import OpenAIError
+from openai import APIConnectionError, OpenAIError
 
 from phone import muse
 from phone.muse import PRICES, error_label, parse
@@ -35,6 +36,17 @@ def test_an_error_records_its_class_never_its_text() -> None:
     assert error_label(e) == "OpenAIError"
     setattr(e, "status_code", 401)  # what openai's APIStatusError carries
     assert error_label(e) == "OpenAIError 401"
+
+
+def test_a_failed_call_becomes_an_error_record(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail(*_: object, **__: object) -> None:
+        raise APIConnectionError(request=httpx.Request("POST", "https://x"))
+
+    monkeypatch.setattr(muse, "call", fail)
+    p = muse.propose("t", b"", (1, 1))
+    assert (p.action, p.x, p.y, p.reason, p.tokens_in) == ("error", -1, -1, "APIConnectionError", 0)
+    a = muse.next_action("t", [], "", "", b"")
+    assert (a.kind, a.arg, a.reason, a.tokens_in) == ("error", "", "APIConnectionError", 0)
 
 
 def test_cost_prices_input_and_output_separately() -> None:
