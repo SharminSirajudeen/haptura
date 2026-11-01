@@ -7,7 +7,7 @@
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 
-// maxBuffer: a results commit makes a diff of tens of MiB, and execFileSync's default 1 MiB turned it into "could not read"
+// maxBuffer: a results commit makes a diff of about 10 MiB, and execFileSync's default 1 MiB turned it into "could not read"
 const git = (args) => {
   try { return execFileSync('git', args, { encoding:'utf8', stdio:['ignore','pipe','pipe'], maxBuffer:1 << 30 }); }
   catch (e){ return null; }

@@ -130,21 +130,18 @@ prices a reply as (input − cached) × $4/M + cached × $0.20/M + output × $20
 
 ## Repeatability: the same request, different replies (the kill test, 1 Nov 2026; docs/pilot-runs.md, runs 54–57)
 A cache file is named by the SHA-256 of its request (for SAM, of the model, the prompt and the frames), so a name that
-two conditions' caches both hold is a request they sent alike. The kill test's three caches (`results/kill-cache/`)
-hold 813, 905 and 405 files, 1,888 distinct names, and 178 names are in two or more caches. Of those 178, **175 hold
-different replies** and 3 the same. A merge of the three result branches reported 175 add/add conflicts in
-`cache/`, the same number.
-- **SAM 3.1:** the two SAM conditions sent 121 requests alike; 118 got different raw replies. The clip is encoded by
-  `gate/video.py` with ffmpeg's libx264 on one thread, and encoding a test clip twice gave the same bytes. Read as
-  `sam_track` reads them (a box for each frame and object id), the boxes are identical in 38 of the 118 and differ in
-  80: the set of (frame, id) pairs differs in 25, the number of tracked objects in 7, and the largest difference in any
-  box coordinate, per request, has a median of 1 px and a maximum of 82 px (10 px or more in 12 of the 80).
-- **Muse Wonder:** all three conditions sent 57 requests with the same body, and `temperature: 0.0` is echoed in
-  every one of the 171 replies. They can only be first turns: a later turn carries the ids of the replies before it.
-  Input tokens are the same in all 57. The tool call (name and arguments) is the same in 48 and differs in 9, for
-  example `run_experiment` with `p_noop` 0.2 in two conditions and 0.25 in the third, or `n` 30 against 20. Output
-  tokens are equal in 10 of the 57 and reasoning tokens in 31; the largest spread of output tokens among the three
-  replies is 60.
+two conditions' caches both hold is a request they sent alike. For SAM that means the same frames: the clip sent also
+carries the encoder's version strings, and no run recorded its ffmpeg build. Counted by `results/kill-cache/count.py`
+from the kill test's three archives: 813, 905 and 405 files, 1,888 distinct names, 178 in two or more caches. Of
+those 178, **175 hold replies that differ byte for byte** and 3 the same; `git merge-tree` of the two SAM conditions'
+result branches reports the same 175 names as add/add conflicts.
+- **SAM 3.1:** the two SAM conditions sent 121 requests alike; 118 got different replies. Read with `sam_track`'s own
+  patterns (a box for each frame and object id), the boxes differ in 80 of the 118; the largest difference in any box
+  coordinate, per request, is 1 px at the median and 82 px at most.
+- **Muse Wonder:** all three conditions sent 57 requests alike, and `temperature: 0.0` is echoed in all 171 replies.
+  They can only be first turns: a later turn carries the ids of the replies before it. Every reply carries its own
+  ids and timestamps, so all 57 differ byte for byte; what was generated (the message text, the tool calls, the
+  output and reasoning token counts) differs in 51, and the tool call (name and arguments) in 9.
 
 A cache folder holds one reply per request name, so it can hold only one of the replies the conditions got. The kill
 test keeps one archive per condition, and a replay of each rebuilds its logs byte for byte (run 57).
@@ -158,5 +155,5 @@ test keeps one archive per condition, and a replay of each rebuilds its logs byt
 3. Muse Spark per turn (28 Oct): ~1k input + ~160 output tokens, ~8 turns ≈ $0.016 per episode; latency 1.3–12 s per
    turn. Muse Wonder per turn (the pilot, run 45): 1,629 input tokens (968 cached) + 271 output, $0.0083, 3.44 s, and
    one Muse turn per block (22 turns, 22 blocks).
-4. **The kill test's numbers are one sample of two services that do not repeat themselves.** A replay of a
+4. **The kill test's numbers are one sample of two services that do not reliably repeat themselves.** A replay of a
    condition's own archive reproduces its logs; a second paid run would not be expected to.

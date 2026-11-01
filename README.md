@@ -6,9 +6,9 @@ stop, probe or decline when it cannot.**
 An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). Status: in progress. The phone and
 desktop owner gates run and are measured (below), and a multi-step Muse agent runs behind the phone gate (a bench
 of 72 scored runs on Muse Spark and Muse Wonder, below). The arena, its agent loop, its evaluation and its runner are built
-and tested offline. The arena's one paid run (the kill test) finished on 1 Nov 2026. EVAL.md's verdict on it is
-Rethink: the arena's claim did not hold on these seeds. The gate's effect passed by a wide margin; SAM's lead over
-a colour tracker did not clear its bar (below).
+and tested offline. The arena's one paid evaluation run (the kill test) finished on 1 Nov 2026. EVAL.md's verdict on
+it is Rethink: the arena's claim did not hold on these seeds. The gate's effect passed, 0.42 against a bar of 0.10;
+SAM's lead over a colour tracker did not clear its bar (below).
 
 ## The model proposes each touch; the gate grants it
 
@@ -186,8 +186,8 @@ not a benchmark number. `uv run python -m mac.owner` reruns it (needs the Access
 
 ## The arena gate: prove control before acting
 
-The main product. It is built and tested offline. Its one paid run, the kill test, finished on 1 Nov 2026; its
-result and its verdict are below.
+The main product. It is built and tested offline. Its one paid evaluation run, the kill test, finished on 1 Nov
+2026; its result and its verdict are below.
 
 **The world** (`gate/arena.py`): a 128×128 arena. The agent has one actuator, `noop | up | down | left | right`, and
 at most one of up to 8 elements obeys it. The others are:
@@ -256,24 +256,27 @@ episodes a condition, each condition run once. `results/table.md`, written by `g
 
 Kill rule, seeds 1001-1019: paired difference (gated+SAM - no-gate+SAM) = 0.421 over 114 pairs (rethink at <= 0.1); identities kept through occlusion, SAM 0.635 - colour 0.526 = 0.109 (rethink below 0.2). **Rethink.**
 
-**In plain words.** EVAL.md fixed the kill rule before the run: Rethink if the gate lifts the six-case score by 0.10 or
+**In plain words.** EVAL.md fixed the kill rule before the run (it is unchanged since 6bb0dcd, the commit all three
+conditions ran from; its header's "not yet frozen" predates the run): Rethink if the gate lifts the six-case score by 0.10 or
 less over the same agent without it, or if SAM keeps identities through occlusion less than 0.20 more often than the
 colour tracker does. **The verdict is Rethink: the arena's claim did not hold on these seeds**, the sentence EVAL.md
 says the README must state. One arm of the rule passed and one failed:
-- **The gate's effect passed, by a wide margin.** The six-case score is 0.70 with the gate and 0.28 without it, a
-  paired difference of 0.421 over 114 pairs against a bar of 0.10. Episodes that ended in a false action fell from 74
+- **The gate's effect passed.** The six-case score is 0.70 with the gate and 0.28 without it, a paired difference
+  of 0.421 over 114 pairs against a bar of 0.10. Episodes that ended in a false action fell from 74
   of 114 to 27.
 - **SAM's lead over the colour tracker did not clear its bar.** Identities kept through occlusion, probe and act blocks
   together: gated+SAM 1179 of 1857 = 0.635, gated+colour 1080 of 2054 = 0.526, a lead of 0.109 against a bar of 0.20.
   The six-case score is 0.70 with SAM and 0.54 with the colour tracker; a correct decision cost $0.1155 with SAM and
-  $0.0867 with the colour tracker.
+  $0.0867 with the colour tracker at the runner's count ($0.1014 and $0.0698 from the cache files).
 - **The feasible case came out lower with the gate:** 8 of 19 episodes succeeded (0.42), against 10 of 19 without it
   (0.53) and 7 of 19 with the colour tracker (0.37). At n = 19 the intervals overlap widely and two episodes separate
   the first two, so the table does not settle whether the gate costs feasible successes.
-- **The weakest case is body_remap:** with gated+SAM 4 of 19 episodes succeeded and 13 acted on the wrong element.
+- **The weakest case is body_remap:** with gated+SAM 3 of 19 episodes were right by EVAL.md (4 reached the goal, one
+  without the body_changed diagnosis EVAL.md requires) and 13 ended in a false act.
 - **The cost:** the runner counted $9.24, $14.31 and $5.38, $28.93 in all, with every call at full price, the ones
-  served from `cache/` too. The requests that reached the API come to $23.87, computed from the cache files. Neither
-  figure is a bill.
+  served from `cache/` too. The requests that reached the API come to $23.87, computed from the cache files by
+  `results/kill-cache/count.py`. Neither figure is a bill. No-gate+SAM's budget was raised from $13 to $16 when it
+  was restarted: it cost more than $13 (run 55).
 
 **Measured before the kill test, at no cost** (`docs/pilot-runs.md`, runs 22, 23, 26 and 27):
 - **The offline floor.** The rule policy with perfect tracking scores 120 of 120 right by EVAL.md's table, on
@@ -307,8 +310,9 @@ response is cached under `cache/`. With `REPLAY=1` a cache miss is an error inst
 
 **Reproducing the kill test.** Each condition's cache is `results/kill-cache/<condition>.tar.gz`, with its SHA-256 and
 the replay command in `results/kill-cache/README.md`. There is one per condition because SAM 3.1 and Muse Wonder did
-not repeat themselves: of the requests that two or more conditions sent alike, 175 got different replies
-in different conditions, so one `cache/` cannot hold all three (`docs/api.md`). Replaying all 114 episodes of each
+not reliably repeat themselves: of the 178 requests that two or more conditions sent alike, 175 got replies that
+differ byte for byte, and 169 differ in content (118 of 121 SAM replies, 51 of 57 Muse replies), so one `cache/`
+cannot hold all three (`docs/api.md`; counted by `results/kill-cache/count.py`). Replaying all 114 episodes of each
 condition from its own archive rebuilt all 342 logs byte for byte, offline and with no key (`docs/pilot-runs.md`,
 run 57). The runner's projection was $8.654, $8.654 and $3.914, $21.22 in all (runs 45 and 48); the runs cost
 $9.24, $14.31 and $5.38 as the runner counts them (runs 54 to 56).
@@ -316,13 +320,14 @@ $9.24, $14.31 and $5.38 as the runner counts them (runs 54 to 56).
 **Limits:**
 - A synthetic 128×128 arena, with four actions plus no-op, up to 8 elements and the six case types. Nothing outside
   them is claimed.
-- One run: 19 seeds, one episode per seed and case, each condition once. Muse Wonder at temperature 0 and SAM 3.1
-  gave different replies to identical requests (`docs/api.md`), so the table is one sample of each: the
-  committed caches reproduce it, and a second paid run would not be expected to.
-- The 2,000-token output cap cut off 31 of no-gate+SAM's 426 Muse replies, in 13 episodes (6 blocked, 7 body_blocked),
-  1 of gated+SAM's 376 and none of gated+colour's 405 (counted from the caches). Without those 13 episodes and their
-  gated+SAM partners the paired difference is 0.406 over 101 pairs; if the baseline had been right in all 13, it
-  would still be 0.351 or more (`docs/pilot-runs.md`, run 57).
+- One run: 19 seeds, one episode per seed and case, each condition once. Muse Wonder at temperature 0, given the same
+  request, and SAM 3.1, given the same frames, often replied differently (`docs/api.md`), so the table is one
+  sample of each: the committed caches reproduce it, and a second paid run would not be expected to.
+- The 2,000-token output cap cut off 31 of no-gate+SAM's 426 Muse replies, 1 of gated+SAM's 376 and none of
+  gated+colour's 405 (`results/kill-cache/count.py`). A replay with that script places the 31 in 13 episodes (6
+  blocked, 7 body_blocked; named in `docs/pilot-runs.md`, run 57). Without those 13 episodes and their gated+SAM
+  partners the paired difference is 0.406 over 101 pairs; if the baseline had been right in all 13, it would still
+  be 0.351.
 - The diagnosis expects a tracker to read an element at a wall within STALE_TOL (3 px) of where the arena holds it.
   The colour tracker reads it 0.5 px off (run 26); SAM's error at a wall is not measured.
 
