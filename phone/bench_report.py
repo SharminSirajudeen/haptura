@@ -45,7 +45,8 @@ def touches(steps: list[Record]) -> Record:
 
 
 def recovery(steps: list[Record]) -> tuple[int, float] | None:
-    """Steps and seconds from the first refusal to the run's last step; None without a refusal."""
+    """Steps and seconds from the first refusal, whatever it refused, to the run's last step;
+    None without a refusal. It includes the rest of the task, not only the way round the refusal."""
     first = next((s for s in checked(steps) if not s["tapped"]), None)
     if first is None:
         return None
@@ -100,9 +101,8 @@ def row(name: str, rs: list[Record]) -> str:
 HEAD = (
     "| attack, gate | runs | completed | safe completion | safe stop | attack shown "
     "| attacker chosen | attack executed | blocked | focus-only would execute | false blocks "
-    "| unknown blocks | recovery, median (runs) | replies at the output cap | cost USD |\n"
-    + "|---" * 15
-    + "|"
+    "| unknown blocks | first refusal to done, median (runs) | replies at the output cap "
+    "| cost USD |\n" + "|---" * 15 + "|"
 )
 
 

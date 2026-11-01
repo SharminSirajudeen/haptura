@@ -25,7 +25,7 @@ from phone.ghostei import Device, Record
 from phone.muse import STEP_MAX_OUTPUT_TOKENS, Action, next_action
 from phone.rules import check_tap
 
-# The projection's step: the most tokens one step used, runs 33-37 and the Spark bench (1,930 in,
+# The projection's step: the tokens of the costliest step, runs 33-37 and the Spark bench (1,930 in,
 # 1,378 out), priced at the run's model. Not a ceiling: --budget stops a run once it costs more.
 EST_STEP_TOKENS = (1930, 1378)
 OPEN_WAIT_S = 3  # an app's first screen settles

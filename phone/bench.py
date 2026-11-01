@@ -34,6 +34,11 @@ WAKE = ("settings put system screen_off_timeout 2147483647", "input keyevent WAK
 SEGMENT_S = 170  # screenrecord stops at 180 s; segments are chained
 
 
+def orphans(out: Path, todo: list[Record]) -> list[str]:
+    """Runs still to do whose step file exists: cut off mid-way, with spend the ledger lacks."""
+    return [p["id"] for p in todo if (out / f"{p['id']}.jsonl").exists()]
+
+
 def plan(case_ids: list[int], repeats: int) -> list[Record]:
     """Every run of the matrix in a fixed shuffled order; attack runs cycle through the dialogs."""
     runs = [
@@ -78,6 +83,13 @@ def attacker(case: Record | None, dev: ghostei.Device, seen: Record) -> Callable
     return fire
 
 
+def segments(flag: str, part: str) -> str:
+    """The device-side loop: one segment after another while `flag` exists. A segment that fails
+    (the screen off: exit 218, measured) ends it, so it never spins writing empty files."""
+    one = f"screenrecord --time-limit {SEGMENT_S} {part}-$i.mp4 || break"
+    return f"i=0; while [ -e {flag} ]; do {one}; i=$((i+1)); done"
+
+
 @contextmanager
 def recording(folder: Path | None, name: str) -> Iterator[None]:
     """The emulator's screen, chained in SEGMENT_S segments, pulled to `folder` afterwards."""
@@ -86,9 +98,7 @@ def recording(folder: Path | None, name: str) -> Iterator[None]:
         return
     flag, part = "/sdcard/cg_rec_on", "/sdcard/cg_part"
     adb.shell(f"rm -f {part}-*.mp4; touch {flag}")
-    one = f"screenrecord --time-limit {SEGMENT_S} {part}-$i.mp4"
-    loop = f"i=0; while [ -e {flag} ]; do {one}; i=$((i+1)); done"
-    rec = subprocess.Popen([adb.ADB, "shell", loop])
+    rec = subprocess.Popen([adb.ADB, "shell", segments(flag, part)])
     try:
         yield
     finally:
@@ -126,7 +136,7 @@ def run_one(
     r = agent.Run(task["text"], task["apps"], p["gate"], dev, adb.screen_size())
     agent.start(task["apps"], case is not None)
     t0, recs = time.time(), []
-    folder = a.record if case else None
+    folder = a.record / a.out.name if case and a.record else None
     with recording(folder, p["id"]), (a.out / f"{p['id']}.jsonl").open("x") as f:
         for rec in agent.run(r, next_action, a.steps, a.budget, attacker(case, dev, seen)):
             f.write(json.dumps(rec) + "\n")
@@ -146,6 +156,10 @@ def run_all(a: argparse.Namespace) -> int:
     ledger = a.out / "runs.jsonl"
     done = [json.loads(ln) for ln in ledger.open()] if ledger.exists() else []
     todo = [p for p in runs if p["id"] not in {d["id"] for d in done}]
+    cut = orphans(a.out, todo)
+    if cut:
+        print(f"step files with no ledger row (a run cut off; its spend is not counted): {cut}")
+        return 1
     spent = sum(d["cost_usd"] for d in done)
     step = muse.usd(*agent.EST_STEP_TOKENS)
     ceiling = len(todo) * a.steps * step

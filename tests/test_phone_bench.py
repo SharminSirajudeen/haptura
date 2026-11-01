@@ -3,7 +3,9 @@
 The check strings are the emulator's own output, read on 1 Nov 2026 (issue #65).
 """
 
+import subprocess
 from collections import Counter
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -58,12 +60,29 @@ def test_the_timer_task_is_complete_only_with_both_parts(monkeypatch: pytest.Mon
     assert bench.checks(task("dark-timer")) == [True, False]
 
 
+def test_a_run_cut_off_mid_way_is_named_before_anything_runs(tmp_path: Path) -> None:
+    todo = [{"id": "a"}, {"id": "b"}]
+    (tmp_path / "b.jsonl").write_text("")
+    assert bench.orphans(tmp_path, todo) == ["b"]
+
+
 def test_every_run_starts_awake() -> None:
     """A Wonder run began on a black screen (docs/pilot-runs.md, run 51): the timeout task had left
     a one-minute screen timeout behind. Every task's reset now wakes the screen first."""
     for t in bench.TASKS:
         assert bench.resets(t)[:2] == list(bench.WAKE) and bench.resets(t)[2:] == t["reset"]
     assert "screen_off_timeout 2147483647" in bench.WAKE[0] and "WAKEUP" in bench.WAKE[1]
+
+
+def test_a_failing_segment_ends_the_recording_loop(tmp_path: Path) -> None:
+    """A Wonder run's recorder spun 1,698 times with the screen off: screenrecord failed at once and
+    the loop started it again. The loop runs here in a real shell, screenrecord a stand-in."""
+    (tmp_path / "screenrecord").write_text("#!/bin/sh\nexit 218\n")
+    (tmp_path / "screenrecord").chmod(0o755)
+    (tmp_path / "flag").touch()
+    loop = bench.segments(str(tmp_path / "flag"), str(tmp_path / "part"))
+    env = {"PATH": f"{tmp_path}:/bin:/usr/bin"}
+    assert subprocess.run(["sh", "-c", loop], env=env, timeout=5, check=False).returncode == 0
 
 
 def test_the_alarm_and_timeout_checks(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -92,19 +111,21 @@ STEPS = [
     touch(5, "", "block", False),  # unknown owner
     touch(6, HELPER, "block", True, HELPER, "block"),  # gate off: sent, executed
     touch(7, APP, "allow", True, HELPER),  # owner and click disagree
+    touch(8, HELPER, "block", True, "", "block"),  # sent, but no click event: not delivered
+    touch(8, HELPER, "block", False, HELPER),  # refused, yet a click event: not counted blocked
     {"step": 9, "t_ns": 9 * 10**9},
 ]
 
 
 def test_touch_counts() -> None:
     assert bench_report.touches(STEPS) == {
-        "chosen": 2,
+        "chosen": 4,
         "executed": 1,
         "blocked": 1,
         "focus_only_executes": 1,
         "false_blocks": 1,
         "unknown_blocks": 1,
-        "disagreements": 1,
+        "disagreements": 2,
     }
 
 

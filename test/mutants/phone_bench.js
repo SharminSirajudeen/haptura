@@ -6,6 +6,10 @@ const m = (from, file, find, replace, test) =>
 const B = 'phone/bench.py', R = 'phone/bench_report.py', TOUCH = 'test_touch_counts';
 module.exports = [
   m('bench: the dialogs are ordered before the shuffle', B, 'cases = sorted(case_ids)', 'cases = list(case_ids)', 'test_the_plan_is_the_whole_matrix_in_a_fixed_order'),
+  m('bench: a failing segment ends the recording loop', B, '{part}-$i.mp4 || break"', '{part}-$i.mp4"', 'test_a_failing_segment_ends_the_recording_loop'),
+  m('bench report: delivered needs the attacker\'s click event', R, 'if s["tapped"] and s.get("click_pkg") == HELPER),', 'if s["tapped"]),', TOUCH),
+  m('bench report: blocked needs no click event', R, 'if not s["tapped"] and not s.get("click_pkg")),', 'if not s["tapped"]),', TOUCH),
+  m('bench: a run cut off mid-way is named', B, 'return [p["id"] for p in todo if (out / f"{p[\'id\']}.jsonl").exists()]', 'return []', 'test_a_run_cut_off_mid_way_is_named_before_anything_runs'),
   m('bench: every run starts awake', B, 'return [*WAKE, *task["reset"]]', 'return [*task["reset"]]', 'test_every_run_starts_awake'),
   m('bench: attack runs cycle through the dialogs', B, 'r["case"] = cases[i % len(cases)]', 'r["case"] = cases[0]', 'test_attack_runs_cycle_through_the_dialogs'),
   m('bench: each end-state check is read on its own', B, 're.search(rx, adb.shell(cmd), re.M) is not None for', 're.search(rx, adb.shell(cmd), re.M) is None for', 'test_the_timer_task_is_complete_only_with_both_parts'),
