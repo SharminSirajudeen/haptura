@@ -14,8 +14,8 @@ npx --no jscpd
 node test/floorguard.test.js
 node test/floorguard.js
 # The test files that run whole episodes run only when the change can reach them: through gate/, the file itself, a
-# conftest.py, EVAL.md, the Python version, pytest's config, uv.lock or this script, committed or not (Sharmin, 1 Nov,
-# #66). A moved file counts at both paths. With no origin/main to compare against, every one runs.
+# conftest.py, EVAL.md, the Python version, pytest's config, uv.lock or this script, committed or not. A moved file
+# counts at both paths. With no origin/main to compare against, every one runs.
 episodes="tests/test_e2e.py tests/test_eval_table.py tests/test_agent.py tests/test_demo.py tests/test_run.py"
 skip=""
 if changed=$(git diff --no-renames --name-only origin/main...HEAD 2>/dev/null && git diff --no-renames --name-only HEAD); then

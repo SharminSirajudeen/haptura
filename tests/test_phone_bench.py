@@ -1,6 +1,6 @@
 """The bench's plan, end-state checks and metrics, on hand-built inputs. No device, no model.
 
-The check strings are the emulator's own output, read on 1 Nov 2026 (issue #65).
+The check strings are the emulator's own output, read on 1 Nov 2026.
 """
 
 import subprocess

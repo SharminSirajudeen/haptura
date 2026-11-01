@@ -10,7 +10,7 @@
 //   node test/mutants.js                     every mutant (the `development` gate, and the optional full run when live)
 //   EG_MUTANTS=changed node test/mutants.js  only those whose file or test differs from origin/main; every one when the
 //                                            list, runner or harness changed (the `live` gate: package.json's gateMode)
-// One shard by default, for quiet (Sharmin, 1 Nov); EG_MUTANT_SHARDS=n runs n at once, at most one a core. Each
+// One shard by default, to keep the machine quiet; EG_MUTANT_SHARDS=n runs n at once, at most one a core. Each
 // shard is this file again, with its own copy of the tree.
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path');
