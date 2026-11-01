@@ -35,3 +35,13 @@ The step-by-step record is `../agent/r4-attack-gated-recorded.jsonl`.
 | `agent-attack-gated-done.log` | the console: one line per step with the verdict, the price and Muse's reason |
 
 The step-by-step record is `../agent/r5-attack-gated-recorded.jsonl`.
+
+## The keyboard lab: a touch on another app's not-focusable window, ungated and gated (recorded 1 Nov 2026)
+
+| file | what |
+|---|---|
+| `lab-ungated-key-360x640.mp4` | One `ungated-key` trial of `phone/lab.py` (record `../lab/video/trials.jsonl`), `show_touches` on. Seconds 5.0–19.4 of the 720×1280 recording (the original is not in the repository), scaled to 360×640, no sound. Settings' search page with the keyboard up and the field empty; about 5 s in, the touch on the `g` key shows and `g` appears in the field. Usable throughout. |
+| `lab-gated-key-360x640.mp4` | One `gated-key` trial, the same way: the same page and keyboard; the gate refuses the touch (owner `com.google.android.inputmethod.latin`, the record's verdict), no touch marker appears and the field stays empty to the end. Usable throughout. |
+
+**On screen in both:** the keyboard is Gboard (Google's), with its toolbar icons, one of them a G, throughout. The
+seconds cut from the start of each recording held Settings' home page with its "Google" row.

@@ -58,8 +58,8 @@ function shard(k, n){
     const skipRoot = new Set(['node_modules', '.git', 'dist', '.venv', 'cache', 'results']);
     const skipAny = /^(?:__pycache__|\.pytest_cache|\.ruff_cache|\.mypy_cache)$/;
     fs.cpSync(root, dir, { recursive:true, filter:src => !(skipRoot.has(path.relative(root, src)) || skipAny.test(path.basename(src))) });
-    // read-only trees are shared, not copied: the API cache can be large and the tests only read it
-    for (const d of ['node_modules', 'cache']) if (fs.existsSync(path.join(root, d))) fs.symlinkSync(path.join(root, d), path.join(dir, d), 'dir');
+    // read-only trees are shared, not copied: the API cache and the run records can be large and the tests only read them
+    for (const d of ['node_modules', 'cache', 'results']) if (fs.existsSync(path.join(root, d))) fs.symlinkSync(path.join(root, d), path.join(dir, d), 'dir');
     if (k === 0) [...new Set(SELECTED.map(m => m.mustFail))].forEach(t => {
       const r = run(dir, SELECTED.find(m => m.mustFail === t));
       if (r.status !== 0){ fails++; console.log('FAIL mutants: ' + t + ' is red before any mutation'); }

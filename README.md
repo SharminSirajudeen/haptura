@@ -37,7 +37,10 @@ what it changed: `docs/pilot-runs.md`. A 25-second clip of the shipped gate bloc
 **Read the block counts carefully:** in these cases the attacker's window also held focus, so "blocked 33 of 33" does
 not by itself show that an overlay without focus is caught. What does: the parser's tests, and one capture where the
 window list names the keyboard's not-focusable window at a point the accessibility dump attributes to the app below
-(`docs/pilot-runs.md`, run 16). No not-focusable attacker overlay was run through the gate. A security
+(`docs/pilot-runs.md`, run 16), and the keyboard lab (`results/phone/lab/`): with Settings' search page holding focus,
+a touch on a key reached the keyboard's uid and typed a letter in 20 of 20 ungated trials; gated, with no allowlist,
+the gate named the keyboard and sent nothing in 20 of 20, where a focused-window check allowed all 20. The keyboard
+stands in for a not-focusable window of another app; no hostile not-focusable overlay was run. A security
 review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the
 runner now reads every owner from the input dispatcher's window list, keyed by uid, and judges and taps back to back
 (`phone/windows.py`, `phone/ghostei.py`; `docs/pilot-runs.md`, run 16); the table above was measured with it. The phone
