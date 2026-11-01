@@ -132,8 +132,8 @@ prices a reply as (input − cached) × $4/M + cached × $0.20/M + output × $20
 1. **A 31-frame block is billed as 50 frames** (`video_frames_processed: 50`). A 49-step block would cost the same,
    but the arena cannot build a scenario with it (`docs/pilot-runs.md`, run 30), so blocks stay at 30 steps.
 2. **One SAM call per block with the prompt "colored object"** (`sam-6` confirmed it on video): $0.01 per block.
-   The kill test on Muse Wonder (60 episodes a condition, seeds 1010–1019) is projected at $10.97 from the rule policy's
-   block counts (`docs/pilot-runs.md`, run 44).
+   The kill test on Muse Wonder (114 episodes a condition, seeds 1001–1019) is projected at $21.22 from the rule policy's
+   block counts (`docs/pilot-runs.md`, run 47).
 3. Muse Spark per turn (28 Oct): ~1k input + ~160 output tokens, ~8 turns ≈ $0.016 per episode; latency 1.3–12 s per
    turn. Muse Wonder per turn (the pilot, run 44): 1,629 input tokens (968 cached) + 271 output, $0.0083, 3.44 s, and
    one Muse turn per block (22 turns, 22 blocks).
