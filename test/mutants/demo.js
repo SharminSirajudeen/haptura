@@ -19,3 +19,12 @@ module.exports.push(
   d('demo: a pair the rule did not pick is refused', 'if len(argv) > 2 and argv[2] not in names:', 'if False:', WRITE),
   d('demo: each pane gets its own log', 'write(gated[names[argv[2]]], "gated", out)', 'write(baseline[names[argv[2]]], "gated", out)', WRITE),
 );
+// web/episodes/: the pair the page plays is the first the rule lists for the kill test, byte for byte the kill test's own logs.
+const WP = 'tests/test_web_fixture.py', PAIR = 'test_the_page_plays_the_first_pair_the_rule_picks_from_the_kill_test';
+const p = (from, file, find, replace) => ({ from, file, find, replace, mustFail:WP, expect:`FAILED ${WP}::${PAIR}`,
+  cmd:`uv run --locked python -m pytest -q ${WP}` });
+module.exports.push(
+  p('web pair: the rule lists its pairs by seed, the first one lowest', 'gate/demo.py', '    return sorted(out)\n', '    return sorted(out, reverse=True)\n'),
+  p('web pair: the gated log is the kill test\'s own', 'web/episodes/gated.json', '"sam_calls": 6', '"sam_calls": 7'),
+  p('web pair: the baseline log is the kill test\'s own', 'web/episodes/baseline.json', '"outcome": "false_act"', '"outcome": "timeout"'),
+);

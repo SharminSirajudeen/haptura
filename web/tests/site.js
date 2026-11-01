@@ -10,7 +10,13 @@ const ROOT = path.join(__dirname, '..');
 const PREFIX = '/control-gate/';
 // the page's FPS must be the project's; a pattern that matches nothing throws here and every spec fails
 const FPS = Number(/^FPS = (\d+)$/m.exec(fs.readFileSync(path.join(ROOT, '..', 'gate', 'constants.py'), 'utf8'))[1]);
-const LOG = JSON.parse(fs.readFileSync(path.join(ROOT, 'fixtures', 'episode.json'), 'utf8'));
+const readJson = (...parts) => JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), 'utf8'));
+const LOG = readJson('fixtures', 'episode.json'); // the synthetic episode: it draws every label the real pair does not
+// the seconds of a clip gate.demo looks in: FIRST_FRAMES = <seconds> * FPS in gate/demo.py
+const WINDOW_SECONDS = Number(/^FIRST_FRAMES = (\d+) \* FPS/m.exec(fs.readFileSync(path.join(ROOT, '..', 'gate', 'demo.py'), 'utf8'))[1]);
+// the pairs the page's pair is one of: the episodes per condition in results/table.md, which gate.eval writes
+const EPISODES = Number(/^\| episodes \| (\d+) \|/m.exec(fs.readFileSync(path.join(ROOT, '..', 'results', 'table.md'), 'utf8'))[1]);
+const PAIR = ['baseline', 'gated'].map((name) => ({ name, log: readJson('episodes', `${name}.json`) })); // the panes' order
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -58,9 +64,14 @@ const panes = (page) => page.locator('.pane');
 // Both panes have drawn their first frame.
 const ready = (page) => expect(page.locator('.pane[data-ready]')).toHaveCount(2);
 
-// Pause the pane's video on video frame `frame` (the middle of its time slot) and wait until the pane shows `where`;
-// the canvas is drawn in the same call that writes `.where`.
-async function showFrame(pane, frame, where) {
+// What the pane last drew (the page writes it beside every draw): the video frame it was for, the media time of the clip's
+// first frame, and the label rectangles in CSS pixels.
+const shown = async (pane) => JSON.parse(await pane.locator('canvas').getAttribute('data-labels'));
+
+// Pause the pane's video on video frame `frame` (the middle of its time slot, counted from the clip's first frame, which
+// an encoder's frame delay can put after media time 0) and wait for the seek; the page draws on it.
+async function seek(pane, frame) {
+  const { start } = await shown(pane);
   await pane.locator('video').evaluate(
     (v, at) =>
       new Promise((done) => {
@@ -68,13 +79,32 @@ async function showFrame(pane, frame, where) {
         v.addEventListener('seeked', done, { once: true });
         v.currentTime = at;
       }),
-    (frame + 0.5) / FPS,
+    start + (frame + 0.5) / FPS,
   );
+}
+
+// ... and wait until the pane shows `where`; the canvas is drawn in the same call that writes `.where`.
+async function showFrame(pane, frame, where) {
+  await seek(pane, frame);
   await expect(pane.locator('.where')).toHaveText(where);
 }
+
+// Both panes play the synthetic episode in place of the real pair: the page asks for episodes/*.json and *.mp4, and `log`
+// (the fixture's, unless a spec changes it) and fixtures/clip.mp4 answer. A redirect, not a copy, so the server's byte
+// ranges still serve the clip.
+async function playFixture(page, log = LOG) {
+  await page.route('**/episodes/*.json', (route) => route.fulfill({ json: log }));
+  await page.route('**/episodes/*.mp4', (route) => route.continue({ url: route.request().url().replace(/episodes\/\w+\.mp4$/, 'fixtures/clip.mp4') }));
+}
+
+// The last video frame of a log's clip, and what a pane says there: its last block.
+const endOf = (log) => ({
+  frame: log.blocks.reduce((n, b) => n + b.actions.length, 0),
+  where: `block ${log.blocks.length} of ${log.blocks.length}, ${log.blocks.at(-1).phase}`,
+});
 
 // Video frames inside each block of the fixture: block 1 starts at frame 0, block 2 at 30, block 3 (act) at 60.
 // ACT is block 3's frame 5, where the three elements are far apart (before the occlusion gap at its frames 11 to 13).
 const FRAME = { probe1: 10, probe2: 40, act: 65 };
 
-module.exports = { test, expect, panes, ready, showFrame, FRAME, LOG };
+module.exports = { test, expect, panes, ready, seek, shown, showFrame, playFixture, endOf, FRAME, LOG, PAIR, EPISODES, WINDOW_SECONDS };
