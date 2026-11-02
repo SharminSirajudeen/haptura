@@ -1,0 +1,13 @@
+device: SM-S942B | Android 17 (SDK 37) | One UI 90000 | Physical size: 1080x2340
+adb round trip: median 267 ms (5 calls)
+power: mWakefulness=Awake
+window list: readable; 16 windows; focused: com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity
+display 0: logicalSize=1080x2340 | transform (ROT_0) (IDENTITY)
+a touch sent at (100, 200) lands at (100, 200)
+uid map: 378 uids; allowlist here: ['com.android.systemui']
+screen tree: 90 nodes
+screenshot: 1477114 bytes; the size Muse is told: (1080, 2340)
+GhostEI cases runnable: 22 {'Chrome': 5, 'Gallery': 11, 'Messages': 1, 'Files': 2, 'Settings': 1, 'Gmail': 2}
+case 8 (Chrome): dialog shown = True (11.7 s to arrange)
+tap on the dialog's 'Cancel' at (671, 717), display point (363, 671): owner com.example.myapplication, gate block; click watch saw com.example.myapplication 'Cancel'
+READY

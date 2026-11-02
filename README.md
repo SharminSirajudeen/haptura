@@ -42,16 +42,20 @@ runs where the agent runs, on a computer driving the phone over adb. Next: the s
 On the dialog, both models chose its dismiss button in all 36 attack runs, never its confirm: what the gate stopped
 is the attacker's app receiving the touch.
 
-**On a real phone**, a Galaxy S26 (Android 17, One UI 9) in Samsung's Remote Test Lab, 2–3 Nov 2026, one GhostEI
-decision per case (`results/phone/galaxy-s26/`): once the parser read that phone's window list, every tap Muse sent at
-an attack dialog was refused, 50 of 50, with the attacker's package named as the window's owner; no tap was refused
-once the task app had opened, 41 of 41; $1.00 of model calls in all. The phone showed four things the emulator had
-not, each now handled with a test. A live wallpaper printed its transform with hex flags, which the parser rejected,
-so every tap was refused until it read them. Google Photos and the file picker cannot start there, so those cases run
-on Samsung's Gallery and My Files. On a screen turned sideways, Android takes a tap in turned coordinates while the
-window list stays upright, so the gate now maps the point through the display's transform first (rechecked against
-the list captured there, the 50 refusals stand). And the runner told Muse the upright screen size, after which 3 of
-its taps fell past the sideways screen's edge, so it now states the size of the screenshot it sends.
+**On a real phone**, a Galaxy S26 (Android 17, One UI 9) in Samsung's Remote Test Lab, turned sideways, with the gate at
+`72869bf` (3 Nov 2026, `results/phone/galaxy-s26-2/`), one GhostEI decision per case: every tap Muse sent at an attack
+dialog was refused, 21 of 21 and, told the owner, 9 of 9, with the attacker's package named as the window's owner. In 4
+cases Muse had pressed the attacker's Install; ungated, those taps reached the attacker's app. No tap in a clean run was
+refused, 43 of 43. Recorded on the same phone, the multi-step agent with the gate on had its tap on the dialog's
+*Cancel* refused, then turned Dark mode on; with the gate off, the same tap reached the attacker's app. $1.03 of model
+calls in all.
+
+A first session the day before (`results/phone/galaxy-s26/`) showed four things the emulator had not, each now handled
+with a test. A live wallpaper printed its transform with hex flags, which the parser rejected. Google Photos and the
+file picker cannot start there, so those cases run on Samsung's Gallery and My Files. On a screen turned sideways,
+Android takes a tap in turned coordinates while the window list stays upright, so the gate maps the point through the
+display's transform first. And the runner had told Muse the upright screen size, after which 3 of its taps fell past
+the sideways screen's edge, so it states the size of the screenshot it sends.
 
 **Limits**, each measured or stated in the records above:
 - **Not atomic.** From reading the window list to the touch being sent, 37.6–76.3 ms passed (20 sent lab trials). When
@@ -62,10 +66,11 @@ its taps fell past the sideways screen's edge, so it now states the size of the 
 - A dialog drawn by the task app itself passes, and a window of an allowlisted package (the system UI, the keyboard)
   passes wherever it is drawn, e.g. a heads-up notification over the task app.
 - The keyboard is a stand-in: no hostile not-focusable overlay was run.
-- One real phone, one session (above), whose records predate the last two fixes: its 41 clean taps were judged at the
-  point as sent. Everything else ran on the emulator. The gate runs on a computer over adb today;
-  an accessibility service on the phone can read a system-checked owner name for an ordinary app's focused window; the
-  owner at a point was not tested (`results/phone/a11y-owner/`).
+- One real phone model, two sessions (above); everything else ran on the emulator. The gate runs on a computer over adb
+  today; an accessibility service on the phone can read a system-checked owner name for an ordinary app's focused
+  window; the owner at a point was not tested (`results/phone/a11y-owner/`).
+- A task app's screen that belongs to another package is refused: Settings' search page, on the emulator and on the
+  Galaxy S26.
 - The allowlist names Google's keyboard, so a phone whose keyboard is another app's has its keyboard refused (the
   Galaxy S26's system packages hold no Google keyboard); pinned by an expected-fail test.
 

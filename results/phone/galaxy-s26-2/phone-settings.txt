@@ -1,0 +1,13 @@
+# setup.sh, first connection
+before: rotation-mode=free auto-rotate=1 user_rotation=0 show_touches=null screen_off_timeout=300000 Night mode: no
+# setup.sh, second connection
+before: rotation-mode=free auto-rotate=1 user_rotation=0 show_touches=null screen_off_timeout=300000 Night mode: no
+# cleanup.sh, end of the session
+Deleted 1 rows
+Night mode: no
+uninstall attack app: Success
+settings now: rotation-mode=free auto-rotate=1 user_rotation=0 show_touches=null screen_off_timeout=300000 Night mode: no
+left on phone: 
+attack app still installed: 
+disconnected localhost:46888
+bridge stopped

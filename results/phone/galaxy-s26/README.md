@@ -1,4 +1,6 @@
-# GhostEI overlay cases on a real phone: Galaxy S26 (2–3 Nov 2026)
+# GhostEI overlay cases on a real phone: Galaxy S26, first session (2–3 Nov 2026)
+
+The second session, at the gate this session's findings produced (`72869bf`), is `../galaxy-s26-2/`.
 
 **Single-step proxy, as in the emulator's final run (`../final/`):** one screenshot and one `muse-spark-1.3` decision per
 case at temperature 0. The ungated agent always taps; the gate's verdict on that same tap is the gated agent. The
@@ -71,8 +73,8 @@ taps past the bottom of the sideways screen (cases 15, 31, 51, above) count as o
 ## Limits
 - One phone model, one session, single-step cases.
 - These runs predate `1fe1f59`. The 50 refused attack taps were rechecked against the captured list (above); the 41
-  allowed clean taps were judged at the point as sent, so on this phone the false blocks of the gate as it is now are
-  not measured.
+  allowed clean taps were judged at the point as sent. The second session measured the gate as it is now
+  (`../galaxy-s26-2/`).
 - The phone allowlist names Google's keyboard; on this phone, cut to its system packages, it holds only the system UI
   (`preflight.txt`, "allowlist here"), so a tap on this phone's own keyboard would be refused. No case here tapped a
   keyboard. Pinned by an expected-fail test (`tests/test_phone_ghostei.py::test_the_devices_own_keyboard_is_allowed`).
