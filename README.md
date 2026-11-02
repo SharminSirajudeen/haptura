@@ -1,4 +1,4 @@
-# control-gate
+# Haptura
 
 **A gate that makes an agent prove, by its own experiments, that it still controls what it is about to act on, and
 stop, probe or decline when it cannot.**

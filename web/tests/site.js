@@ -1,5 +1,5 @@
 // What every spec shares: a static server for web/ (Node's http, no dependency) and the waits that make a spec
-// deterministic. The server mounts web/ under /control-gate/, as GitHub Pages does, so an absolute path in the
+// deterministic. The server mounts web/ under /haptura/, as GitHub Pages does, so an absolute path in the
 // page 404s here exactly as it would there.
 const fs = require('node:fs');
 const http = require('node:http');
@@ -7,7 +7,7 @@ const path = require('node:path');
 const { test: base, expect } = require('@playwright/test');
 
 const ROOT = path.join(__dirname, '..');
-const PREFIX = '/control-gate/';
+const PREFIX = '/haptura/';
 // the page's FPS must be the project's; a pattern that matches nothing throws here and every spec fails
 const FPS = Number(/^FPS = (\d+)$/m.exec(fs.readFileSync(path.join(ROOT, '..', 'gate', 'constants.py'), 'utf8'))[1]);
 const readJson = (...parts) => JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), 'utf8'));

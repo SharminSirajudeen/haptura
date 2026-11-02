@@ -17,7 +17,7 @@ test('the banner names the pair the panes play, the rule that chose it and its p
     'the gated run, right by EVAL.md, has not acted yet',
     'EVAL.md\'s verdict on it is Rethink',
   ]) await expect(banner).toContainText(text);
-  await expect(banner.getByRole('link', { name: 'README' })).toHaveAttribute('href', 'https://github.com/SharminSirajudeen/control-gate#readme');
+  await expect(banner.getByRole('link', { name: 'README' })).toHaveAttribute('href', 'https://github.com/SharminSirajudeen/haptura#readme');
 });
 
 test('each pane plays its own run: named from its log, its clip, and ending where its log ends', async ({ page, viewer }) => {

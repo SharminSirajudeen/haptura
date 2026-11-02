@@ -1,5 +1,5 @@
 [project]
-name = "control-gate"
+name = "haptura"
 version = "0.0.0"
 description = "A gate that makes an agent prove, by its own experiments, that it still controls what it is about to act on."
 readme = "README.md"

@@ -1,5 +1,5 @@
 {
-  "name": "control-gate",
+  "name": "haptura",
   "private": true,
   "gateMode": "development",
   "scripts": {

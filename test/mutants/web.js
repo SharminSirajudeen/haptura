@@ -79,7 +79,7 @@ module.exports = [
   m('pair: the banner drops the baseline half of the rule', ARENA, 'the baseline commits to an element it does not control', 'the baseline commits to an element', 'pair.spec.js', '5:1', BANNER),
   m('pair: the banner drops the gated half of the rule', ARENA, 'while the gated run, right by EVAL.md, has not acted yet', 'while the gated run is right', 'pair.spec.js', '5:1', BANNER),
   m('pair: the banner drops the verdict', ARENA, `<span data-source="README.md">EVAL.md's verdict on it is Rethink: the arena's claim did not hold on these seeds.</span> `, '', 'pair.spec.js', '5:1', BANNER),
-  m('pair: the banner drops the link to the table', ARENA, '<a href="https://github.com/SharminSirajudeen/control-gate#readme">README</a>', 'README', 'pair.spec.js', '5:1', BANNER),
+  m('pair: the banner drops the link to the table', ARENA, '<a href="https://github.com/SharminSirajudeen/haptura#readme">README</a>', 'README', 'pair.spec.js', '5:1', BANNER),
   m('pair: the intro drops what the gated agent was shown', ARENA, "The gated agent is shown that test's labels and advice. ", '', 'pair.spec.js', '37:1', SHOWN),
   m('pair: the intro drops what the baseline agent was shown', ARENA, `<span data-source="README.md">returns only each element's mean displacement per action, with no p, no label and no advice</span>`, 'returns the control test\'s labels', 'pair.spec.js', '37:1', SHOWN),
   m('pair: the baseline pane plays the gated log', JS, PANE('baseline', 'baseline'), PANE('gated', 'baseline'), 'pair.spec.js', '23:1', OWN),
