@@ -36,7 +36,10 @@ module.exports.push(
 );
 module.exports.push(
   m('windows: a transform line is the whole line',
-    '( \\([A-Z ]+\\))?$|', '( \\([A-Z ]+\\))?|', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
+    '( \\([A-Z ]+\\))?$"', '( \\([A-Z ]+\\))?"', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
+  m('windows: a transform line may carry the hex flags Android 17 prints',
+    '^ +transform( 0x[0-9a-f]+)? \\([A-Z0-9_]+\\)( 0x[0-9a-f]+)?', '^ +transform \\([A-Z0-9_]+\\)',
+    'test_an_android_17_list_with_hex_transform_flags_is_read'),
   m('windows: window indices run 0, 1, 2 with no repeat',
     ' or int(n.group(1)) != self.index:', ':', 'test_a_title_that_adds_a_window_line_blocks_everything'),
 );

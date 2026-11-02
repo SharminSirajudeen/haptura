@@ -2,7 +2,9 @@
 
 settings: Settings in front. keyboard: Settings search with the keyboard up (the keyboard
 window never takes focus). overlay: GhostEI's dialog over Settings. lab-key: the keyboard case
-again, from the lab runs of 1 Nov (results/phone/lab, gated-key trial 0).
+again, from the lab runs of 1 Nov (results/phone/lab, gated-key trial 0). galaxy-s26: GhostEI's
+dialog on a Galaxy S26 (Android 17, One UI 9), 2 Nov 2026, whose list prints hex flags in its
+transform lines (results/phone/galaxy-s26).
 """
 
 import re
@@ -23,7 +25,7 @@ from phone.windows import (
 FIX = Path(__file__).parent / "fixtures" / "phone"
 TEXT = {
     n: (FIX / f"input-{n}.txt").read_text()
-    for n in ("settings", "keyboard", "overlay", "recording", "lab-key")
+    for n in ("settings", "keyboard", "overlay", "recording", "lab-key", "galaxy-s26")
 }
 WINS = {n: parse_windows(t) for n, t in TEXT.items()}
 UIDS = packages_by_uid((FIX / "uids.txt").read_text())
@@ -234,3 +236,11 @@ def test_an_allowlisted_package_of_the_uid_is_named() -> None:
 def test_no_window_is_no_owner() -> None:
     assert owner_package(None, UIDS, "com.android.settings", frozenset()) == ""
     assert receiver(WINS["overlay"], 5000, 5000) is None
+
+
+def test_an_android_17_list_with_hex_transform_flags_is_read() -> None:
+    text, wins = TEXT["galaxy-s26"], WINS["galaxy-s26"]
+    assert "transform 0x" in text  # the line Android 17 prints
+    assert len(wins) == 21
+    f = focused(wins, text)
+    assert f is not None and "com.example.myapplication" in f.name

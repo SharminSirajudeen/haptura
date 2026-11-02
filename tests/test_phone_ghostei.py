@@ -229,3 +229,9 @@ def test_startable_packages_are_read_from_the_launcher_list(
     )
     monkeypatch.setattr(adb, "shell", lambda cmd, timeout=30: listing)
     assert ghostei.launchable() == {"com.android.chrome", "com.sec.android.app.myfiles"}
+
+
+@pytest.mark.xfail(strict=True, reason="#81: the allowlist names Google's keyboard")
+def test_the_devices_own_keyboard_is_allowed() -> None:
+    system = "package:com.android.systemui\npackage:com.samsung.android.honeyboard\n"
+    assert "com.samsung.android.honeyboard" in ghostei.device(UIDS, system).allow

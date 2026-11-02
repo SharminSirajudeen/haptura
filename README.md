@@ -26,6 +26,10 @@ permission to perform action"
 ([Meta](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse)). This gate does it
 for touches on a screen.
 
+**How it runs.** Haptura is not an app you install. It sits in the agent's action path: before every touch the agent
+sends, it asks Android which app owns the window under the finger, and refuses if that is not the task's app. Today it
+runs where the agent runs, on a computer driving the phone over adb. Next: the same check on the phone itself.
+
 **The evidence**, on the Android emulator (API 36), 1 Nov 2026, each row from the records named:
 
 | Measurement | Gate off | Gate on | Records |
@@ -38,6 +42,13 @@ for touches on a screen.
 On the dialog, both models chose its dismiss button in all 36 attack runs, never its confirm: what the gate stopped
 is the attacker's app receiving the touch.
 
+**On a real phone**, a Galaxy S26 (Android 17, One UI 9) in Samsung's Remote Test Lab, 2–3 Nov 2026, one GhostEI
+decision per case (`results/phone/galaxy-s26/`): every tap Muse sent at an attack dialog was refused, 50 of 50, with
+the attacker's package named as the window's owner; no tap on the task's own app was refused, 41 of 41; $1.00 of model
+calls in all. The phone found two defects, both fixed with tests: Android 17 prints hex flags in the window list's
+transform lines, which the parser rejected, so the gate refused every tap until it read them; and Google Photos and
+the file picker cannot start on that phone, so those cases run on Samsung's Gallery and My Files.
+
 **Limits**, each measured or stated in the records above:
 - **Not atomic.** From reading the window list to the touch being sent, 37.6–76.3 ms passed (20 sent lab trials). When
   the keyboard was raised just before an approved touch, it took the touch in 6 of 10 trials with the touch sent 55–60
@@ -47,9 +58,11 @@ is the attacker's app receiving the touch.
 - A dialog drawn by the task app itself passes, and a window of an allowlisted package (the system UI, the keyboard)
   passes wherever it is drawn, e.g. a heads-up notification over the task app.
 - The keyboard is a stand-in: no hostile not-focusable overlay was run.
-- Emulator only, no physical phone. The gate runs on a computer over adb today; an accessibility service on the phone
-  can read a system-checked owner name for an ordinary app's focused window; the owner at a point was not tested
-  (`results/phone/a11y-owner/`).
+- One real phone, one session (above); everything else ran on the emulator. The gate runs on a computer over adb today;
+  an accessibility service on the phone can read a system-checked owner name for an ordinary app's focused window; the
+  owner at a point was not tested (`results/phone/a11y-owner/`).
+- The allowlist names Google's keyboard, so a phone whose keyboard is another app's has its keyboard refused (the
+  Galaxy S26's system packages hold no Google keyboard); pinned by an expected-fail test.
 
 **Closest work.** Google's ARTEMIS (github.com/google/artemis at 351ca84) checks before each action that the chosen
 element is still present ("Checks that the element the Operator decided to interact with is still present on the live
@@ -340,9 +353,8 @@ $9.24, $14.31 and $5.38 as the runner counts them (runs 54 to 56).
 - **Robot self-modelling** is older: Gold and Scassellati (2009), Lipson's line of work, and Neural Jacobian Fields
   (2025). What is ours is the three-level diagnosis, a gate any agent loop can call, and its evaluation.
 
-**Who it is for:** first, agents that operate real phone apps, such as Actuator (separate and pre-existing). There an
-app can change under the agent while it keeps tapping, which is the remap case. The arena gate has not yet run on a
-phone.
+**Who it is for:** first, agents that operate real phone apps. There an app can change under the agent while it keeps
+tapping, which is the remap case. The arena gate has not yet run on a phone.
 
 ## Built during the hackathon
 
@@ -357,7 +369,6 @@ Written before the event started on 26 Oct 2026:
 - The gate's tooling, copied in from a project kit of our own and adapted: `test/mutants.js`,
   `test/mutants.list.js`, `test/check.js`, `test/floorguard.js`, `test/floorguard.test.js`, `scripts/ci.sh`,
   `scripts/merge.sh`.
-- Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. None of its source is in this repository.
 
 Used, not ours:
 - The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT). Its licence notice

@@ -1,0 +1,1123 @@
+INPUT MANAGER (dumpsys input)
+
+Input properties:
+  velocitytracker_strategy (flag value) = default
+
+Input Manager State:
+  Display not interactive: {}
+  System UI Lights Out: false
+  System UI Lights Out on Dex: false
+  Pointer Speed: 0
+  Display with Mouse Scaling Disabled: {}
+  Pointer Gestures Enabled: true
+  Pointer Capture: UNCAPTURED, seq=0
+  DeX Mode: 0
+  DeX DisplayType: 0
+  DeX DisplayId: -1
+  VirtualTouchpad: false
+  VirtualTouchpadType: 0
+  VirtualTouchpadRegion: <empty>
+  xdpi: 409.433
+  ydpi: 409.903
+  Primary Mouse Button Location: 0
+  Scroll speed: 1
+  Use mouse acceleration: true
+  Mouse pointer acceleration enabled: true
+  Mouse button behavior(S/T/B/F): (1/3/7/4)
+  Multi Control out of focus: false
+
+Event Hub State:
+  BuiltInKeyboardId: -2
+  Devices:
+    3: gpio_keys
+      Classes: KEYBOARD
+      Path: /dev/input/event0
+      Enabled: true
+      Descriptor: 485d69228e24f5e46da1598745890b214130dbc4
+      Location: gpio-keys/input0
+      ControllerNumber: 0
+      UniqueId: 
+      Identifier: bus=0x0019, vendor=0x0001, product=0x0001, version=0x0100, bluetoothAddress=<not set>
+      KeyBitmask: 115 
+      KeyLayoutFile: /system/usr/keylayout/Generic_internal.kl
+      KeyCharacterMapFile: /system/usr/keychars/Generic.kcm
+      Overlay KeyCharacterMapFile: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk
+      ConfigurationFile: <none>
+      VideoDevice: <none>
+      SysfsDevicePath: /sys/devices/platform/gpio_keys
+      KeyState (pressed): <none>
+    7: certify_hall
+      Classes: SWITCH
+      Path: /dev/input/event2
+      Enabled: true
+      Descriptor: 5a992b125b028d8005f2be21d193b9e73694f332
+      Location: back_cover
+      ControllerNumber: 0
+      UniqueId: 
+      Identifier: bus=0x0000, vendor=0x0000, product=0x0000, version=0x0000, bluetoothAddress=<not set>
+      KeyBitmask: 
+      KeyLayoutFile: 
+      KeyCharacterMapFile: 
+      Overlay KeyCharacterMapFile: 
+      ConfigurationFile: /system/usr/idc/certify_hall.idc
+      VideoDevice: <none>
+      SysfsDevicePath: /sys/devices/virtual
+      SwState (pressed): <none>
+    -1: Virtual
+      Classes: KEYBOARD | ALPHAKEY | DPAD | VIRTUAL
+      Path: <virtual>
+      Enabled: true
+      Descriptor: a718a782d34bc767f4689c232d64d527998ea7fd
+      Location: 
+      ControllerNumber: 0
+      UniqueId: <virtual>
+      Identifier: bus=0x0000, vendor=0x0000, product=0x0000, version=0x0000, bluetoothAddress=<not set>
+      KeyBitmask: 
+      KeyLayoutFile: /system/usr/keylayout/Generic_internal.kl
+      KeyCharacterMapFile: /system/usr/keychars/Virtual.kcm
+      Overlay KeyCharacterMapFile: 
+      ConfigurationFile: <none>
+      VideoDevice: <none>
+      SysfsDevicePath: <none>
+    4: sec_touchpad
+      Classes: KEYBOARD | TOUCH | TOUCH_MT | TOUCHPAD
+      Path: /dev/input/event5
+      Enabled: false
+      Descriptor: 6bb78087f323d376bc537679f3f2a4c034fb4659
+      Location: sec_touchpad
+      ControllerNumber: 0
+      UniqueId: 
+      Identifier: bus=0x0018, vendor=0x0000, product=0x0000, version=0x0000, bluetoothAddress=<not set>
+      KeyBitmask: 142 143 280 281 325 328 330 333 334 335 550 702 
+      KeyLayoutFile: /system/usr/keylayout/Generic_internal.kl
+      KeyCharacterMapFile: /system/usr/keychars/Generic.kcm
+      Overlay KeyCharacterMapFile: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk
+      ConfigurationFile: <none>
+      VideoDevice: <none>
+      SysfsDevicePath: /sys/devices/platform/108e0000.spi/spi_master/spi10/spi10.0
+      KeyState (pressed): <none>
+      AbsState: ABS_X=0, ABS_Y=0, ABS_MT_SLOT=0, ABS_MT_TOUCH_MAJOR=0, ABS_MT_TOUCH_MINOR=0, ABS_MT_POSITION_X=0, ABS_MT_POSITION_Y=0, ABS_MT_TRACKING_ID=0
+    9: sec_touchscreen
+      Classes: KEYBOARD | TOUCH | TOUCH_MT
+      Path: /dev/input/event4
+      Enabled: true
+      Descriptor: 0fa9d3d0d40f7f5b316320876742e00ad5eb1ba9
+      Location: sec_touchscreen
+      ControllerNumber: 0
+      UniqueId: 
+      Identifier: bus=0x0018, vendor=0x0000, product=0x0000, version=0x0000, bluetoothAddress=<not set>
+      KeyBitmask: 142 143 280 281 325 330 550 702 
+      KeyLayoutFile: /system/usr/keylayout/Generic_internal.kl
+      KeyCharacterMapFile: /system/usr/keychars/Generic.kcm
+      Overlay KeyCharacterMapFile: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk
+      ConfigurationFile: <none>
+      VideoDevice: <none>
+      SysfsDevicePath: /sys/devices/platform/108e0000.spi/spi_master/spi10/spi10.0
+      KeyState (pressed): <none>
+      AbsState: ABS_X=0, ABS_Y=0, ABS_MT_SLOT=0, ABS_MT_TOUCH_MAJOR=0, ABS_MT_TOUCH_MINOR=0, ABS_MT_POSITION_X=0, ABS_MT_POSITION_Y=0, ABS_MT_TRACKING_ID=0
+    5: s2se912-power-keys
+      Classes: KEYBOARD
+      Path: /dev/input/event1
+      Enabled: true
+      Descriptor: d2c52ff0f656fac4cd7b7a118d575e0109a9fe1c
+      Location: s2se912-keys/input0
+      ControllerNumber: 0
+      UniqueId: 
+      Identifier: bus=0x0018, vendor=0x0001, product=0x0001, version=0x0100, bluetoothAddress=<not set>
+      KeyBitmask: 114 116 
+      KeyLayoutFile: /system/usr/keylayout/Generic_internal.kl
+      KeyCharacterMapFile: /system/usr/keychars/Generic.kcm
+      Overlay KeyCharacterMapFile: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk
+      ConfigurationFile: <none>
+      VideoDevice: <none>
+      SysfsDevicePath: /sys/devices/platform/esca_mfd_bus/i2c-100/100-0001/s2se912-power-keys.1
+      KeyState (pressed): <none>
+  Unattached video devices:
+    <none>
+
+Input Reader State (Nums of device: 6):
+  Device 6: gpio_keys
+    EventHub Devices: [ 3 ] 
+    Generation: 42
+    IsExternal: false
+    IsVirtualDevice: false
+    IsWaking: false
+    AssociatedDisplayPort: <none>
+    AssociatedDisplayUniqueIdByPort: <none>
+    AssociatedDisplayUniqueIdByDescriptor: <none>
+    SysfsRootPath:     /sys/devices/platform/gpio_keys
+    HasMic:     false
+    Sources: KEYBOARD
+    KeyboardType: 1
+    ControllerNum: 0
+    Keyboard Input Mapper:
+      Parameters:
+        OrientationAware: false
+        HandlesKeyRepeat: false
+      Orientation: Rotation0
+      KeyDowns: 0 keys currently down
+      MetaState: 0x0
+      KeyboardLayoutInfo: <not set>
+  Device 2: sec_touchscreen
+    EventHub Devices: [ 9 ] 
+    Generation: 44
+    IsExternal: false
+    IsVirtualDevice: false
+    IsWaking: false
+    AssociatedDisplayPort: <none>
+    AssociatedDisplayUniqueIdByPort: <none>
+    AssociatedDisplayUniqueIdByDescriptor: <none>
+    SysfsRootPath:     /sys/devices/platform/108e0000.spi/spi_master/spi10/spi10.0
+    HasMic:     false
+    Sources: KEYBOARD | TOUCHSCREEN
+    KeyboardType: 1
+    ControllerNum: 0
+    Motion Ranges:
+      X: source=TOUCHSCREEN, min=0.000, max=1079.736, flat=0.000, fuzz=0.000, resolution=0.000
+      Y: source=TOUCHSCREEN, min=0.000, max=2339.429, flat=0.000, fuzz=0.000, resolution=0.000
+      PRESSURE: source=TOUCHSCREEN, min=0.000, max=1.000, flat=0.000, fuzz=0.000, resolution=0.000
+      SIZE: source=TOUCHSCREEN, min=0.000, max=1.000, flat=0.000, fuzz=0.000, resolution=0.000
+      TOUCH_MAJOR: source=TOUCHSCREEN, min=0.000, max=2577.208, flat=0.000, fuzz=0.000, resolution=0.000
+      TOUCH_MINOR: source=TOUCHSCREEN, min=0.000, max=2577.208, flat=0.000, fuzz=0.000, resolution=0.000
+      TOOL_MAJOR: source=TOUCHSCREEN, min=0.000, max=2577.208, flat=0.000, fuzz=0.000, resolution=0.000
+      TOOL_MINOR: source=TOUCHSCREEN, min=0.000, max=2577.208, flat=0.000, fuzz=0.000, resolution=0.000
+    Keyboard Input Mapper:
+      Parameters:
+        OrientationAware: false
+        HandlesKeyRepeat: false
+      Orientation: Rotation0
+      KeyDowns: 0 keys currently down
+      MetaState: 0x0
+      KeyboardLayoutInfo: <not set>
+    Touch Input Mapper (mode - DIRECT):
+      Parameters:
+        DeviceType: TOUCH_SCREEN
+        AssociatedDisplay: isExternal=false, displayId=''
+        OrientationAware: true
+        Orientation: Rotation0
+        UsiVersion: <not set>
+        EnableForInactiveViewport: true
+      Raw Touch Axes:
+        X: min=0, max=4095, flat=0, fuzz=0, resolution=0
+        Y: min=0, max=4095, flat=0, fuzz=0, resolution=0
+        Pressure: unknown range
+        TouchMajor: min=0, max=255, flat=0, fuzz=0, resolution=0
+        TouchMinor: min=0, max=255, flat=0, fuzz=0, resolution=0
+        ToolMajor: unknown range
+        ToolMinor: unknown range
+        Orientation: unknown range
+        Distance: unknown range
+        TiltX: unknown range
+        TiltY: unknown range
+        TrackingId: min=0, max=65535, flat=0, fuzz=0, resolution=0
+        Slot: min=0, max=9, flat=0, fuzz=0, resolution=0
+      Calibration:
+        touch.size.calibration: GEOMETRIC
+        touch.pressure.calibration: none
+        touch.orientation.calibration: none
+        touch.distance.calibration: none
+      Affine Transformation:
+        X scale: 1.000
+        X ymix: 0.000
+        X offset: 0.000
+        Y xmix: 0.000
+        Y scale: 1.000
+        Y offset: 0.000
+      Viewport INTERNAL: displayId=0, uniqueId=local:4633128672291735937, port=129, orientation=1, densityDpi=480 xDpi=409.432831, yDpi=409.903442, logicalFrame=[0, 0, 2340, 1080], physicalFrame=[0, 0, 2340, 1080], deviceSize=[2340, 1080], isActive=[1]
+      DisplayBounds: 1080x2340
+      PhysicalFrameInRotatedDisplay: Rect{0, 0, 2340, 1080}
+      InputDeviceOrientation: Rotation0
+      Translation and Scaling Factors:
+        RawToDisplay Transform: (ROT_0) (SCALE TRANSLATE)
+            0.2637  0.0000  0.2637
+            0.0000  0.5713  0.0000
+            0.0000  0.0000  1.0000
+        RawRotation Transform: (ROT_0) (IDENTITY)
+        OrientedXPrecision: 3.793
+        OrientedYPrecision: 1.750
+        GeometricScale: 0.417
+        PressureScale: 0.000
+        SizeScale: 0.004
+        OrientationScale: 0.000
+        DistanceScale: 0.000
+        HaveTilt: false
+        TiltXCenter: 0.000
+        TiltXScale: 0.000
+        TiltYCenter: 0.000
+        TiltYScale: 0.000
+      Last Raw Button State: 0x00000000
+      Last Raw Touch:
+        When: -9223372036854775808
+        Read time: 0
+        Button state: 0x00000000
+        Raw pointer data:
+          0 pointers:
+          ID bits: hovering = 0x00000000, touching = 0x00000000, canceled = 0x00000000
+      Last Cooked Button State: 0x00000000
+      Last Cooked Touch: pointerCount=0
+      Stylus Fusion:
+        ExternalStylusPresence: NONE
+        Fused External Stylus Pointer ID: <not set>
+        External Stylus Data Timeout: 9223372036854775807
+        External Stylus Buttons Applied: 0x00000000
+      External Stylus State:
+        When: 0
+        Pressure: <not set>
+        Button State: 0x00000000
+        Tool Type: UNKNOWN
+      DPI x: 0.000, y: 0.000
+      TSP Features: 0x50321
+    Multi Touch Input Mapper:
+      Slot  0: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  1: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  2: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  3: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  4: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  5: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  6: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  7: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  8: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+      Slot  9: inUse=false, x=   0, y=   0, trackingId=   -1, touchMajor=   0, pressure=   0, toolType=0, palm=0
+  Device 4: s2se912-power-keys
+    EventHub Devices: [ 5 ] 
+    Generation: 45
+    IsExternal: false
+    IsVirtualDevice: false
+    IsWaking: false
+    AssociatedDisplayPort: <none>
+    AssociatedDisplayUniqueIdByPort: <none>
+    AssociatedDisplayUniqueIdByDescriptor: <none>
+    SysfsRootPath:     /sys/devices/platform/esca_mfd_bus/i2c-100/100-0001/s2se912-power-keys.1
+    HasMic:     false
+    Sources: KEYBOARD
+    KeyboardType: 1
+    ControllerNum: 0
+    Keyboard Input Mapper:
+      Parameters:
+        OrientationAware: false
+        HandlesKeyRepeat: false
+      Orientation: Rotation0
+      KeyDowns: 0 keys currently down
+      MetaState: 0x0
+      KeyboardLayoutInfo: <not set>
+  Device 3: certify_hall
+    EventHub Devices: [ 7 ] 
+    Generation: 11
+    IsExternal: false
+    IsVirtualDevice: false
+    IsWaking: false
+    AssociatedDisplayPort: <none>
+    AssociatedDisplayUniqueIdByPort: <none>
+    AssociatedDisplayUniqueIdByDescriptor: <none>
+    SysfsRootPath:     /sys/devices/virtual
+    HasMic:     false
+    Sources: 0x80000000
+    KeyboardType: 0
+    ControllerNum: 0
+    Switch Input Mapper:
+      SwitchValues: 0
+      SwitchValid:  8000000
+      ModifySwitchCodes: 0xa -> 0x1f
+      ModifySwitchCodes: 0xb -> 0x1b
+      ModifySwitchCodes: 0xc -> 0x1e
+      ModifySwitchCodes: 0xf -> 0x13
+      ModifySwitchCodes: 0x10 -> 0x15
+  Device 5: sec_touchpad
+    EventHub Devices: [ 4 ] 
+    Generation: 147
+    IsExternal: false
+    IsVirtualDevice: false
+    IsWaking: false
+    AssociatedDisplayPort: <none>
+    AssociatedDisplayUniqueIdByPort: <none>
+    AssociatedDisplayUniqueIdByDescriptor: <none>
+    SysfsRootPath:     /sys/devices/platform/108e0000.spi/spi_master/spi10/spi10.0
+    HasMic:     false
+    Sources: KEYBOARD | MOUSE | TOUCHPAD
+    KeyboardType: 1
+    ControllerNum: 0
+    Motion Ranges:
+      PRESSURE: source=MOUSE, min=0.000, max=1.000, flat=0.000, fuzz=0.000, resolution=0.000
+      X: source=MOUSE, min=0.000, max=2339.000, flat=0.000, fuzz=0.000, resolution=0.000
+      Y: source=MOUSE, min=0.000, max=1079.000, flat=0.000, fuzz=0.000, resolution=0.000
+      GESTURE_X_OFFSET: source=MOUSE, min=-1.000, max=1.000, flat=0.000, fuzz=0.000, resolution=0.000
+      GESTURE_Y_OFFSET: source=MOUSE, min=-1.000, max=1.000, flat=0.000, fuzz=0.000, resolution=0.000
+    Keyboard Input Mapper:
+      Parameters:
+        OrientationAware: false
+        HandlesKeyRepeat: false
+      Orientation: Rotation0
+      KeyDowns: 0 keys currently down
+      MetaState: 0x0
+      KeyboardLayoutInfo: <not set>
+    Touchpad Input Mapper:
+      Pointer capture mode: UNCAPTURED
+      Gesture converter:
+        Orientation: Rotation270
+        Axis info:
+          X: min=0, max=4095, flat=0, fuzz=0, resolution=16
+          Y: min=0, max=4095, flat=0, fuzz=0, resolution=16
+        Button state: 0x00000000
+        Down time: 0
+        Current classification: NONE
+        Is hovering: 0
+        Enable Tap Timestamp: 0
+        Three finger tap shortcut enabled: disabled
+      Gesture properties:
+        Accel Max dt (real): [0.050000]
+        Accel Min dt (real): [0.003000]
+        Australian Scrolling (boolean): [false]
+        Bottom Zone Size (real): [10.000000]
+        Box Height (real): [0.000000]
+        Box Width (real): [0.000000]
+        Button Evaluation Timeout (real): [0.050000]
+        Button Finger Timeout (real): [0.030000]
+        Button Max Distance From Expected (real): [20.000000]
+        Button Move Distance (real): [10.000000]
+        Button Right Click Zone Enable (boolean): [false]
+        Button Right Click Zone Height (real): [20.000000]
+        Button Right Click Zone Width (real): [20.000000]
+        Change Min Move Distance (real): [3.000000]
+        Change Timeout (real): [0.200000]
+        Click Drag Min Slope (real): [2.220000]
+        Click Drag Pressure Diff Factor (real): [1.200000]
+        Click Drag Pressure Diff Thresh (real): [10.000000]
+        Compute Surface Area from Pressure (boolean): [true]
+        Compute Surface Area from Touch Size for Haptic Pads (boolean): [false]
+        Custom Haptic Button Force Threshold Down (real): [150.000000]
+        Custom Haptic Button Force Threshold Up (real): [130.000000]
+        Damp Scroll Min Move Factor (real): [0.200000]
+        Delay On Possible Liftoff (boolean): [false]
+        Device Mouse (boolean): [false]
+        Device Pointing Stick (boolean): [false]
+        Device Touchpad (boolean): [true]
+        Drag and Scroll Enable (boolean): [false]
+        Drumroll Co Move Ratio (real): [1.200000]
+        Drumroll Max Speed Change Factor (real): [15.000000]
+        Drumroll Speed Thresh (real): [400.000000]
+        Drumroll Suppression Enable (boolean): [true]
+        Dynamic Haptic Down Ratio (real): [1.200000]
+        Dynamic Haptic Up Ratio (real): [0.500000]
+        Enable Haptic Button Generation (boolean): [false]
+        Evaluation Timeout (real): [0.150000]
+        Event Debug Logging Components Enable (integer): [0]
+        Event Logging Enable (boolean): [false]
+        Fake Timestamp Delta (real): [0.000000]
+        Fat Finger Min Move Distance (real): [15.000000]
+        Fat Finger Pressure Ratio (real): [1.400000]
+        Fat Finger Width Ratio (real): [1.300000]
+        Filter Low Pressure (boolean): [false]
+        Finger Merge Distance Thresh (real): [140.000000]
+        Finger Merge Filter Enabled (boolean): [false]
+        Finger Merge Maximum Pressure (real): [83.000000]
+        Finger Merge Min Pressure (real): [51.000000]
+        Finger Merge Minimum Touch Major (real): [280.000000]
+        Finger Moving Energy (real): [0.012000]
+        Finger Moving Hysteresis (real): [0.006000]
+        Fling Buffer Depth (integer): [10]
+        Fling Buffer Min Avg Speed (real): [10.000000]
+        Fling Buffer Suppress Zero Length Scrolls (boolean): [true]
+        Fling Stop Extra Delay (real): [0.055000]
+        Fling Stop Timeout (real): [0.030000]
+        Force Calibration Offset (real): [0.000000]
+        Force Calibration Slope (real): [1.000000]
+        Force Touch Count To Match Finger Count (boolean): [false]
+        Four Finger Swipe Distance Ratio (real): [0.200000]
+        Four Finger Swipe Distance Thresh (real): [1.500000]
+        Haptic Button Sensitivity (integer): [3]
+        Haptic Complete Release Suppression Speed (real): [200.000000]
+        Horizontal Scroll Snap Slope (real): [0.577350]
+        Hysteresis Pinch Scale Resolution Squared (real): [1.050000]
+        Input Queue Delay (real): [0.000000]
+        Input Queue Max Delay (real): [0.017000]
+        Input Queue Min Nonsuppression Speed (real): [200.000000]
+        Integrated Touchpad (boolean): [false]
+        Inter-Tap Timeout (real): [0.150000]
+        Invert Scrolling (boolean): [true]
+        Inward Pinch Minimum Angle (real): [0.300000]
+        Keyboard Palm Prevent Timeout (real): [0.500000]
+        Keyboard Touched Timeval High (integer): [0]
+        Keyboard Touched Timeval Low (integer): [0]
+        Liftoff Speed Factor (real): [5.000000]
+        Log Path (string): /var/log/xorg/touchpad_activity_log.txt
+        Logging Notify (integer): [0]
+        Logging Reset (integer): [0]
+        Max Allowed Pressure Change Per Sec (real): [800.000000]
+        Max Dynamic Haptic Up Force (real): [350.000000]
+        Max Finger Stationary Speed (real): [0.000000]
+        Max Hysteresis Pressure Per Sec (real): [600.000000]
+        Max Pressure Change Duration (real): [0.016000]
+        Max Stationary Move Speed (real): [0.000000]
+        Max Stationary Move Speed Hysteresis (real): [0.000000]
+        Max Stationary Move Suppress Distance (real): [1.000000]
+        Merged Finger Max Age (real): [0.350000]
+        Merged Finger Max X Move (real): [180.000000]
+        Merged Finger Max Y Move (real): [60.000000]
+        Merged Finger Suspicious Angle Min Displacement (real): [7.000000]
+        Merged Finger Touch Major Pressure Ratio (real): [5.000000]
+        Merged Finger Touch Major Thresh (real): [380.000000]
+        Merged Finger X Jump Max Disp (real): [9.000000]
+        Merged Finger X Jump Min Disp (real): [6.000000]
+        Metrics Mouse Moving Time (real): [0.050000]
+        Metrics Mouse Warmup Session (integer): [100]
+        Metrics Noisy Ground Distance (real): [10.000000]
+        Metrics Noisy Ground Time (real): [0.100000]
+        Min Interpolate Period (real): [0.021000]
+        Minimum Movement Direction Detection (real): [0.003000]
+        Minimum Pinch Scale Resolution Squared (real): [1.005000]
+        Motion Tap Prevent Timeout (real): [0.050000]
+        Mouse Accel Curves (boolean): [false]
+        Mouse CPI (real): [1000.000000]
+        Mouse Pointer Accel Curve (80 reals): [inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000, inf, 0.000000, 1.000000, 0.000000]
+        Mouse Scroll Curves (boolean): [false]
+        Move Change Lock Ratio (real): [2.000000]
+        Move Change Lock Speed (real): [20.000000]
+        Move Lock Speed (real): [10.000000]
+        Move Report Distance (real): [0.350000]
+        Multiple Palm Width (real): [75.000000]
+        Old Mouse Accel Curves (boolean): [false]
+        One Finger Click Wiggle Timeout (real): [0.200000]
+        Palm Edge Zone Min Point Speed (real): [100.000000]
+        Palm Edge Zone Width (real): [14.000000]
+        Palm Eval Timeout (real): [0.100000]
+        Palm Filter Top Edge Enable (boolean): [false]
+        Palm Pointing Max Reverse Move Distance (real): [0.300000]
+        Palm Pointing Min Move Distance (real): [8.000000]
+        Palm Pressure (real): [200.000000]
+        Palm Split Maximum Distance (real): [4.000000]
+        Palm Stationary Distance (real): [4.000000]
+        Palm Stationary Time (real): [2.000000]
+        Palm Width (real): [21.200000]
+        Pinch Certain Minimum Movement (real): [8.000000]
+        Pinch Enable (boolean): [true]
+        Pinch Evaluation Timeout (real): [0.100000]
+        Pinch Guess Consistent Movement Ratio (real): [0.400000]
+        Pinch Guess Minimum Movement (real): [2.000000]
+        Pinch Initial Scale Time Inverse (real): [3.330000]
+        Pinch Noise Level Squared (real): [2.000000]
+        Pinch Thumb Minimum Movement (real): [1.410000]
+        Pinch Zoom Maximum Angle (real): [-0.400000]
+        Pinch Zoom Minimum Events (integer): [3]
+        Point X Out Scale (real): [1.000000]
+        Point Y Out Scale (real): [1.000000]
+        Pointer Accel Curve (80 reals): [32.002000, 0.000000, 2.041600, 0.000000, 52.830000, 0.000000, 3.065600, -32.802560, 119.124000, 0.000000, 4.659200, -116.951680, inf, 0.000000, 9.625600, -708.835840, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000]
+        Pointer Acceleration (boolean): [true]
+        Pointer Sensitivity (integer): [3]
+        Pressure Calibration Offset (real): [0.000000]
+        Pressure Calibration Slope (real): [1.000000]
+        Pressure Minimum Threshold (real): [0.000000]
+        Quick Acceleration Factor (real): [0.000000]
+        Quick Move Distance Thresh (real): [3.000000]
+        Right Click Second Finger Age Thresh (real): [0.500000]
+        Right Click Start Time Diff Thresh (real): [0.100000]
+        Scroll Accel Curve (80 reals): [32.002000, 0.000000, 2.041600, 0.000000, 52.830000, 0.000000, 3.065600, -32.802560, 119.124000, 0.000000, 4.659200, -116.951680, inf, 0.000000, 9.625600, -708.835840, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000]
+        Scroll Minimum Angle (real): [-0.200000]
+        Scroll Sensitivity (integer): [3]
+        Scroll X Out Scale (real): [1.000000]
+        Scroll Y Out Scale (real): [1.000000]
+        Smooth Accel (boolean): [false]
+        Stationary Pinch Scale Resolution Squared (real): [1.050000]
+        Stationary Pinch Time (real): [0.100000]
+        Stationary Wiggle Filter Enabled (boolean): [false]
+        Suppress Immediate Tapdown (boolean): [true]
+        T5R2 Three Finger Click Enable (boolean): [false]
+        Tap Drag Delay (real): [0.000000]
+        Tap Drag Enable (boolean): [false]
+        Tap Drag Lock Enable (boolean): [false]
+        Tap Drag Stationary Time (real): [0.000000]
+        Tap Drag Timeout (real): [0.300000]
+        Tap Enable (boolean): [true]
+        Tap Exclusion Border Width (real): [8.000000]
+        Tap Maximum Finger Age (real): [1.200000]
+        Tap Maximum Movement (real): [0.000100]
+        Tap Min Separation (real): [10.000000]
+        Tap Minimum Pressure (real): [25.000000]
+        Tap Move Distance (real): [2.000000]
+        Tap Paused (boolean): [false]
+        Tap Timeout (real): [0.200000]
+        Three Finger Click Enable (boolean): [true]
+        Three Finger Swipe Distance Ratio (real): [0.200000]
+        Three Finger Swipe Distance Thresh (real): [1.500000]
+        Three Finger Swipe Enable (boolean): [true]
+        Thumb Click Prevention Timeout (real): [0.150000]
+        Thumb Evaluation Timeout (real): [0.060000]
+        Thumb Movement Factor (real): [0.500000]
+        Thumb Pinch Delay Factor (real): [9.000000]
+        Thumb Pinch Evaluation Timeout (real): [0.250000]
+        Thumb Pinch Minimum Movement (real): [0.800000]
+        Thumb Pinch Movement Ratio (real): [20.000000]
+        Thumb Pinch Threshold Ratio (real): [0.250000]
+        Thumb Slow Pinch Similarity Ratio (real): [5.000000]
+        Thumb Speed Factor (real): [0.500000]
+        Top Edge Tap Exclusion Border Width (real): [3.000000]
+        Touchpad Device Output Bias on X-Axis (real): [0.000000]
+        Touchpad Device Output Bias on Y-Axis (real): [0.000000]
+        Touchpad Stack Version (integer): [2]
+        Tracing Enabled (boolean): [false]
+        Trend Classifying 2nd-order Motion Enabled (boolean): [false]
+        Trend Classifying Filter Enabled (boolean): [true]
+        Trend Classifying Min Num of Samples (integer): [6]
+        Trend Classifying Num of Samples (integer): [20]
+        Trend Classifying Z Threshold (real): [2.575829]
+        Two Finger Horizontal Close Distance Thresh (real): [50.000000]
+        Two Finger Move Distance Thresh (real): [7.000000]
+        Two Finger Pressure Diff Factor (real): [1.650000]
+        Two Finger Pressure Diff Thresh (real): [32.000000]
+        Two Finger Scroll Distance Thresh (real): [1.500000]
+        Two Finger Vertical Close Distance Thresh (real): [45.000000]
+        Use Custom Haptic Button Force Thresholds (boolean): [false]
+        Use Custom Mouse Pointer Accel Curve (boolean): [false]
+        Use Custom Touchpad Pointer Accel Curve (boolean): [true]
+        Use Custom Touchpad Scroll Accel Curve (boolean): [true]
+        Use Dynamic Haptic Thresholds (boolean): [false]
+        Vertical Scroll Snap Slope (real): [1.191754]
+        Wiggle Button Down Timeout (real): [0.250000]
+        Wiggle Max Distance (real): [5.500000]
+        Wiggle Timeout (real): [0.075000]
+        Zero Finger Click Enable (boolean): [true]
+      Timer provider:
+        Timer IDs: [0]
+        Deadlines and corresponding timer IDs:
+        
+      Captured event converter:
+        Orientation scale: 0
+        Pressure scale: 1
+        Size scale: 0.00392157
+        Dimension axes: touch major, touch minor
+        Down time: 0
+        Button state: 0x00000000
+        Pointer IDs in use: 00000000000000000000000000000000
+        Pointer IDs for slot numbers:
+        
+      Relative mode gesture converter:
+        Button state: 0x00000000
+        Down time: 0
+      DisplayId: -1
+  Device -1: Virtual
+    EventHub Devices: [ -1 ] 
+    Generation: 3
+    IsExternal: false
+    IsVirtualDevice: false
+    IsWaking: false
+    AssociatedDisplayPort: <none>
+    AssociatedDisplayUniqueIdByPort: <none>
+    AssociatedDisplayUniqueIdByDescriptor: <none>
+    SysfsRootPath:     <none>
+    HasMic:     false
+    Sources: KEYBOARD | DPAD
+    KeyboardType: 2
+    ControllerNum: 0
+    Keyboard Input Mapper:
+      Parameters:
+        OrientationAware: false
+        HandlesKeyRepeat: false
+      Orientation: Rotation0
+      KeyDowns: 0 keys currently down
+      MetaState: 0x0
+      KeyboardLayoutInfo: <not set>
+  NextTimeout: 9223372036854775807
+  Configuration:
+    ExcludedDeviceNames: []
+    VirtualKeyQuietTime: 0.0ms
+    WheelVelocityControlParameters: scale=1.000, lowThreshold=15.000, highThreshold=50.000, acceleration=4.000
+    PointerGesture:
+      Enabled: true
+      Viewports:
+        Viewport INTERNAL: displayId=0, uniqueId=local:4633128672291735937, port=129, orientation=1, densityDpi=480 xDpi=409.432831, yDpi=409.903442, logicalFrame=[0, 0, 2340, 1080], physicalFrame=[0, 0, 2340, 1080], deviceSize=[2340, 1080], isActive=[1]
+  Input meta state: 0x0
+  Input meta data: 0/0/0/0/0/
+  Cover State:
+    Verifier type: nfc, Verified: false
+    Cover type: -1, Front: opened, Back: detached
+    Test mode enabled: false, type: -1
+    Front state change time: 0
+    Glove mode enabled: false
+
+UnwantedInteractionBlocker:
+  mPreferStylusOverTouchBlocker:
+    mActiveStyli: {}
+    mLastTouchEvents: 
+    mDevicesWithMixedToolType: {}
+    mCanceledDevices: {}
+  mEnablePalmRejection: 0
+  isPalmRejectionEnabled (flag value): 0
+  mPalmRejectors: None
+
+PointerChoreographer:
+  Show Touches Enabled: false
+  DisplaysWithShowTouchesForceEnabled: {}
+  Show all touches: false
+  Stylus PointerIcon Enabled: true
+  Accessibility Pointer Motion Filter Enabled: false
+  S-pen deviceId: -1, show hovering enabled: false
+  Default mouse displayId: 0
+  DeX displayId: <unset>
+  Flow pointer mode: false
+  Dex type: 0
+  Touchpad enabled: false
+  S-pen touchpad: <unset>
+  Force hide cursor: false
+  MousePointerControllers:
+  TouchPointerControllers:
+  StylusPointerControllers:
+  DrawingTabletControllers:
+  DisplayTopologyGraph:
+    PrimaryDisplayId: 0
+    TopologyGraph:
+      displayId(0):AdjacentDisplays: []
+      Density: 480
+      Bounds: FloatRect(0.000000, 0.000000, 780.000000, 360.000000)
+    
+
+
+Input Processor State:
+  Motion Classifier:
+    <nullptr>
+
+InputDeviceMetricsCollector:
+  Logged device IDs: {2, 3, 4, 5, 6}
+  Devices with active usage sessions: {}
+
+InputFilter:
+
+Input Dispatcher State:
+  DispatchEnabled: true
+  DispatchFrozen: false
+  InputFilterEnabled: false
+  FocusedDisplayId: 0
+  FocusedApplications:
+    displayId=0, name='ActivityRecord{83356651 u0 com.example.myapplication/.PopupActivity t36}', dispatchingTimeout=10000ms
+  FocusedWindows:
+    displayId=0, name='a9d8149 Sys2038:com.example.myapplication/com.example.myapplication.PopupActivity'
+  FocusRequests:
+    displayId=0, name='a9d8149 Sys2038:com.example.myapplication/com.example.myapplication.PopupActivity' result='OK'
+  Pointer Capture Mode Requested: UNCAPTURED
+  Current Window with Pointer Capture: None
+  TouchStatesByDisplay: <no displays touched>
+  CursorStatesByDisplay: <no displays touched by cursor>
+  Display: 0
+    logicalSize=2340x1080
+        transform (ROT_270) (ROTATE TRANSLATE)
+            0.0000  1.0000  0.0000
+            -1.0000  0.0000  1080.0000
+            0.0000  0.0000  1.0000
+    Windows:
+      0: name=PointerEventDispatcherOverlay0, id=35, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | SPY | DO_NOT_PILFER, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=PointerEventDispatcherOverlay0, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=10000ms, token=0xb40000795a4231d0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      1: name=[Gesture Monitor] secinputdev, id=258, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | SPY, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=[Gesture Monitor] secinputdev, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=10000ms, token=0xb40000795a3ad710, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      2: name=[Gesture Monitor] touchpad-gesture, id=86, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | SPY, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=[Gesture Monitor] touchpad-gesture, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=3236, ownerUid=10171, dispatchingTimeout=10000ms, token=0xb40000795a280210, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      3: name=[Gesture Monitor] PalmMotion, id=82, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | SPY, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=[Gesture Monitor] PalmMotion, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=10000ms, token=0xb40000795a28bc90, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      4: name=[Gesture Monitor] CornerGestureMonitor, id=38, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | SPY, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=[Gesture Monitor] CornerGestureMonitor, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=10000ms, token=0xb40000795a2ac150, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      5: name=c306c14 NavigationBar0, id=77, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | WATCH_OUTSIDE_TOUCH | SLIPPERY, samsungFlags=0x0, alpha=1, frame=[0,2196][1080,2340], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[0,2196][1080,2340], pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=2475, ownerUid=10062, dispatchingTimeout=10000ms, token=0xb40000795a2942d0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  -2196.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      6: name=4fb8216 com.sec.android.app.launcher/com.samsung.app.honeyspace.edge.edgepanel.app.CocktailBarService, id=237, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY | WATCH_OUTSIDE_TOUCH, samsungFlags=FORCE_TRUSTED_OVERLAY, alpha=1, frame=[789,0][990,80], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[789,0][990,47], pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=3236, ownerUid=10171, dispatchingTimeout=10000ms, token=0xb40000795a3d9950, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  990.0000
+          0.0000  0.0000  1.0000
+      7: name=ee1fde3 StatusBar, id=78, displayId=0, inputConfig=NOT_FOCUSABLE | TRUSTED_OVERLAY, samsungFlags=0x0, alpha=1, frame=[990,0][1080,2340], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[990,0][1080,2196], pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=2475, ownerUid=10062, dispatchingTimeout=10000ms, token=0xb40000795a294790, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      8: name=a9d8149 Sys2038:com.example.myapplication/com.example.myapplication.PopupActivity, id=878, displayId=0, inputConfig=0x0, samsungFlags=0x100000, alpha=1, frame=[0,0][1080,2340], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[-1080,-2340][2160,4680], pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=29024, ownerUid=10379, dispatchingTimeout=10000ms, token=0xb40000795a3e0fd0, touchOcclusionMode=USE_OPACITY, canOccludePresentation
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      9: name=f2cf846 RecentsTransitionOverlay, id=90, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE | NOT_FOCUSABLE | NOT_TOUCHABLE | TRUSTED_OVERLAY, samsungFlags=0x0, alpha=1, frame=[1079,0][1080,1], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=<empty>, pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=3236, ownerUid=10171, dispatchingTimeout=0ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      10: name=361be52 com.example.myapplication/com.example.myapplication.PopupActivity, id=869, displayId=0, inputConfig=0x0, samsungFlags=0x100000, alpha=1, frame=[0,0][1080,2340], globalScale=1, applicationInfo.name=ActivityRecord{83356651 u0 com.example.myapplication/.PopupActivity t36}, applicationInfo.token=0xb4000078da333310, touchableRegion=[0,0][1080,2340], pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=29024, ownerUid=10379, dispatchingTimeout=10000ms, token=0xb40000795a38f990, touchOcclusionMode=BLOCK_UNTRUSTED, canOccludePresentation
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      11: name=a333d48 ActivityRecordInputSink com.example.myapplication/.PopupActivity, id=877, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_FOCUSABLE | NOT_TOUCHABLE, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=0, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=0ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      12: name=561a5b8 com.example.myapplication/com.example.myapplication.MainActivity, id=854, displayId=0, inputConfig=0x0, samsungFlags=0x100000, alpha=1, frame=[0,0][1080,2340], globalScale=1, applicationInfo.name=ActivityRecord{119071456 u0 com.example.myapplication/.MainActivity t36}, applicationInfo.token=0xb4000078da2794f0, touchableRegion=[0,0][1080,2340], pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=29024, ownerUid=10379, dispatchingTimeout=10000ms, token=0xb40000795a3756d0, touchOcclusionMode=BLOCK_UNTRUSTED, canOccludePresentation
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      13: name=2d64912 ActivityRecordInputSink com.example.myapplication/.MainActivity, id=832, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_FOCUSABLE, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=0, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=0ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      14: name=505cced ActivityRecordInputSink com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity, id=710, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE | NOT_FOCUSABLE | NOT_TOUCHABLE, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=0, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=0ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      15: name=Dim layer#61, id=61, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=<empty>, pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=2475, ownerUid=10062, dispatchingTimeout=5000ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      16: name=Dim layer#60, id=60, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE, samsungFlags=0x0, alpha=1, frame=[1080,0][1080,0], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=<empty>, pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=2475, ownerUid=10062, dispatchingTimeout=5000ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      17: name=Split Background Layer#59, id=59, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE | TRUSTED_OVERLAY, samsungFlags=0x0, alpha=1, frame=[0,0][1080,2340], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=<empty>, pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=2475, ownerUid=10062, dispatchingTimeout=5000ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_270) (ROTATE TRANSLATE)
+          0.0000  1.0000  0.0000
+          -1.0000  0.0000  1080.0000
+          0.0000  0.0000  1.0000
+      18: name=c8772ae ActivityRecordInputSink com.sec.android.app.launcher/.Launcher, id=241, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE | NOT_FOCUSABLE | NOT_TOUCHABLE, samsungFlags=0x0, alpha=1, frame=[0,0][0,0], globalScale=0, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=[-9720,-23400][11880,23400], pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=1386, ownerUid=1000, dispatchingTimeout=0ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform (ROT_0) (IDENTITY)
+      19: name=Wallpaper BBQ wrapper 7_phone|systemlock#49, id=49, displayId=0, inputConfig=NO_INPUT_CHANNEL | NOT_VISIBLE, samsungFlags=0x0, alpha=1, frame=[-1324,-157][1144,1237], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=<empty>, pTouchableRegion=<empty>, 1HXY=[0, 0, 0], ownerPid=2249, ownerUid=10161, dispatchingTimeout=5000ms, token=0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform 0x00000080 (ROT_INVALID) 0x8009 (TRANSLATE)
+          -0.1387  0.9903  -7.2629
+          -0.9903  -0.1387  1155.7432
+          0.0000  0.0000  1.0000
+      20: name=c2cfcc6 com.samsung.android.wallpaper.live.infinity.InfinityWallpaper, id=47, displayId=0, inputConfig=NOT_VISIBLE | NOT_FOCUSABLE | IS_WALLPAPER, samsungFlags=0x8, alpha=1, frame=[1144,167][1144,167], globalScale=1, applicationInfo.name=, applicationInfo.token=<null>, touchableRegion=<empty>, pTouchableRegion=<empty>, 1HXY=[0, 0, 1], ownerPid=2249, ownerUid=10161, dispatchingTimeout=10000ms, token=0xb40000795a29c3d0, touchOcclusionMode=BLOCK_UNTRUSTED
+      transform 0x00000080 (ROT_INVALID) 0x8009 (TRANSLATE)
+          -0.1387  0.9903  -7.2629
+          -0.9903  -0.1387  1155.7432
+          0.0000  0.0000  1.0000
+  mMaximumObscuringOpacityForTouch: 0.800000
+  DisplayTopologyGraph:
+    PrimaryDisplayId: 0
+    TopologyGraph:
+      displayId(0):AdjacentDisplays: []
+      Density: 480
+      Bounds: FloatRect(0.000000, 0.000000, 780.000000, 360.000000)
+    
+  
+  Focus Monitors: <none>
+  Connections:
+    1240: channelName='a9d8149 Sys2038:com.example.myapplication/com.example.myapplication.PopupActivity', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1234: channelName='361be52 com.example.myapplication/com.example.myapplication.PopupActivity', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1324: channelName='4add381 com.samsung.android.spay.pay.HintService', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    968: channelName='ee1fde3 StatusBar', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    959: channelName='2e46681 ShellDropTarget', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    954: channelName='[Gesture Monitor] secinputdev', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1027: channelName='[Gesture Monitor] PalmMotion', filter=0x1, status=NORMAL, isFocusMonitor=false, responsive=true
+    1280: channelName='a728da6 com.sec.android.app.launcher/com.android.quickstep.RecentsActivity', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1048: channelName='4fb8216 com.sec.android.app.launcher/com.samsung.app.honeyspace.edge.edgepanel.app.CocktailBarService', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1062: channelName='recents_animation_input_consumer', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1309: channelName='575e30 com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1047: channelName='[Gesture Monitor] touchpad-gesture', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    961: channelName='60647 LockscreenShortcutBlur', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    793: channelName='[Gesture Monitor] CornerGestureMonitor', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    967: channelName='84ebee9 NotificationShade', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    970: channelName='bec61cf Bouncer', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    904: channelName='561a5b8 com.example.myapplication/com.example.myapplication.MainActivity', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1314: channelName='14f47cb com.android.chrome/org.chromium.chrome.browser.firstrun.FirstRunActivity', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    1230: channelName='9c0b3dc InputMethod', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    966: channelName='c306c14 NavigationBar0', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    922: channelName='c2cfcc6 com.samsung.android.wallpaper.live.infinity.InfinityWallpaper', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+    312: channelName='PointerEventDispatcher0', filter=0xffff, status=NORMAL, isFocusMonitor=false, responsive=true
+  Filter verifier on display 0:
+    Touching pointer IDs by device: {}
+    Hovering pointer IDs by device: {}
+    Down times by device: {DeviceId(-1): 791151000000}
+  RecentQueue: length=10
+    FocusEvent(hasFocus=false), age=21437ms
+    FocusEvent(hasFocus=true), age=21430ms
+    DeviceResetEvent(deviceId=19), policyFlags=0x00000000, age=19806ms
+    DeviceResetEvent(deviceId=19), policyFlags=0x00000000, age=19789ms
+    FocusEvent(hasFocus=false), age=19419ms
+    FocusEvent(hasFocus=true), age=19419ms
+    FocusEvent(hasFocus=false), age=15459ms
+    FocusEvent(hasFocus=true), age=15459ms
+    FocusEvent(hasFocus=false), age=15434ms
+    FocusEvent(hasFocus=true), age=15426ms
+  PendingEvent: <none>
+  InboundQueue: <empty>
+  CommandQueue: <empty>
+  TouchModePerDisplay:
+    Display: 0 TouchMode: 1
+  Configuration:
+    KeyRepeatDelay: 50ms
+    KeyRepeatTimeout: 400ms
+    Show Pen hovering (Air view): false
+    LatencyTracker:
+      mTimelines.size() = 0
+      mEventTimes.size() = 0
+    LatencyAggregatorWithHistograms:
+     Histograms:
+      mLastSlowEventTime=0ns
+      mNumEventsSinceLastSlowEventReport = 0
+      mNumSkippedSlowEvents = 0
+  InputTracer: Disabled
+
+Input Manager Service (Java) State:
+  Gesture Monitors (implemented as spy windows):
+    0: name='[Gesture Monitor] PalmMotion', InputChannel token=android.os.BinderProxy@890d033, displayId=0
+    1: name='[Gesture Monitor] CornerGestureMonitor', InputChannel token=android.os.BinderProxy@151a7c9, displayId=0
+    2: name='[Gesture Monitor] touchpad-gesture', InputChannel token=android.os.BinderProxy@13af552, displayId=0
+    3: name='[Gesture Monitor] secinputdev', InputChannel token=android.os.BinderProxy@bb06e3d, displayId=0
+  mAdditionalDisplayInputProperties:
+    <none>
+  BatteryController:
+    State: Polling = false, Interactive = true
+    Listeners: 0 battery listeners
+    Device Monitors: 0 monitors
+  KbdBacklightController: 0 keyboard backlights
+  KeyboardLedController: 0 keyboard mic mute lights
+  KeyboardLedController: 0 keyboard volume mute lights
+  KeyboardGlyphManager: 27 glyph maps
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099652, vendorId=1406, productId=8198]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099652, vendorId=1406, productId=8199]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099652, vendorId=1406, productId=8201]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099652, vendorId=1406, productId=8206]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099653, vendorId=1356, productId=1476]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099653, vendorId=1356, productId=2508]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099653, vendorId=1356, productId=2976]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099653, vendorId=1356, productId=3302]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099653, vendorId=1356, productId=3570]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=654]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=655]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=1817]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=721]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=733]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=736]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=746]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=765]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2848]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=739]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2816]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2821]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2850]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2826]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2828]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2849]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2834]
+    KeyboardGlyphManager$KeyGlyphMapData[packageName=com.android.inputdevices, receiverName=com.android.inputdevices.KeyGlyphMapProvider, resourceId=2131099654, vendorId=1118, productId=2835]
+  KeyGestureController:
+    mCurrentUserId = 0
+    mSystemPid = 1386
+    mPendingMetaAction = false
+    mPendingCapsLockToggle = false
+    mPendingHideRecentSwitcher = false
+    mSearchKeyBehavior = 0
+    mSettingsKeyBehavior = 0
+    mRingerToggleChord = 1
+    mPowerVolUpBehavior = 0
+    mIsScreenshotTriggered = false
+    mGlobalActionsByKeyCombination = false
+    mKeyGestureEventListenerRecords = {2475}
+    mKeyGestureHandlerRecords = {1386, 2475, 3236}
+    mSupportedKeyGestures = {
+    1, 2(3236), 3(2475), 4, 5, 6, 7, 8(2475), 10, 11, 12, 13, 14, 15, 16, 17, 21(3236), 22, 23, 25, 27, 28, 31, 32, 51, 52, 53, 54(3236), 55, 56, 57, 59, 60, 61, 62(2475), 63, 64, 65, 66, 67, 68(2475), 69(2475), 70(2475), 71(2475), 72, 73, 75, 76, 77(2475), 78(2475), 79(2475), 80(2475), 81(2475), 82(2475), 83(2475), 84(3236), 85(2475), 86(2475), 87, 88, 1001, 1003, 1101, 1102, 1103, 1104, 1105, 1106, 1107, 1108, 1109, 1110, 1111, 1112(3236), 1121(2475), 1122(2475), 1123(2475)}
+  Last handled KeyGestureEvents: 
+    KeyGestureEvent { deviceId = -1, keycodes = [25, 26], modifierState = 0, keyGestureType = KEY_GESTURE_TYPE_SCREENSHOT_CHORD, action = COMPLETE, displayId = 0, flags = CANCELLED, appLaunchData = null }
+    KeyGestureEvent { deviceId = -1, keycodes = [26], modifierState = 0, keyGestureType = KEY_GESTURE_TYPE_TOGGLE_POWER, action = COMPLETE, displayId = 0, flags = , appLaunchData = null }
+    KeyGestureEvent { deviceId = -1, keycodes = [224], modifierState = 0, keyGestureType = KEY_GESTURE_TYPE_WAKEUP, action = COMPLETE, displayId = 0, flags = , appLaunchData = null }
+    KeyGestureEvent { deviceId = -1, keycodes = [3], modifierState = 0, keyGestureType = KEY_GESTURE_TYPE_HOME, action = COMPLETE, displayId = 0, flags = , appLaunchData = null }
+  KeyCombination rules:
+    KEYCODE_VOLUME_DOWN + KEYCODE_POWER
+    KEYCODE_VOLUME_DOWN + KEYCODE_VOLUME_UP
+    KEYCODE_VOLUME_UP + KEYCODE_POWER
+    KEYCODE_APP_SWITCH + KEYCODE_BACK
+  AppLaunchShortcutManager:
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_E, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=CategoryData{mCategory='android.intent.category.APP_EMAIL'}], allowCaptureByFocusedWindow = true }
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_B, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=RoleData{mRole='android.app.role.BROWSER'}], allowCaptureByFocusedWindow = true }
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_C, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=CategoryData{mCategory='android.intent.category.APP_CONTACTS'}], allowCaptureByFocusedWindow = true }
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_S, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=RoleData{mRole='android.app.role.SMS'}], allowCaptureByFocusedWindow = true }
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_P, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=CategoryData{mCategory='android.intent.category.APP_MUSIC'}], allowCaptureByFocusedWindow = true }
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_M, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=CategoryData{mCategory='android.intent.category.APP_MAPS'}], allowCaptureByFocusedWindow = true }
+    InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_K, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=CategoryData{mCategory='android.intent.category.APP_CALENDAR'}], allowCaptureByFocusedWindow = true }
+  InputGestureManager:
+    System Shortcuts:
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_X, mModifierState=65536}, action = Action[keyGestureType=1105, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_UP, mModifierState=69632}, action = Action[keyGestureType=53, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_UP, mModifierState=65536}, action = Action[keyGestureType=1122, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_T, mModifierState=65538}, action = Action[keyGestureType=63, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_8, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_4, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_L, mModifierState=65536}, action = Action[keyGestureType=32, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_4, mModifierState=65538}, action = Action[keyGestureType=67, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_0, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_L, mModifierState=65537}, action = Action[keyGestureType=32, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_H, mModifierState=65536}, action = Action[keyGestureType=1, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_MINUS, mModifierState=65536}, action = Action[keyGestureType=70, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_D, mModifierState=69632}, action = Action[keyGestureType=62, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_D, mModifierState=65536}, action = Action[keyGestureType=1, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_TAB, mModifierState=65536}, action = Action[keyGestureType=2, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_DOWN, mModifierState=69632}, action = Action[keyGestureType=52, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_DOWN, mModifierState=65536}, action = Action[keyGestureType=1123, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_Y, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=ComponentData{mPackageName='com.samsung.android.smartmirroring', mClassName='com.samsung.android.smartmirroring.CastingDialog'}], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_9, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_U, mModifierState=65536}, action = Action[keyGestureType=1104, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_ESCAPE, mModifierState=65536}, action = Action[keyGestureType=3, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_5, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_Q, mModifierState=65536}, action = Action[keyGestureType=1103, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_5, mModifierState=65538}, action = Action[keyGestureType=64, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_1, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_EQUALS, mModifierState=65536}, action = Action[keyGestureType=71, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_M, mModifierState=65538}, action = Action[keyGestureType=72, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_I, mModifierState=65536}, action = Action[keyGestureType=7, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_ENTER, mModifierState=65536}, action = Action[keyGestureType=1, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_I, mModifierState=65538}, action = Action[keyGestureType=87, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_A, mModifierState=65537}, action = Action[keyGestureType=1108, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_A, mModifierState=65536}, action = Action[keyGestureType=5, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_Z, mModifierState=65536}, action = Action[keyGestureType=7, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_LEFT, mModifierState=65536}, action = Action[keyGestureType=3, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_LEFT, mModifierState=69632}, action = Action[keyGestureType=27, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_V, mModifierState=65536}, action = Action[keyGestureType=1110, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_V, mModifierState=65538}, action = Action[keyGestureType=76, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_V, mModifierState=65537}, action = Action[keyGestureType=1109, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_R, mModifierState=65536}, action = Action[keyGestureType=51, appLaunchData=ComponentData{mPackageName='com.sec.android.app.myfiles', mClassName='com.sec.android.app.myfiles.ui.MainActivity'}], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_6, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_N, mModifierState=65536}, action = Action[keyGestureType=8, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_6, mModifierState=65538}, action = Action[keyGestureType=66, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_2, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_LEFT_BRACKET, mModifierState=65536}, action = Action[keyGestureType=68, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_LEFT_BRACKET, mModifierState=69632}, action = Action[keyGestureType=77, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_F, mModifierState=65536}, action = Action[keyGestureType=1101, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DEL, mModifierState=69632}, action = Action[keyGestureType=31, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DEL, mModifierState=65536}, action = Action[keyGestureType=3, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_RIGHT, mModifierState=69632}, action = Action[keyGestureType=28, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_DPAD_RIGHT, mModifierState=65536}, action = Action[keyGestureType=1121, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_W, mModifierState=69632}, action = Action[keyGestureType=81, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_7, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_S, mModifierState=65537}, action = Action[keyGestureType=10, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_F23, mModifierState=65537}, action = Action[keyGestureType=5, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_S, mModifierState=65536}, action = Action[keyGestureType=10, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_S, mModifierState=69632}, action = Action[keyGestureType=10, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_SLASH, mModifierState=65536}, action = Action[keyGestureType=12, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_S, mModifierState=65538}, action = Action[keyGestureType=73, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_3, mModifierState=65536}, action = Action[keyGestureType=1112, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_O, mModifierState=65536}, action = Action[keyGestureType=1111, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_RIGHT_BRACKET, mModifierState=65536}, action = Action[keyGestureType=69, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_3, mModifierState=65538}, action = Action[keyGestureType=65, appLaunchData=null], allowCaptureByFocusedWindow = true }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_RIGHT_BRACKET, mModifierState=69632}, action = Action[keyGestureType=78, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_F4, mModifierState=2}, action = Action[keyGestureType=1105, appLaunchData=null], allowCaptureByFocusedWindow = false }
+      InputGestureData { trigger = KeyTrigger{mKeycode=KEYCODE_G, mModifierState=65536}, action = Action[keyGestureType=1102, appLaunchData=null], allowCaptureByFocusedWindow = false }
+    Blocklisted Triggers:
+      KeyTrigger{mKeycode=KEYCODE_E, mModifierState=65536}
+      KeyTrigger{mKeycode=KEYCODE_C, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_B, mModifierState=65536}
+      KeyTrigger{mKeycode=KEYCODE_SPACE, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_C, mModifierState=65536}
+      KeyTrigger{mKeycode=KEYCODE_A, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_SPACE, mModifierState=4097}
+      KeyTrigger{mKeycode=KEYCODE_TAB, mModifierState=2}
+      KeyTrigger{mKeycode=KEYCODE_TAB, mModifierState=3}
+      KeyTrigger{mKeycode=KEYCODE_Z, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_Y, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_X, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_Z, mModifierState=4098}
+      KeyTrigger{mKeycode=KEYCODE_V, mModifierState=4096}
+      KeyTrigger{mKeycode=KEYCODE_S, mModifierState=65536}
+      KeyTrigger{mKeycode=KEYCODE_P, mModifierState=65536}
+      KeyTrigger{mKeycode=KEYCODE_LANGUAGE_SWITCH, mModifierState=1}
+      KeyTrigger{mKeycode=KEYCODE_M, mModifierState=65536}
+      KeyTrigger{mKeycode=KEYCODE_K, mModifierState=65536}
+    Custom Gestures:
+    VirtualInputController: 
+      Active descriptors: 
+    Input Device Remapper State:
+      Current user ID: 0
+      Remapping Data:
+        User 0:
+          Device: InputDeviceIdentifier: vendorId: 6353, productId: 1, descriptor: e1fe28b90f915c7d1febbd52c1ef84b3c4cbed9f
+          Device: InputDeviceIdentifier: vendorId: 1, productId: 1, descriptor: d2c52ff0f656fac4cd7b7a118d575e0109a9fe1c
+          Device: InputDeviceIdentifier: vendorId: 0, productId: 0, descriptor: a718a782d34bc767f4689c232d64d527998ea7fd
+          Device: InputDeviceIdentifier: vendorId: 1, productId: 1, descriptor: 485d69228e24f5e46da1598745890b214130dbc4
+          Device: InputDeviceIdentifier: vendorId: 0, productId: 0, descriptor: 5a992b125b028d8005f2be21d193b9e73694f332
+          Device: InputDeviceIdentifier: vendorId: 0, productId: 0, descriptor: 0fa9d3d0d40f7f5b316320876742e00ad5eb1ba9
+          Device: InputDeviceIdentifier: vendorId: 0, productId: 0, descriptor: 6bb78087f323d376bc537679f3f2a4c034fb4659
+    KeyboardLayoutManager:
+      mCurrentImeInfo: userId=0, subtypeHandle=InputMethodSubtypeHandle{mHandle=com.samsung.android.honeyboard/.service.HoneyBoardService:subtype:65538}, subtype=android.view.inputmethod.InputMethodSubtype@10002, languageTag=en-GB
+      mConfiguredKeyboards:
+      Keyboard layout cache:
+        key: layoutDescriptor:6bb78087f323d376bc537679f3f2a4c034fb4659,userId:0,subtypeHandle:com.samsung.android.honeyboard/.service.HoneyBoardService:subtype:65538  layout: KeyboardLayoutSelectionResult { layoutDescriptor = com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk, selectionCriteria = LAYOUT_SELECTION_CRITERIA_VIRTUAL_KEYBOARD }
+        key: layoutDescriptor:0fa9d3d0d40f7f5b316320876742e00ad5eb1ba9,userId:0,subtypeHandle:com.samsung.android.honeyboard/.service.HoneyBoardService:subtype:65538  layout: KeyboardLayoutSelectionResult { layoutDescriptor = com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk, selectionCriteria = LAYOUT_SELECTION_CRITERIA_VIRTUAL_KEYBOARD }
+        key: layoutDescriptor:vendor:1,product:1,userId:0,subtypeHandle:com.samsung.android.honeyboard/.service.HoneyBoardService:subtype:65538  layout: KeyboardLayoutSelectionResult { layoutDescriptor = com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk, selectionCriteria = LAYOUT_SELECTION_CRITERIA_VIRTUAL_KEYBOARD }
+    Data store:
+    All Keyboard Layouts:
+      "KeyboardLayout English (Canada) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_ca, priority: 0, locales: [en_CA_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_ca
+      "KeyboardLayout English (UK), Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk, priority: 0, locales: [en_GB_#Latn,ga], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_uk
+      "KeyboardLayout English (US), Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us, priority: 0, locales: [en__#Latn,en_US_#Latn,en_AU,xh,zu,af,id,ms,uz,fil,hg_IN,vi,ko,th,zh,zh_CN,zh_HK,zh_TW], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us
+      "KeyboardLayout English (US), International style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_intl, priority: 0, locales: [en_US_#Latn], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_intl
+      "KeyboardLayout English (US), Colemak style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_colemak, priority: 0, locales: [en_US_#Latn], layout type: colemak, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_colemak
+      "KeyboardLayout English (US), Dvorak style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_dvorak, priority: 0, locales: [en_US_#Latn], layout type: dvorak, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_dvorak
+      "KeyboardLayout English (US), Workman style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_workman, priority: 0, locales: [en_US_#Latn], layout type: workman, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_us_workman
+      "KeyboardLayout German, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_german, priority: 0, locales: [de__#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_german
+      "KeyboardLayout French, Azerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_french, priority: 0, locales: [fr_FR_#Latn], layout type: azerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_french
+      "KeyboardLayout French (Canada), Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_french_ca, priority: 0, locales: [fr_CA_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_french_ca
+      "KeyboardLayout Russian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_russian, priority: 0, locales: [ru__#Cyrl], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_russian
+      "KeyboardLayout Russian, Mac style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_russian_mac, priority: 0, locales: [ru__#Cyrl], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_russian_mac
+      "KeyboardLayout Spanish, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_spanish, priority: 0, locales: [es_ES_#Latn,gl,eu,ca], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_spanish
+      "KeyboardLayout Swiss French, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_swiss_french, priority: 0, locales: [fr_CH_#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_swiss_french
+      "KeyboardLayout Swiss German, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_swiss_german, priority: 0, locales: [de_CH_#Latn,gsw_CH_#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_swiss_german
+      "KeyboardLayout Belgian, Azerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_belgian, priority: 0, locales: [fr_BE_#Latn], layout type: azerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_belgian
+      "KeyboardLayout Bulgarian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_bulgarian, priority: 0, locales: [bg__#Cyrl], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_bulgarian
+      "KeyboardLayout Bulgarian, Phonetic - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_bulgarian_phonetic, priority: 0, locales: [bg__#Cyrl], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_bulgarian_phonetic
+      "KeyboardLayout Italian, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_italian, priority: 0, locales: [it__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_italian
+      "KeyboardLayout Danish, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_danish, priority: 0, locales: [da__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_danish
+      "KeyboardLayout Norwegian, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_norwegian, priority: 0, locales: [nb__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_norwegian
+      "KeyboardLayout Swedish, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_swedish, priority: 0, locales: [sv__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_swedish
+      "KeyboardLayout Finnish, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_finnish, priority: 0, locales: [fi__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_finnish
+      "KeyboardLayout Croatian, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_croatian, priority: 0, locales: [hr__#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_croatian
+      "KeyboardLayout Czech, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_czech, priority: 0, locales: [cs__#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_czech
+      "KeyboardLayout Czech, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_czech_qwerty, priority: 0, locales: [cs__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_czech_qwerty
+      "KeyboardLayout Estonian, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_estonian, priority: 0, locales: [et__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_estonian
+      "KeyboardLayout Hungarian, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_hungarian, priority: 0, locales: [hu__#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_hungarian
+      "KeyboardLayout Icelandic, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_icelandic, priority: 0, locales: [is__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_icelandic
+      "KeyboardLayout Brazilian, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_brazilian, priority: 0, locales: [pt_BR_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_brazilian
+      "KeyboardLayout Portuguese, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_portuguese, priority: 0, locales: [pt_PT_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_portuguese
+      "KeyboardLayout Slovak, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_slovak, priority: 0, locales: [sk__#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_slovak
+      "KeyboardLayout Slovak, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_slovak_qwerty, priority: 0, locales: [sk__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_slovak_qwerty
+      "KeyboardLayout Slovenian, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_slovenian, priority: 0, locales: [sl__#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_slovenian
+      "KeyboardLayout Turkish - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_turkish, priority: 0, locales: [tr__#Latn], layout type: turkish_q, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_turkish
+      "KeyboardLayout Turkish F - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_turkish_f, priority: 0, locales: [tr__#Latn], layout type: turkish_f, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_turkish_f
+      "KeyboardLayout Ukrainian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_ukrainian, priority: 0, locales: [uk__#Cyrl], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_ukrainian
+      "KeyboardLayout Arabic - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_arabic, priority: 0, locales: [ar__#Arab], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_arabic
+      "KeyboardLayout Greek - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_greek, priority: 0, locales: [el__#Grek], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_greek
+      "KeyboardLayout Hebrew - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_hebrew, priority: 0, locales: [he__#Hebr], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_hebrew
+      "KeyboardLayout Lithuanian, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_lithuanian, priority: 0, locales: [lt__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_lithuanian
+      "KeyboardLayout Spanish (Latin), Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_spanish_latin, priority: 0, locales: [es_419_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_spanish_latin
+      "KeyboardLayout Latvian, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_latvian, priority: 0, locales: [lv__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_latvian
+      "KeyboardLayout Farsi - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_persian, priority: 0, locales: [fa__#Arab], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_persian
+      "KeyboardLayout Azerbaijani, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_azerbaijani, priority: 0, locales: [az_AZ_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_azerbaijani
+      "KeyboardLayout Polish, Qwerty style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_polish, priority: 0, locales: [pl__#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_polish
+      "KeyboardLayout Belarusian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_belarusian, priority: 0, locales: [be__#Cyrl], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_belarusian
+      "KeyboardLayout Japanese - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_japanese, priority: 0, locales: [ja_JP], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_japanese
+      "KeyboardLayout Mongolian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_mongolian, priority: 0, locales: [mn__#Cyrl], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_mongolian
+      "KeyboardLayout Georgian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_georgian, priority: 0, locales: [ka__#Geor], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_georgian
+      "KeyboardLayout Thai (Kedmanee) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_thai_kedmanee, priority: 0, locales: [th__#Thai], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_thai_kedmanee
+      "KeyboardLayout Thai (Pattachote) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_thai_pattachote, priority: 0, locales: [th__#Thai], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_thai_pattachote
+      "KeyboardLayout Serbian (Latin) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_serbian_latin, priority: 0, locales: [sr_RS_#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_serbian_latin
+      "KeyboardLayout Montenegrin (Latin) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_montenegrin_latin, priority: 0, locales: [cnr_ME_#Latn], layout type: qwertz, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_montenegrin_latin
+      "KeyboardLayout Serbian (Cyrillic) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_serbian_cyrillic, priority: 0, locales: [sr_RS_#Cyrl], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_serbian_cyrillic
+      "KeyboardLayout Montenegrin (Cyrillic) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_montenegrin_cyrillic, priority: 0, locales: [cnr_ME_#Cyrl], layout type: extended, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_montenegrin_cyrillic
+      "KeyboardLayout Romanian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_romanian, priority: 0, locales: [ro_RO_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_romanian
+      "KeyboardLayout English (India) - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_india, priority: 0, locales: [en_IN_#Latn], layout type: qwerty, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_english_india
+      "KeyboardLayout Kazakh - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_kazakh, priority: 0, locales: [kk_KZ], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_kazakh
+      "KeyboardLayout Albanian, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_albanian, priority: 0, locales: [sq], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_albanian
+      "KeyboardLayout Macedonian - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_macedonian, priority: 0, locales: [mk], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_macedonian
+      "KeyboardLayout Bosnian, Qwertz style - Android keyboard, descriptor: com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_bosnian, priority: 0, locales: [bs], layout type: undefined, vendorId: -1, productId: -1": com.android.inputdevices/com.android.inputdevices.InputDeviceReceiver/keyboard_layout_bosnian
+  mBlockDeviceMode=0
