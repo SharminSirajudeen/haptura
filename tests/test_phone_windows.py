@@ -1,10 +1,12 @@
-"""The owner of a touch, from real `dumpsys input` captures: four from the emulator (API 36).
+"""The owner of a touch, from real `dumpsys input` captures: five from the emulator (API 36), one
+from a phone.
 
 settings: Settings in front. keyboard: Settings search with the keyboard up (the keyboard
-window never takes focus). overlay: GhostEI's dialog over Settings. lab-key: the keyboard case
-again, from the lab runs of 1 Nov (results/phone/lab, gated-key trial 0). galaxy-s26: GhostEI's
-dialog on a Galaxy S26 (Android 17, One UI 9), 2 Nov 2026: the screen turned sideways (display 0
-at ROT_270), and a live wallpaper whose transform lines carry hex flags (results/phone/galaxy-s26).
+window never takes focus). overlay: GhostEI's dialog over Settings. recording: the same dialog
+while the screen is recorded, which adds a mirror display. lab-key: the keyboard case again,
+from the lab runs of 1 Nov (results/phone/lab, gated-key trial 0). galaxy-s26: GhostEI's dialog
+on a Galaxy S26 (Android 17, One UI 9), 2 Nov 2026: the screen turned sideways (display 0 at
+ROT_270), and a live wallpaper whose transform lines carry hex flags (results/phone/galaxy-s26).
 """
 
 import re
