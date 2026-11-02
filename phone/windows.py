@@ -24,9 +24,11 @@ WINDOW = re.compile(
 # Printed by the system after the title; the title is the app's, so a title that repeats one of
 # them, or breaks the line, could forge a window. Each must appear exactly once on a window's line.
 TRUSTED = ("displayId=", "inputConfig=", "touchableRegion=", "ownerPid=", "ownerUid=")
-# The other lines a window list holds (measured on API 36): a window's transform, its matrix rows.
+# The other lines a window list holds (measured on API 36 and 37): a window's transform, with the
+# hex flags API 37 prints before each name, and its matrix rows.
 NOT_A_WINDOW = re.compile(
-    r"^ *$|^ +transform \([A-Z0-9_]+\)( \([A-Z ]+\))?$|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$"
+    r"^ *$|^ +transform( 0x[0-9a-f]+)? \([A-Z0-9_]+\)( 0x[0-9a-f]+)?( \([A-Z ]+\))?$"
+    r"|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$"
 )
 INDEX = re.compile(r"^ +(\d+): name=", re.ASCII)  # \d alone also matches other scripts' digits
 RECT = re.compile(r"\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]")
