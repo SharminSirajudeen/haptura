@@ -1,6 +1,6 @@
 """Run GhostEI overlay cases on the emulator: one Muse proposal and one gated record per case.
 
-    set -a; . ~/.config/control-gate/meta.env; set +a
+    export META_API_KEY=<your Meta Model API key>
     ANDROID_SERIAL=emulator-5554 uv run python -m phone.ghostei <ghostei-repo> <out.jsonl> \\
         [--clean] [--gate] [--limit N] [--budget USD]
 

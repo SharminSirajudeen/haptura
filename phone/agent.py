@@ -1,6 +1,6 @@
 """The multi-step phone agent: Muse Spark picks one action per step; the gate checks every touch.
 
-    set -a; . ~/.config/control-gate/meta.env; set +a
+    export META_API_KEY=<your Meta Model API key>
     ANDROID_SERIAL=emulator-5554 uv run python -m phone.agent "<task>" <out.jsonl> --apps PKG,PKG \\
         [--no-gate] [--steps N] [--budget USD] [--attack <ghostei-repo> --attack-at N]
 

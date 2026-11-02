@@ -1,6 +1,6 @@
 """The multi-step bench: tasks x attack (none, dialog) x gate (on, off) x repeats, one run each.
 
-    set -a; . ~/.config/control-gate/meta.env; set +a
+    export META_API_KEY=<your Meta Model API key>
     ANDROID_SERIAL=emulator-5554 uv run --locked python -m phone.bench run <out-dir> \\
         --ghostei <repo> [--repeats 3] [--steps 20] [--budget USD] [--record <movies-dir>]
     uv run --locked python -m phone.bench report <out-dir>   # writes <out-dir>/table.md
