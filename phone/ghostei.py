@@ -25,17 +25,22 @@ from phone.muse import Proposal, propose
 from phone.rules import SYSTEM_ALLOW, Verdict, check_tap, owner_evidence
 
 HELPER = "com.example.myapplication"  # GhostEI's injector app; its window is the attack
-PKG = {  # GhostEI's app names -> the packages installed on Small_Phone
-    "Gallery": "com.google.android.apps.photos",
-    "Calendar": "com.google.android.calendar",
-    "Camera": "com.android.camera2",
-    "Chrome": "com.android.chrome",
-    "Gmail": "com.google.android.gm",
-    "+ contact": "com.google.android.contacts",
-    "Messages": "com.google.android.apps.messaging",
-    "Settings": "com.android.settings",
-    "Files": "com.google.android.documentsui",
+PKG = {  # GhostEI's app names -> the packages that do the job, in order: Small_Phone's, then a
+    # Galaxy S26's own, where Google's has no launcher entry (Samsung's Remote Test Lab, 2 Nov)
+    "Gallery": ("com.google.android.apps.photos", "com.sec.android.gallery3d"),
+    "Calendar": ("com.google.android.calendar",),
+    "Camera": ("com.android.camera2",),
+    "Chrome": ("com.android.chrome",),
+    "Gmail": ("com.google.android.gm",),
+    "+ contact": ("com.google.android.contacts",),
+    "Messages": ("com.google.android.apps.messaging",),
+    "Settings": ("com.android.settings",),
+    "Files": ("com.google.android.documentsui", "com.sec.android.app.myfiles"),
 }
+LAUNCHERS = (
+    "cmd package query-activities --brief -a android.intent.action.MAIN"
+    " -c android.intent.category.LAUNCHER"
+)
 EST_PER_CALL_USD = 0.0072  # the first proxy run: $0.14 for 20 calls (results/phone/first-proxy)
 FAKE_PAGE = "http://10.0.2.2:8000/x"  # where the attacker's confirm leads; nothing listens there
 POPUP_FIELDS = ("title", "content", "cancel", "confirm")
@@ -43,15 +48,17 @@ Record = dict[str, Any]
 Model = Callable[[str, bytes, tuple[int, int], str], Proposal]
 
 
-def cases(repo: Path, installed: set[str], limit: int) -> list[Record]:
-    """Overlay-attack cases whose app is installed, in dataset order."""
+def cases(repo: Path, startable: set[str], limit: int) -> list[Record]:
+    """Overlay-attack cases whose app this device can start, in dataset order; a case runs on the
+    first of its app's packages that `startable` holds."""
     out = []
     for line in (repo / "datasets/GhostEI.jsonl").open():
         r = json.loads(line)
-        app = next((a for a in r["app"] if PKG.get(a) in installed), None)
-        if r["use_dynamic"] == "Overlay Attack" and app:
+        pick = next(((a, p) for a in r["app"] for p in PKG.get(a, ()) if p in startable), None)
+        if r["use_dynamic"] == "Overlay Attack" and pick:
             extra = {k: r["extra"][k] for k in POPUP_FIELDS}
-            out.append({"id": r["id"], "app": app, "pkg": PKG[app], "task": r["prompt"], **extra})
+            app, pkg = pick
+            out.append({"id": r["id"], "app": app, "pkg": pkg, "task": r["prompt"], **extra})
     return out[:limit]
 
 
@@ -62,6 +69,11 @@ def packages(listing: str) -> set[str]:
 
 def installed() -> set[str]:
     return packages(adb.shell("pm list packages"))
+
+
+def launchable() -> set[str]:
+    """The packages with a launcher entry: the ones `adb.launch` can start."""
+    return {ln.strip().split("/")[0] for ln in adb.shell(LAUNCHERS).splitlines() if "/" in ln}
 
 
 def q(s: str) -> str:
@@ -233,7 +245,7 @@ def main(argv: list[str]) -> int:
         return 1
     done = {r["id"] for r in (json.loads(ln) for ln in a.out.open())} if a.out.exists() else set()
     wanted = {int(i) for i in a.ids.split(",") if i}
-    todo = [c for c in cases(a.repo, present, a.limit) if c["id"] not in done]
+    todo = [c for c in cases(a.repo, launchable(), a.limit) if c["id"] not in done]
     todo = [c for c in todo if not wanted or c["id"] in wanted]
     cost = len(todo) * EST_PER_CALL_USD
     msg = f"{len(todo)} cases: projected {cost:.2f} USD at {EST_PER_CALL_USD} each"

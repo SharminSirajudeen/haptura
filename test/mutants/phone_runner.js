@@ -45,3 +45,8 @@ module.exports.push(
   m('runner: unreadable means the grammar broke, not an empty dump', 'phone/ghostei.py', 'windows.window_lines(text) is not None', 'bool(wins)', G, EMPTY),
   m('report: a block on an unreadable list is counted', 'phone/report.py', 'sum(1 for r in taps if r.get("dump_readable") is False)', '0', REP, 'test_a_block_on_an_unreadable_window_list_is_named_in_the_row'),
 );
+const FIRST = 'test_a_case_runs_on_the_first_package_of_its_app_that_can_start';
+module.exports.push(
+  m('runner: a case runs on the first package of its app that can start', 'phone/ghostei.py', 'for p in PKG.get(a, ()) if p in startable', 'for p in PKG.get(a, ())[:1] if p in startable', G, FIRST),
+  m('runner: startable packages are read by package name', 'phone/ghostei.py', 'ln.strip().split("/")[0]', 'ln.strip()', G, 'test_startable_packages_are_read_from_the_launcher_list'),
+);

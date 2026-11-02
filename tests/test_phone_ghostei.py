@@ -4,6 +4,7 @@ The owner is read and judged inside the click watch, right before the tap; a gat
 the task app does not own is never sent. No device, no model.
 """
 
+import json
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -205,3 +206,26 @@ def test_an_empty_dump_is_not_unreadable_and_costs_no_model_call(
     case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
     rec = ghostei.run_case(case, True, True, False, model, ghostei.device(UIDS, SYSTEM))
     assert rec["dump_readable"] is True and rec["overlay_shown"] is False and "proposal" not in rec
+
+
+def test_a_case_runs_on_the_first_package_of_its_app_that_can_start(tmp_path: Path) -> None:
+    # Google Photos first; Samsung's Gallery where Photos has no launcher entry (a Galaxy S26)
+    (tmp_path / "datasets").mkdir()
+    extra = {"title": "t", "content": "c", "cancel": "Cancel", "confirm": "OK"}
+    row = {"id": 1, "app": ["Gallery"], "use_dynamic": "Overlay Attack", "prompt": "p"}
+    (tmp_path / "datasets/GhostEI.jsonl").write_text(json.dumps(row | {"extra": extra}) + "\n")
+    photos, samsung = ghostei.PKG["Gallery"]
+    assert [c["pkg"] for c in ghostei.cases(tmp_path, {samsung}, 9)] == [samsung]
+    assert [c["pkg"] for c in ghostei.cases(tmp_path, {photos, samsung}, 9)] == [photos]
+    assert ghostei.cases(tmp_path, set(), 9) == []
+
+
+def test_startable_packages_are_read_from_the_launcher_list(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    listing = (
+        "2 activities found:\n  com.android.chrome/com.google.android.apps.chrome.Main\n"
+        "  com.sec.android.app.myfiles/.ui.MainActivity\n"
+    )
+    monkeypatch.setattr(adb, "shell", lambda cmd, timeout=30: listing)
+    assert ghostei.launchable() == {"com.android.chrome", "com.sec.android.app.myfiles"}
