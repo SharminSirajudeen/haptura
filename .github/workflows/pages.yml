@@ -1,0 +1,35 @@
+# Publishes web/ to GitHub Pages at https://sharminsirajudeen.github.io/haptura/: the tree web/tests/site.js serves under
+# /haptura/. Adapted from GitHub's starter workflow (actions/starter-workflows, pages/static.yml).
+# Turn Pages on with Settings > Pages > Source: GitHub Actions. While the repository is private the job is skipped.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ !github.event.repository.private }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v5
