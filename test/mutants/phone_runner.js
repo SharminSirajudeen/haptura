@@ -22,7 +22,7 @@ module.exports = [
 const LABKEY = 'test_the_keyboard_over_a_focused_task_app_is_named_and_refused', CLOCK = 'test_the_timing_marks_bracket_the_dump_and_the_send';
 module.exports.push(
   m('runner: a tap is judged by the window that receives it, not the focused one', 'phone/ghostei.py',
-    'w = windows.receiver(windows.parse_windows(text), x, y)', 'w = windows.focused(windows.parse_windows(text), text)', G, LABKEY),
+    'w = windows.receiver(windows.parse_windows(text), *p) if p else None', 'w = windows.focused(windows.parse_windows(text), text)', G, LABKEY),
   m('runner: the first mark is taken before the dump', 'phone/ghostei.py',
     '        marks = [time.perf_counter_ns()]\n        dump = adb.input_dump()\n', '        dump = adb.input_dump()\n        marks = [time.perf_counter_ns()]\n', G, CLOCK),
   m('runner: the last mark is taken after the send', 'phone/ghostei.py',
