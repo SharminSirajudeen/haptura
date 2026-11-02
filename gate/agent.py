@@ -38,7 +38,7 @@ from gate.constants import (
 )
 from gate.control import control_scores, design_block
 from gate.episode import Tracker
-from gate.gate import PROBE_SEED, _mine, centre, check_act, rule_policy
+from gate.gate import PROBE_SEED, Goal, _mine, centre, check_act, rule_policy
 from gate.meta_api import MuseReply, ToolCall
 from gate.trackers import _last, match_ids
 from gate.types import (
@@ -54,7 +54,6 @@ from gate.types import (
 )
 
 Body = Mapping[str, Vec | None]
-Goal = tuple[float, float, float, float]
 RunBlock = Callable[[Arena, Sequence[str], Tracker, bool, Path | None], tuple[Frames, Tracks]]
 Diagnose = Callable[
     [Body, Sequence[str], Tracks, int, tuple[Sequence[str], Tracks] | None], Diagnosis

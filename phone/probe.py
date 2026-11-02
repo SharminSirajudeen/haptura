@@ -20,7 +20,7 @@ from typing import Any
 
 import numpy as np
 
-from phone import adb, ghostei, ui
+from phone import adb, agent, ghostei, ui
 from phone.rules import Verdict, check_tap
 
 Frame = np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
@@ -264,8 +264,7 @@ def main() -> None:
     install = ui.with_text(ui.parse_nodes(adb.ui_xml()), "Install")
     if install is None:
         sys.exit("GhostEI's dialog did not render: reinstall its helper APK and allow its overlay")
-    x1, y1, x2, y2 = install.bounds
-    overlay = trial((x1 + x2) // 2, (y1 + y2) // 2) | {"overlay": True}
+    overlay = trial(*agent.centre(install)) | {"overlay": True}
     adb.force_stop(ghostei.HELPER)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "trials.jsonl").write_text("".join(json.dumps(r) + "\n" for r in [*rows, overlay]))

@@ -211,11 +211,11 @@ def main(argv: list[str]) -> int:
     apps = [p for p in a.apps.split(",") if p]
     muse.MODEL = a.model
     step = muse.usd(*EST_STEP_TOKENS)
+    cost = a.steps * step
     print(
-        f"{a.steps} steps of {a.model}: projected {a.steps * step:.2f} USD "
+        f"{a.steps} steps of {a.model}: projected {cost:.2f} USD "
         f"at {step:.4f} each; budget {a.budget}"
     )
-    cost = a.steps * step
     if cost > a.budget or ghostei.HELPER in apps or (a.attack and a.attack_at < 1):
         print("over budget, the attacker's app on --apps, or --attack with no --attack-at: not run")
         return 1

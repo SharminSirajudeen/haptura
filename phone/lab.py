@@ -22,7 +22,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
-from phone import adb, ghostei, ui, windows
+from phone import adb, agent, ghostei, ui, windows
 from phone.rules import check_tap
 
 SEARCH = "com.google.android.settings.intelligence"  # the task app: Settings' search page
@@ -119,7 +119,7 @@ def point(kind: str, case: Record | None, dump: str, uids: windows.Uids) -> tupl
         return BACK
     assert case is not None
     n = ui.with_text(ui.parse_nodes(adb.ui_xml()), case["cancel"])
-    return ((n.bounds[0] + n.bounds[2]) // 2, (n.bounds[1] + n.bounds[3]) // 2) if n else None
+    return agent.centre(n) if n else None
 
 
 def state() -> Record:
