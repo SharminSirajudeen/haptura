@@ -7,7 +7,7 @@ const { defineConfig } = require('@playwright/test');
 
 // Artifacts go to a temp directory named by this checkout's path, so the repo stays clean and the mutant runner's
 // parallel copies of the tree never clear each other's output.
-const outputDir = path.join(os.tmpdir(), `control-gate-pw-${crypto.createHash('sha1').update(__dirname).digest('hex').slice(0, 8)}`);
+const outputDir = path.join(os.tmpdir(), `haptura-pw-${crypto.createHash('sha1').update(__dirname).digest('hex').slice(0, 8)}`);
 
 module.exports = defineConfig({
   testDir: 'tests',

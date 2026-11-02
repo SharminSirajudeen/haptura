@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Arena viewer · control-gate</title>
+<title>Arena viewer · Haptura</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to the viewer</a>
 <nav class="topnav" aria-label="Site">
-  <a class="brand" href="./">control-gate</a>
-  <a class="repo" href="https://github.com/SharminSirajudeen/control-gate">Repository</a>
+  <a class="brand" href="./">Haptura</a>
+  <a class="repo" href="https://github.com/SharminSirajudeen/haptura">Repository</a>
 </nav>
 <header class="page-head band">
   <h1>Arena viewer</h1>
-  <p class="provenance"><strong class="tag">One pair from the kill test</strong> Muse Wonder, gated+SAM against no-gate+SAM, seed 1003, case blocked. A fixed rule chose it: the first pair on the list from <code>python -m gate.demo</code>, which keeps the pairs where, in the first 20 seconds of its clip, the baseline commits to an element it does not control while the gated run, right by EVAL.md, has not acted yet. It is one pair of 114, not the result. The kill test ran on 1 Nov 2026. <span data-source="README.md">EVAL.md's verdict on it is Rethink: the arena's claim did not hold on these seeds.</span> The full table is in the <a href="https://github.com/SharminSirajudeen/control-gate#readme">README</a>.</p>
+  <p class="provenance"><strong class="tag">One pair from the kill test</strong> Muse Wonder, gated+SAM against no-gate+SAM, seed 1003, case blocked. A fixed rule chose it: the first pair on the list from <code>python -m gate.demo</code>, which keeps the pairs where, in the first 20 seconds of its clip, the baseline commits to an element it does not control while the gated run, right by EVAL.md, has not acted yet. It is one pair of 114, not the result. The kill test ran on 1 Nov 2026. <span data-source="README.md">EVAL.md's verdict on it is Rethink: the arena's claim did not hold on these seeds.</span> The full table is in the <a href="https://github.com/SharminSirajudeen/haptura#readme">README</a>.</p>
   <p class="intro-p">Each pane plays one run of that pair. Each box is a tracked element, labelled by the gate's control test at the end of the block now playing; a label with no free place is left off the picture, and the list under each pane names every track. The gated agent is shown that test's labels and advice. The baseline agent's <code>run_experiment</code> <span data-source="README.md">returns only each element's mean displacement per action, with no p, no label and no advice</span>, so on its pane the labels are the gate's reading of its probes, not what it believed.</p>
 </header>
 <noscript><p>This page needs JavaScript to draw its labels.</p></noscript>
