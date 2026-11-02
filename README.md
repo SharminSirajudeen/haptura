@@ -228,7 +228,7 @@ here to proving control.
 - `rules-only+SAM` replaces Muse with the gate's own rule policy. Defined, not run.
 - `gated+truth` gives the gate perfect eyes: an upper bound. Defined, not run.
 
-**The kill test** (1 Nov 2026, issue #59): Muse Wonder at low effort, seeds 1001–1019, all six cases, so 114
+**The kill test** (1 Nov 2026): Muse Wonder at low effort, seeds 1001–1019, all six cases, so 114
 episodes a condition, each condition run once. `results/table.md`, written by `gate.eval` from the 342 logs in
 `results/logs/`, is:
 
