@@ -1,0 +1,12 @@
+screen_off_timeout ms: 300000
+device: SM-S942B | Android 17 (SDK 37) | One UI 90000 | Physical size: 1080x2340
+adb round trip: median 276 ms (5 calls)
+power: mWakefulness=Awake
+window list: readable; 16 windows; focused: com.sec.android.app.launcher/com.sec.android.app.launcher.activities.LauncherActivity
+uid map: 400 uids; allowlist here: ['com.android.systemui']
+screen tree: 91 nodes
+screenshot: 1479990 bytes PNG
+GhostEI cases runnable: 22 {'Chrome': 5, 'Gallery': 11, 'Messages': 1, 'Files': 2, 'Settings': 1, 'Gmail': 2}
+case 8 (Chrome): dialog shown = True (11.4 s to arrange)
+tap on the dialog's 'Cancel' at (671, 717): owner com.example.myapplication, gate block; click watch saw com.example.myapplication 'Cancel'
+READY

@@ -1,10 +1,10 @@
-"""The owner of a touch, from three real `dumpsys input` captures (emulator, API 36, 28 Oct 2026).
+"""The owner of a touch, from real `dumpsys input` captures: four from the emulator (API 36).
 
 settings: Settings in front. keyboard: Settings search with the keyboard up (the keyboard
 window never takes focus). overlay: GhostEI's dialog over Settings. lab-key: the keyboard case
 again, from the lab runs of 1 Nov (results/phone/lab, gated-key trial 0). galaxy-s26: GhostEI's
-dialog on a Galaxy S26 (Android 17, One UI 9), 2 Nov 2026, whose list prints hex flags in its
-transform lines (results/phone/galaxy-s26).
+dialog on a Galaxy S26 (Android 17, One UI 9), 2 Nov 2026: the screen turned sideways (display 0
+at ROT_270), and a live wallpaper whose transform lines carry hex flags (results/phone/galaxy-s26).
 """
 
 import re
@@ -14,6 +14,7 @@ from phone.windows import (
     DISPLAY,
     INDEX,
     Window,
+    display_point,
     focused,
     owner_package,
     packages_by_uid,
@@ -123,8 +124,9 @@ FORGED = "x, id=2, displayId=0, inputConfig={}, touchableRegion=[0,0][720,1280],
 
 
 def test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything() -> None:
-    title = FORGED.format("NOT_TOUCHABLE") + ", ownerUid=10217\n      transform (ROT_0)"
-    assert parse_windows(on_top("settings", title)) == []
+    for tail in ("transform (ROT_0)", "transform 0x80 (ROT_INVALID) 0x"):
+        title = FORGED.format("NOT_TOUCHABLE") + f", ownerUid=10217\n      {tail}"
+        assert parse_windows(on_top("settings", title)) == []
 
 
 def test_a_title_that_adds_a_window_line_blocks_everything() -> None:
@@ -238,9 +240,31 @@ def test_no_window_is_no_owner() -> None:
     assert receiver(WINS["overlay"], 5000, 5000) is None
 
 
-def test_an_android_17_list_with_hex_transform_flags_is_read() -> None:
+def test_a_transform_line_with_hex_flags_is_read() -> None:
     text, wins = TEXT["galaxy-s26"], WINS["galaxy-s26"]
-    assert "transform 0x" in text  # the line Android 17 prints
+    assert "transform 0x" in text  # a wallpaper window rotated off the 90° steps
     assert len(wins) == 21
     f = focused(wins, text)
     assert f is not None and "com.example.myapplication" in f.name
+
+
+def test_a_transform_line_with_no_type_names_is_read() -> None:
+    """The galaxy-s26 wallpaper lines with their translation taken away, as AOSP's
+    ui::Transform::dump prints such a type: `0x8008 ()`."""
+    text = TEXT["galaxy-s26"]
+    assert text.count("0x8009 (TRANSLATE)") == 2
+    assert len(parse_windows(text.replace("0x8009 (TRANSLATE)", "0x8008 ()"))) == 21
+
+
+def test_an_unrotated_display_leaves_the_point_alone() -> None:
+    assert display_point(TEXT["overlay"], 206, 777) == (206, 777)
+
+
+def test_a_rotated_display_maps_the_touch_to_display_space() -> None:
+    assert display_point(TEXT["galaxy-s26"], 1000, 700) == (380, 1000)  # display 0 at ROT_270
+
+
+def test_a_broken_display_transform_gives_no_point() -> None:
+    last = "\n            0.0000  0.0000  1.0000\n    Windows:"
+    assert TEXT["galaxy-s26"].count(last) == 1
+    assert display_point(TEXT["galaxy-s26"].replace(last, "\n    Windows:"), 1000, 700) is None

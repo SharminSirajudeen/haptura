@@ -36,10 +36,19 @@ module.exports.push(
 );
 module.exports.push(
   m('windows: a transform line is the whole line',
-    '( \\([A-Z ]+\\))?$"', '( \\([A-Z ]+\\))?"', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
-  m('windows: a transform line may carry the hex flags Android 17 prints',
+    '( \\([A-Z ]*\\))?$"', '( \\([A-Z ]*\\))?"', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
+  m('windows: a transform line may name no type',
+    '( \\([A-Z ]*\\))?$"', '( \\([A-Z ]+\\))?$"', 'test_a_transform_line_with_no_type_names_is_read'),
+  m('windows: a transform line may carry hex flags',
     '^ +transform( 0x[0-9a-f]+)? \\([A-Z0-9_]+\\)( 0x[0-9a-f]+)?', '^ +transform \\([A-Z0-9_]+\\)',
-    'test_an_android_17_list_with_hex_transform_flags_is_read'),
+    'test_a_transform_line_with_hex_flags_is_read'),
+  m('windows: transform hex flags are hex digits only',
+    '\\)( 0x[0-9a-f]+)?( \\(', '\\)( 0x.+)?( \\(', 'test_a_title_that_forges_its_flags_onto_a_transform_line_blocks_everything'),
+  m('windows: a rotated display maps the touch to display space',
+    '    return round((e * u - b * v) / det), round((a * v - d * u) / det)\n', '    return x, y\n',
+    'test_a_rotated_display_maps_the_touch_to_display_space'),
+  m('windows: a broken display transform gives no point',
+    '    if len(rows) != 3:\n        return None\n', '', 'test_a_broken_display_transform_gives_no_point'),
   m('windows: window indices run 0, 1, 2 with no repeat',
     ' or int(n.group(1)) != self.index:', ':', 'test_a_title_that_adds_a_window_line_blocks_everything'),
 );

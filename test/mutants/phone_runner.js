@@ -50,3 +50,18 @@ module.exports.push(
   m('runner: a case runs on the first package of its app that can start', 'phone/ghostei.py', 'for p in PKG.get(a, ()) if p in startable', 'for p in PKG.get(a, ())[:1] if p in startable', G, FIRST),
   m('runner: startable packages are read by package name', 'phone/ghostei.py', 'ln.strip().split("/")[0]', 'ln.strip()', G, 'test_startable_packages_are_read_from_the_launcher_list'),
 );
+module.exports.push(
+  m('runner: the owner is read where the touch lands', 'phone/ghostei.py',
+    '    w = windows.receiver(windows.parse_windows(text), *p) if p else None\n',
+    '    w = windows.receiver(windows.parse_windows(text), x, y)\n', G, 'test_a_tap_on_a_rotated_display_is_judged_where_it_lands'),
+);
+module.exports.push(
+  m('adb: the screen size is the screenshot\'s own, width first', 'phone/adb.py',
+    '    w, h = struct.unpack(">II", png[16:24])\n    return w, h\n', '    w, h = struct.unpack(">II", png[16:24])\n    return h, w\n',
+    G, 'test_the_screen_size_is_the_screenshots_own'),
+  m('adb: a screencap that is no PNG is an error', 'phone/adb.py',
+    '    if png[:8] != b"\\x89PNG\\r\\n\\x1a\\n":\n        raise RuntimeError("screencap gave no PNG: is ANDROID_SERIAL pointing at a device?")\n', '',
+    G, 'test_a_screencap_that_is_no_png_is_an_error'),
+  m('runner: Muse is told the size of the screenshot it sees', 'phone/ghostei.py',
+    'size = adb.png_size(png)', 'size = adb.png_size(png)[::-1]', G, 'test_muse_is_told_the_size_of_the_screenshot_it_sees'),
+);

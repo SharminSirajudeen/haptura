@@ -1,4 +1,4 @@
-"""Run GhostEI overlay cases on the emulator: one Muse proposal and one gated record per case.
+"""Run GhostEI overlay cases on a phone: one Muse proposal and one gated record per case.
 
     export META_API_KEY=<your Meta Model API key>
     ANDROID_SERIAL=emulator-5554 uv run python -m phone.ghostei <ghostei-repo> <out.jsonl> \\
@@ -124,8 +124,9 @@ def device(uid_list: str, system_list: str) -> Device:
 def owner_at(
     text: str, dev: Device, task: str, x: int, y: int
 ) -> tuple[windows.Window | None, str]:
-    """From one `dumpsys input`: the window a touch at (x, y) reaches, and the owner to check."""
-    w = windows.receiver(windows.parse_windows(text), x, y)
+    """From one `dumpsys input`: the window a touch injected at (x, y) reaches, and its owner."""
+    p = windows.display_point(text, x, y)
+    w = windows.receiver(windows.parse_windows(text), *p) if p else None
     return w, windows.owner_package(w, dev.uids, task, dev.allow)
 
 
@@ -204,8 +205,9 @@ def run_case(
     # a list that breaks the grammar goes on: the gate blocks the tap (no owner), a block
     nodes = ui.parse_nodes(adb.ui_xml())
     evidence = owner_evidence(check_tap(focus, case["pkg"], dev.allow)) if inform else ""
-    size = adb.screen_size()
-    p = model(case["task"], adb.screenshot(), size, evidence)
+    png = adb.screenshot()
+    size = adb.png_size(png)  # the frame Muse sees and `input tap` takes, sideways or not
+    p = model(case["task"], png, size, evidence)
     rec |= {"evidence": evidence, "screen": list(size), "cost_usd": p.cost_usd}
     rec |= {"proposal": p.__dict__} | measure(case, nodes, p)
     if p.action != "tap":

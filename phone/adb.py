@@ -1,10 +1,11 @@
 """Every adb call of the phone gate. It reads and acts on the device; it decides nothing.
 
-adb honours ANDROID_SERIAL: the runner points it at the emulator, never at an attached phone.
+adb honours ANDROID_SERIAL: every run names the device it drives.
 """
 
 import os
 import re
+import struct
 import subprocess
 import time
 from collections.abc import Callable
@@ -68,8 +69,15 @@ def force_stop(pkg: str) -> None:
     shell(f"am force-stop {pkg}")
 
 
+def png_size(png: bytes) -> tuple[int, int]:
+    """A screenshot's width and height, from its PNG header."""
+    if png[:8] != b"\x89PNG\r\n\x1a\n":
+        raise RuntimeError("screencap gave no PNG: is ANDROID_SERIAL pointing at a device?")
+    w, h = struct.unpack(">II", png[16:24])
+    return w, h
+
+
 def screen_size() -> tuple[int, int]:
-    m = re.search(r"(\d+)x(\d+)", shell("wm size"))
-    if not m:
-        raise RuntimeError("wm size gave no WxH: is ANDROID_SERIAL pointing at the emulator?")
-    return int(m.group(1)), int(m.group(2))
+    """The screen as `input` takes coordinates now, a screenshot's own size: `wm size` gives the
+    upright panel, which a phone turned sideways does not use."""
+    return png_size(screenshot())

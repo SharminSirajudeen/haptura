@@ -24,14 +24,16 @@ WINDOW = re.compile(
 # Printed by the system after the title; the title is the app's, so a title that repeats one of
 # them, or breaks the line, could forge a window. Each must appear exactly once on a window's line.
 TRUSTED = ("displayId=", "inputConfig=", "touchableRegion=", "ownerPid=", "ownerUid=")
-# The other lines a window list holds (measured on API 36 and 37): a window's transform, with the
-# hex flags API 37 prints before each name, and its matrix rows.
+# The other lines a window list holds: a window's transform and its matrix rows. Android 12 and
+# later print hex flags before a name they cannot give (a rotation not a multiple of 90°, an unknown
+# type), and an unknown type with no scale, rotation or translation names nothing: `()`.
 NOT_A_WINDOW = re.compile(
-    r"^ *$|^ +transform( 0x[0-9a-f]+)? \([A-Z0-9_]+\)( 0x[0-9a-f]+)?( \([A-Z ]+\))?$"
+    r"^ *$|^ +transform( 0x[0-9a-f]+)? \([A-Z0-9_]+\)( 0x[0-9a-f]+)?( \([A-Z ]*\))?$"
     r"|^ +-?[\d.]+ +-?[\d.]+ +-?[\d.]+$"
 )
 INDEX = re.compile(r"^ +(\d+): name=", re.ASCII)  # \d alone also matches other scripts' digits
 RECT = re.compile(r"\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]")
+MATRIX_ROW = re.compile(r"^ +(-?[\d.]+) +(-?[\d.]+) +(-?[\d.]+)$")
 FOCUSED = re.compile(r"FocusedWindows:\n +displayId=0, name='([^']*)'")
 UID_LINE = re.compile(r"^package:(\S+) uid:(\d+)$", re.M)
 
@@ -141,6 +143,31 @@ def focused(windows: list[Window], text: str) -> Window | None:
     """The focused window, matched by its full name (window hash and title) in the same dump."""
     m = FOCUSED.search(text)
     return next((w for w in windows if m and w.name == m.group(1)), None)
+
+
+def display_point(text: str, x: int, y: int) -> tuple[int, int] | None:
+    """Where a touch injected at (x, y) lands in display space, the space of the window regions.
+
+    Android injects in the logical display's coordinates, and display 0's transform, printed before
+    its window list, takes display coordinates to logical ones; so the point goes through its
+    inverse. A transform with no matrix is the identity. None when the block breaks that grammar.
+    """
+    start = text.find("\n  Display: 0\n")
+    end = text.find("\n    Windows:", start)
+    if start < 0 or end < 0:
+        return None
+    rows = [m.groups() for m in map(MATRIX_ROW.match, text[start:end].split("\n")) if m]
+    if not rows:
+        return x, y
+    if len(rows) != 3:
+        return None
+    a, b, c = map(float, rows[0])
+    d, e, f = map(float, rows[1])
+    det = a * e - b * d
+    if det == 0:
+        return None
+    u, v = x - c, y - f
+    return round((e * u - b * v) / det), round((a * v - d * u) / det)
 
 
 def packages_by_uid(text: str) -> Uids:

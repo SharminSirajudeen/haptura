@@ -5,6 +5,7 @@ the task app does not own is never sent. No device, no model.
 """
 
 import json
+import struct
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -21,6 +22,9 @@ SETTINGS, HELPER = "com.android.settings", "com.example.myapplication"
 SYSTEM = "package:com.android.systemui\npackage:com.android.settings\n"
 TAP = Proposal("tap", 513, 739, "Install", "r", 1, 1)  # GhostEI's Install button on the overlay
 AT = (TAP.x, TAP.y, "input tap 513 739")
+CASE = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
+# A PNG's header, as `screencap -p` gives it for a phone turned sideways: 2340 wide, 1080 high
+SIDEWAYS = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + struct.pack(">II", 2340, 1080)
 
 
 def recorder(sent: list[str]) -> Callable[..., str]:
@@ -31,6 +35,20 @@ def recorder(sent: list[str]) -> Callable[..., str]:
         return ""
 
     return shell
+
+
+def fake_case(monkeypatch: pytest.MonkeyPatch, dump: str) -> list[str]:
+    """A case on a faked device: arranged, no screen tree, a sideways screenshot, `dump` for every
+    window list; the shell commands sent are returned."""
+    sent: list[str] = []
+    monkeypatch.setattr(adb, "input_dump", lambda: dump)
+    monkeypatch.setattr(adb, "shell", recorder(sent))
+    monkeypatch.setattr(adb, "clicked_during", lambda act: (act(), ("", "")))
+    monkeypatch.setattr(ghostei, "arrange", lambda case, attack: None)
+    monkeypatch.setattr(adb, "ui_xml", lambda: "")
+    monkeypatch.setattr(ui, "parse_nodes", lambda xml: [])
+    monkeypatch.setattr(adb, "screenshot", lambda: SIDEWAYS)
+    return sent
 
 
 def fake_device(monkeypatch: pytest.MonkeyPatch, capture: str) -> list[str]:
@@ -177,18 +195,8 @@ def test_an_unreadable_window_list_is_gated_not_dropped(monkeypatch: pytest.Monk
     real = (FIX / "input-overlay.txt").read_text()
     forged = real.replace("name=", "name=x, ownerUid=1000 ", 1)
     assert windows.parse_windows(real) and windows.parse_windows(forged) == []
-    sent: list[str] = []
-    monkeypatch.setattr(adb, "input_dump", lambda: forged)
-    monkeypatch.setattr(adb, "shell", recorder(sent))
-    monkeypatch.setattr(adb, "clicked_during", lambda act: (act(), ("", "")))
-    monkeypatch.setattr(ghostei, "arrange", lambda case, attack: None)
-    monkeypatch.setattr(adb, "ui_xml", lambda: "")
-    monkeypatch.setattr(ui, "parse_nodes", lambda xml: [])
-    monkeypatch.setattr(adb, "screen_size", lambda: (720, 1280))
-    monkeypatch.setattr(adb, "screenshot", lambda: b"")
-    case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
-    dev = ghostei.device(UIDS, SYSTEM)
-    rec = ghostei.run_case(case, True, True, False, lambda *a: TAP, dev)
+    sent = fake_case(monkeypatch, forged)
+    rec = ghostei.run_case(CASE, True, True, False, lambda *a: TAP, ghostei.device(UIDS, SYSTEM))
     assert rec["dump_readable"] is False and rec["verdict"]["kind"] == "block"
     assert not rec["tapped"] and sent == []  # the tap was never sent
 
@@ -231,7 +239,37 @@ def test_startable_packages_are_read_from_the_launcher_list(
     assert ghostei.launchable() == {"com.android.chrome", "com.sec.android.app.myfiles"}
 
 
-@pytest.mark.xfail(strict=True, reason="#81: the allowlist names Google's keyboard")
+@pytest.mark.xfail(strict=True, reason="known defect: the allowlist names Google's keyboard")
 def test_the_devices_own_keyboard_is_allowed() -> None:
     system = "package:com.android.systemui\npackage:com.samsung.android.honeyboard\n"
     assert "com.samsung.android.honeyboard" in ghostei.device(UIDS, system).allow
+
+
+def test_a_tap_on_a_rotated_display_is_judged_where_it_lands() -> None:
+    text = (FIX / "input-galaxy-s26.txt").read_text()  # display 0 at ROT_270
+    w, _ = ghostei.owner_at(text, ghostei.device(UIDS, SYSTEM), HELPER, 1000, 700)
+    assert w is not None and w.uid == 10379  # the dialog at display (380, 1000), not the status bar
+
+
+def test_the_screen_size_is_the_screenshots_own(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Turned sideways, the phone takes `input` in 2340x1080; `wm size` still says 1080x2340."""
+    monkeypatch.setattr(adb, "screenshot", lambda: SIDEWAYS)
+    assert adb.screen_size() == (2340, 1080)
+
+
+def test_a_screencap_that_is_no_png_is_an_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(adb, "screenshot", lambda: b"error: device offline")
+    with pytest.raises(RuntimeError):
+        adb.screen_size()
+
+
+def test_muse_is_told_the_size_of_the_screenshot_it_sees(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_case(monkeypatch, (FIX / "input-overlay.txt").read_text())
+    told: list[tuple[int, int]] = []
+
+    def model(task: str, png: bytes, size: tuple[int, int], evidence: str) -> Proposal:
+        told.append(size)
+        return TAP
+
+    rec = ghostei.run_case(CASE, True, True, False, model, ghostei.device(UIDS, SYSTEM))
+    assert told == [(2340, 1080)] and rec["screen"] == [2340, 1080]

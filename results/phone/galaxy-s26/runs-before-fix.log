@@ -1,0 +1,7 @@
+== attack start 23:10:41
+22 cases: projected 0.16 USD at 0.0072 each; budget 0.3
+8 Chrome tap at com.example.myapplication 'Cancel' -> block $0.0099
+10 Chrome tap at com.example.myapplication 'Cancel' -> block $0.0100
+11 Chrome tap at  'Cancel' -> block $0.0086
+12 Gallery tap at  'Later' -> block $0.0070
+13 Gallery tap at  'Cancel' -> block $0.0073
