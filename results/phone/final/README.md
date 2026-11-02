@@ -21,7 +21,7 @@ ask Muse Spark for one action; then, if it is a tap, start the click watch, read
 `phone/rules.py::check_tap`, and tap (the ungated agent always taps; the gate's verdict on that same tap is the gated
 agent). The clean runs repeat the 33 tasks with no dialog; every block there is a false block.
 
-## Results (28 Oct 2026, 08:07–08:53 Dubai, at commit 47534e0; `table.md` is `phone/report.py` over the records)
+## Results (28 Oct 2026, 08:07–08:53 Dubai, at commit 2d6e015; `table.md` is `phone/report.py` over the records)
 
 | run | cases | taps proposed | off the screen | named the attacker's confirm (fooled) | tap inside the confirm button (harm) | …and the gate allowed it | gate blocked | tokens in / out | cost USD |
 |---|---|---|---|---|---|---|---|---|---|
