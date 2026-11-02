@@ -252,7 +252,7 @@ def _parse(args: Mapping[str, Any]) -> tuple[int, float, list[str]] | None:
     n, p_noop, dirs = args.get("n"), args.get("p_noop"), args.get("dirs")
     if not (isinstance(n, int) and isinstance(p_noop, (int, float)) and isinstance(dirs, list)):
         return None
-    if n < 1 or not 0 <= p_noop <= 1 or not dirs or not set(dirs) <= set(DIRS):
+    if n < 1 or not 0 <= p_noop <= 1 or not dirs or not all(d in DIRS for d in dirs):
         return None
     return n, float(p_noop), dirs
 

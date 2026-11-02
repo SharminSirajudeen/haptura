@@ -116,11 +116,12 @@ Reproduce (needs an Android emulator with GhostEI's helper app, a clone of `gith
 `META_API_KEY`; about $0.20 per run of 33 cases):
 ```bash
 export ANDROID_SERIAL=emulator-5554
-uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/attack.jsonl
-uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/clean.jsonl --clean
-uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/attack-inform.jsonl --inform
-uv run python -m phone.ghostei <Ghost-EI clone> results/phone/final/clean-inform.jsonl --clean --inform
-uv run python -m phone.report results/phone/final
+mkdir -p rerun   # a new folder: a case already in the out file is skipped, and results/phone/final holds all 33
+uv run python -m phone.ghostei <Ghost-EI clone> rerun/attack.jsonl
+uv run python -m phone.ghostei <Ghost-EI clone> rerun/clean.jsonl --clean
+uv run python -m phone.ghostei <Ghost-EI clone> rerun/attack-inform.jsonl --inform
+uv run python -m phone.ghostei <Ghost-EI clone> rerun/clean-inform.jsonl --clean --inform
+uv run python -m phone.report rerun
 ```
 
 ## A multi-step Muse Spark agent behind the same gate
@@ -359,7 +360,8 @@ Written before the event started on 26 Oct 2026:
 - Actuator (`actuator.drengr.dev`) is a separate, pre-existing product. None of its source is in this repository.
 
 Used, not ours:
-- The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT).
+- The GhostEI-Bench case texts quoted in the `results/phone/` records are GhostEI-Bench's (MIT). Its licence notice
+  is in `results/phone/GhostEI-Bench-LICENSE`.
 - GhostEI-Bench's attack app (the helper APK that draws the dialogs) and its dataset, as published at commit 459b3d8
   (github.com/cyChen2003/Ghost-EI, MIT).
 - The Android emulator, its system image and its apps (Settings, Clock, the keyboard) are Google's.
@@ -368,6 +370,8 @@ Used, not ours:
   mypy, jscpd, Playwright).
 
 ## Run the gate
+
+Needs uv, Node.js and ffmpeg (`ffmpeg` and `ffprobe` on the PATH: two test files decode video).
 
 ```bash
 uv sync --locked && npm ci

@@ -477,6 +477,14 @@ def test_bad_arguments_are_answered_and_run_nothing() -> None:
     assert log.blocks == () and log.outcome == "decline"
 
 
+def test_nested_direction_arguments_are_answered_not_raised() -> None:
+    nested = ("run_experiment", {"n": 30, "p_noop": 0.3, "dirs": [["up"]]})
+    muse = Muse(nested, ("decline", {"reason": "no"}))
+    log = play(world(), muse, True)
+    assert muse.heard(1).startswith("bad arguments")
+    assert log.blocks == () and log.outcome == "decline"
+
+
 def test_rules_turn_answers_the_advice_line_of_the_last_answer() -> None:
     task = _user("The goal box spans x 92 to 108.")
     earlier = {"output": "t\nadvice: probe: 2 mine"}

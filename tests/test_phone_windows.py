@@ -190,6 +190,13 @@ def test_a_shared_system_uid_resolves_to_the_task_app_it_contains() -> None:
     assert owner_package(w, UIDS, "com.google.android.calendar", frozenset()) != ""
 
 
+def test_the_fallback_never_names_the_task_app() -> None:
+    # a uid shared with a package that sorts after the task app, and no allowlisted package
+    uids = {10123: frozenset({"com.a.task", "com.z.other"})}
+    w = Window("1a2b3c com.z.other/.AccountPicker", frozenset(), (), 10123)
+    assert owner_package(w, uids, "com.a.task", frozenset()) == "com.z.other"
+
+
 def test_a_shared_uid_window_without_the_tasks_component_is_not_the_task_app() -> None:
     chooser = parse_windows(
         on_top("settings", "ab12 android/android.accounts.ChooseTypeAndAccountActivity")

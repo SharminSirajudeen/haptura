@@ -16,7 +16,9 @@ module.exports = [
   m('windows: the task app is found in a shared uid',
     '    if w and task_pkg in pkgs and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):\n        return task_pkg\n', '', 'test_a_shared_system_uid_resolves_to_the_task_app_it_contains'),
   m('windows: an allowlisted package of the uid is preferred',
-    'min(pkgs & allow, default=min(pkgs, default=""))', 'min(pkgs, default="")', 'test_an_allowlisted_package_of_the_uid_is_named'),
+    'min(pkgs & allow, default=min(pkgs - {task_pkg}, default=""))', 'min(pkgs - {task_pkg}, default="")', 'test_an_allowlisted_package_of_the_uid_is_named'),
+  m('windows: the fallback never names the task app',
+    'min(pkgs - {task_pkg}, default="")', 'min(pkgs, default="")', 'test_the_fallback_never_names_the_task_app'),
 ];
 module.exports.push(
   m('windows: an owner field outside a list breaks the grammar',

@@ -157,7 +157,7 @@ def shown(windows: list[Window], uids: Uids, pkg: str) -> bool:
 
 def owner_package(w: Window | None, uids: Uids, task_pkg: str, allow: frozenset[str]) -> str:
     """The package the gate checks for window `w`: the task app if its uid owns `w`, else an
-    allowlisted package of that uid, else any package of it; "" when nothing is known.
+    allowlisted package of that uid, else any other package of it; "" when nothing is known.
 
     A uid shared by several packages (the system's 1000) is the task app only when the window's
     name carries the task's component: only system code names those windows, and the attacker can
@@ -166,4 +166,4 @@ def owner_package(w: Window | None, uids: Uids, task_pkg: str, allow: frozenset[
     pkgs = uids.get(w.uid, frozenset()) if w else frozenset()
     if w and task_pkg in pkgs and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):
         return task_pkg
-    return min(pkgs & allow, default=min(pkgs, default=""))
+    return min(pkgs & allow, default=min(pkgs - {task_pkg}, default=""))
