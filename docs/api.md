@@ -134,7 +134,7 @@ two conditions' caches both hold is a request they sent alike. For SAM that mean
 carries the encoder's version strings, and no run recorded its ffmpeg build. Counted by `results/kill-cache/count.py`
 from the kill test's three archives: 813, 905 and 405 files, 1,888 distinct names, 178 in two or more caches. Of
 those 178, **175 hold replies that differ byte for byte** and 3 the same; `git merge-tree` of the two SAM conditions'
-result branches reports the same 175 names as add/add conflicts.
+result branches reported the same 175 names as add/add conflicts.
 - **SAM 3.1:** the two SAM conditions sent 121 requests alike; 118 got different replies. Read with `sam_track`'s own
   patterns (a box for each frame and object id), the boxes differ in 80 of the 118; the largest difference in any box
   coordinate, per request, is 1 px at the median and 82 px at most.

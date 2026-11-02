@@ -256,7 +256,7 @@ episodes a condition, each condition run once. `results/table.md`, written by `g
 
 Kill rule, seeds 1001-1019: paired difference (gated+SAM - no-gate+SAM) = 0.421 over 114 pairs (rethink at <= 0.1); identities kept through occlusion, SAM 0.635 - colour 0.526 = 0.109 (rethink below 0.2). **Rethink.**
 
-**In plain words.** EVAL.md fixed the kill rule before the run (it is unchanged since 3135c56, the commit all three
+**In plain words.** EVAL.md fixed the kill rule before the run (it is unchanged since af0b59c, the commit all three
 conditions ran from; its header's "not yet frozen" predates the run): Rethink if the gate lifts the six-case score by 0.10 or
 less over the same agent without it, or if SAM keeps identities through occlusion less than 0.20 more often than the
 colour tracker does. **The verdict is Rethink: the arena's claim did not hold on these seeds**, the sentence EVAL.md

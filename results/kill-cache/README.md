@@ -1,7 +1,7 @@
 # The kill test's API caches
 
 One archive per condition: the `cache/` folder of that condition's run on Muse Wonder, seeds 1001–1019, 1 Nov 2026
-(branches `results/kill-wonder-gated-SAM`, `results/kill-wonder-no-gate-SAM` and `results/kill-wonder-gated-colour`).
+(each run pushed its folder to a branch of its own; these archives replace those branches).
 A cache file is one API reply, named by the SHA-256 of its request. With `REPLAY=1`, `gate.run` reads its replies from
 `cache/` and a miss is an error, so a replay makes no request and reads no key. The logs the caches rebuild are
 `results/logs/<condition>/`; `gate.eval` makes `results/table.md` from them.
@@ -65,8 +65,8 @@ gated+colour: done: $0.31 spent on gated+colour   byte-identical logs: 6
 ## Why three archives and not one cache
 
 The three archives hold 1,888 distinct file names between them; 178 names are in two or more. **175 of those 178 hold
-replies that differ byte for byte**; `git merge-tree` of the two SAM branches reports the same 175 names as add/add
-conflicts (the three branches are kept). 118 are SAM 3.1 replies to the same model, prompt and frames; 57 are Muse
+replies that differ byte for byte**; `git merge-tree` of the two SAM branches reported the same 175 names as add/add
+conflicts. 118 are SAM 3.1 replies to the same model, prompt and frames; 57 are Muse
 Wonder replies to the same first-turn request (a later turn carries the ids of the replies before it, so only a first
 turn can be shared), with `temperature: 0.0` echoed. Every Muse reply carries its own ids and timestamps; in content,
 51 of the 57 differ, 9 in the tool call. A folder holds one reply per name, so a merged `cache/` would hold one
