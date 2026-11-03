@@ -10,6 +10,9 @@ and tested offline. The arena's one paid evaluation run (the kill test) finished
 it is Rethink: the arena's claim did not hold on these seeds. The gate's effect passed, 0.42 against a bar of 0.10;
 SAM's lead over a colour tracker did not clear its bar (below).
 
+**Live demo page:** https://sharminsirajudeen.github.io/haptura/, the measured results, how the gate works and the
+arena replay, in a browser, no setup. **Video (3 min):** https://www.youtube.com/watch?v=UaFilR5qpPs
+
 ## The model proposes each touch; the gate grants it
 
 **The problem.** An agent that works a phone's apps can be led to touch a window that is not the app it was asked to
