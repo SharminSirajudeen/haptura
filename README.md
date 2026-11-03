@@ -137,8 +137,14 @@ sees which element a tap would reach without clicking anything: 0 of 20 presses 
 too late to trust (verdict `unknown`), and one held 511–627 ms, past the 400 ms long-press timeout
 (`results/phone/probe/`).
 
-Reproduce (needs an Android emulator with GhostEI's helper app, a clone of `github.com/cyChen2003/Ghost-EI`, and
-`META_API_KEY`; about $0.20 per run of 33 cases):
+**Run it yourself.** Once, on a computer with `adb` (Android SDK platform-tools), uv and a Meta Model API key:
+1. An Android emulator with Google's apps (ours: Android Studio's Small Phone AVD, API 36,
+   `google/sdk_gphone64_arm64`, 720x1280) or a phone with USB debugging on; `adb devices` lists it.
+2. The attack app: clone `github.com/cyChen2003/Ghost-EI`, run `adb install app-debug.apk` from its root, and let it
+   draw over other apps: `adb shell appops set com.example.myapplication SYSTEM_ALERT_WINDOW allow`.
+3. `export META_API_KEY=<your key>` and `uv sync --locked` in this repository.
+
+Reproduce the bench (about $0.20 per run; a case whose app the device lacks is skipped):
 ```bash
 export ANDROID_SERIAL=emulator-5554
 mkdir -p rerun   # a new folder: a case already in the out file is skipped, and results/phone/final holds all 33
