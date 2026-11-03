@@ -1,0 +1,33 @@
+# The gate (scripts/gate.sh) on every pushed commit, in a fresh checkout on GitHub's runner: nothing from any
+# developer's machine. Which gate runs is package.json's gateMode at that commit (`development`: every mutant).
+name: gate
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # scripts/gate.sh and test/floorguard.js compare the change with origin/main
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.26"  # the uv that wrote uv.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: EG_MUTANT_SHARDS=4 scripts/gate.sh

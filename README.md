@@ -407,8 +407,10 @@ runs only the test it names (a Playwright one: every test declared on that line)
 episodes (`test_e2e`, `test_eval_table`, `test_agent`, `test_demo`, `test_run`) run only when the change touches
 `gate/`, the file itself, a `conftest.py`, `EVAL.md`, `.python-version`, pytest's config (`pyproject.toml`,
 `pytest.ini`, `tox.ini`, `setup.cfg`), `uv.lock` or `scripts/gate.sh`; a moved file counts at both paths.
-`scripts/ci.sh` runs the same in a fresh clone of the pushed commit, and `scripts/merge.sh` merges a pull request
-only when that run passed on its head and the head contains main, so the merged tree is the tree the gate ran on.
+`.github/workflows/gate.yml` runs the same on GitHub for every pushed commit, in a fresh checkout. `scripts/ci.sh`
+runs it in a fresh clone on a developer's machine and posts the result on the commit; `scripts/merge.sh` merges a
+pull request only when that run passed on its head and the head contains main, so the merged tree is the tree the
+gate ran on.
 
 ## Licence
 
