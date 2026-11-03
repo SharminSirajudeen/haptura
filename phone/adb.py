@@ -61,6 +61,12 @@ def input_dump() -> str:
     return shell("dumpsys input")
 
 
+def keyboard() -> str:
+    """`settings get secure default_input_method`: the keyboard the device is set to, as
+    package/service, or `null`."""
+    return shell("settings get secure default_input_method")
+
+
 def launch(pkg: str) -> None:
     shell(f"monkey -p {pkg} -c android.intent.category.LAUNCHER 1")
 

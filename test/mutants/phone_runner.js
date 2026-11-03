@@ -10,7 +10,7 @@ module.exports = [
     '    def act() -> tuple[windows.Window | None, str, Verdict, bool, list[int], str]:\n        marks = [time.perf_counter_ns()]\n        dump = adb.input_dump()\n',
     '    dump = adb.input_dump()\n\n    def act() -> tuple[windows.Window | None, str, Verdict, bool, list[int], str]:\n        marks = [time.perf_counter_ns()]\n', G, 'test_a_gated_tap_on_the_overlay_is_never_sent'),
   m('runner: the allowlist is cut to system packages', 'phone/ghostei.py',
-    'SYSTEM_ALLOW & packages(system_list))', 'SYSTEM_ALLOW)', G, 'test_the_allowlist_is_cut_to_this_devices_system_packages'),
+    '    allow = SYSTEM_ALLOW & packages(system_list) | keyboard\n', '    allow = SYSTEM_ALLOW | keyboard\n', G, 'test_the_allowlist_is_cut_to_this_devices_system_packages'),
   m('adb: the old dump file goes before each dump', 'phone/adb.py',
     'shell("rm -f /sdcard/ui.xml; uiautomator dump /sdcard/ui.xml")', 'shell("uiautomator dump /sdcard/ui.xml")', G,
     'test_the_dump_file_is_removed_before_each_dump'),
@@ -64,4 +64,13 @@ module.exports.push(
     G, 'test_a_screencap_that_is_no_png_is_an_error'),
   m('runner: Muse is told the size of the screenshot it sees', 'phone/ghostei.py',
     'size = adb.png_size(png)', 'size = adb.png_size(png)[::-1]', G, 'test_muse_is_told_the_size_of_the_screenshot_it_sees'),
+);
+const KEYBOARD = 'test_the_devices_own_keyboard_is_allowed';
+module.exports.push(
+  m('runner: the keyboard the device is set to is allowed', 'phone/ghostei.py',
+    '    allow = SYSTEM_ALLOW & packages(system_list) | keyboard\n', '    allow = SYSTEM_ALLOW & packages(system_list)\n', G, KEYBOARD),
+  m('runner: a setting that names no keyboard adds nothing', 'phone/ghostei.py',
+    '    keyboard = frozenset({pkg}) if slash and pkg else frozenset[str]()\n', '    keyboard = frozenset({pkg})\n', G, KEYBOARD),
+  m('runner: a setting with no package before its slash adds nothing', 'phone/ghostei.py',
+    '    keyboard = frozenset({pkg}) if slash and pkg else frozenset[str]()\n', '    keyboard = frozenset({pkg}) if slash else frozenset[str]()\n', G, KEYBOARD),
 );

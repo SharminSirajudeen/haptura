@@ -113,12 +113,18 @@ class Device:
     """What the gate needs about the device, read once per run."""
 
     uids: windows.Uids  # uid -> its packages
-    allow: frozenset[str]  # SYSTEM_ALLOW, cut to the packages this device ships as system
+    allow: frozenset[str]  # SYSTEM_ALLOW cut to this device's system packages, plus its keyboard
 
 
-def device(uid_list: str, system_list: str) -> Device:
-    """From `cmd package list packages -U` and `pm list packages -s`."""
-    return Device(windows.packages_by_uid(uid_list), SYSTEM_ALLOW & packages(system_list))
+def device(uid_list: str, system_list: str, ime: str) -> Device:
+    """From `cmd package list packages -U`, `pm list packages -s` and `settings get secure
+    default_input_method`: the uid map, and the allowlist cut to this device's system packages plus
+    the keyboard it is set to, whoever made it. A setting with no package before its slash (`null`,
+    nothing, `/x`) names no keyboard."""
+    pkg, slash, _ = ime.partition("/")  # package/service
+    keyboard = frozenset({pkg}) if slash and pkg else frozenset[str]()
+    allow = SYSTEM_ALLOW & packages(system_list) | keyboard
+    return Device(windows.packages_by_uid(uid_list), allow)
 
 
 def owner_at(
@@ -255,7 +261,9 @@ def main(argv: list[str]) -> int:
     if cost > a.budget:
         print("over budget: nothing run")
         return 1
-    dev = device(adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s"))
+    dev = device(
+        adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s"), adb.keyboard()
+    )
     with a.out.open("a") as f:
         for case in todo:
             rec = run_case(case, not a.clean, a.gate, a.inform, propose, dev)

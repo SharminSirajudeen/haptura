@@ -54,7 +54,7 @@
   <h2 id="result-title">The phone tap gate, measured on GhostEI</h2>
   <div class="split">
     <div class="prose">
-      <p data-source="README.md">A phone agent about to tap asks one question first: which app owns the window under this point? If it is not the task’s own app or an allowlisted system package, the tap does not happen, and the agent (in this single-step runner) stops and reports the owner.</p>
+      <p data-source="README.md">A phone agent about to tap asks one question first: which app owns the window under this point? If it is not the task’s own app or an allowlisted package (the system UI, the phone’s keyboard), the tap does not happen, and the agent (in this single-step runner) stops and reports the owner.</p>
       <p data-source="README.md">Muse Spark proposes every action; the gate decides whether a proposed tap may run.</p>
       <p data-source="README.md">Measured on 33 of GhostEI-Bench’s 59 overlay-attack cases (the ones whose app is installed on our Android API 36 emulator), one screenshot and one <code>muse-spark-1.3</code> decision per case at temperature 0, with the gate as shipped, 28 Oct 2026.</p>
     </div>
@@ -116,7 +116,7 @@
   <ol class="flow" role="list">
     <li><h3>Muse proposes</h3><p>The agent picks the next action: a tap on a phone; in the arena, an experiment, an act or a decline.</p></li>
     <li><h3>The gate measures</h3><p>Plain code, no model. On a phone it reads which app owns the window under the tap point. In the arena it tests which element moves with the agent’s own actions.</p></li>
-    <li><h3>Act, or not</h3><p>The action runs only if the check passes: the tap lands on the task’s own app or an allowlisted system package, or the element is the one labelled mine. Otherwise it is refused, with the reason.</p></li>
+    <li><h3>Act, or not</h3><p>The action runs only if the check passes: the tap lands on the task’s own app or an allowlisted package (the system UI, the phone’s keyboard), or the element is the one labelled mine. Otherwise it is refused, with the reason.</p></li>
   </ol>
   <dl class="rows">
     <div>
@@ -124,7 +124,7 @@
       <dd>
         <p data-source="README.md">The runner now reads every owner from the input dispatcher’s window list, keyed by uid, and judges and taps back to back.</p>
         <p data-source="README.md">The parser accepts only the dump’s exact grammar (each owner field once per window line, windows numbered without gaps, nothing else inside a list) and blocks every tap when any line breaks it.</p>
-        <p data-source="README.md">The phone allowlist is the system UI and the keyboard, cut to the device’s own system packages.</p>
+        <p data-source="README.md">The phone allowlist is the system UI, cut to the device’s own system packages, and the keyboard the device is set to.</p>
       </dd>
     </div>
     <div>

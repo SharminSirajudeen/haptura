@@ -90,8 +90,8 @@ def main(argv: list[str]) -> int:
     with (a.out / "replay.jsonl").open("x") as f:
         fire = agent.attacker(a.attack, a.attack_case, a.step)
         uids, system = adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
-        (a.out / "uids.txt").write_text(uids)  # what both verdicts were computed with
-        dev = ghostei.device(uids, system)
+        (a.out / "uids.txt").write_text(uids)  # the uid map both verdicts were computed with
+        dev = ghostei.device(uids, system, adb.keyboard())
         for gate in (False, True):
             seen: list[str] = []
             lab.recording_dump(seen)

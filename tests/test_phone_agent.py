@@ -54,7 +54,7 @@ def go(
         seen.append(history)
         return next(script, step("back"))
 
-    r = agent.Run("task", list(apps), True, device(UIDS, SYSTEM), (720, 1280))
+    r = agent.Run("task", list(apps), True, device(UIDS, SYSTEM, ""), (720, 1280))
     return list(agent.run(r, model, 10, budget, lambda i: None)), sent, seen
 
 
@@ -140,7 +140,7 @@ def test_the_attack_hook_runs_before_each_step_reads_the_screen(mp: pytest.Monke
 
     mp.setattr(adb, "ui_xml", read)
     mp.setattr(adb, "screenshot", lambda: b"png")
-    r = agent.Run("t", [], True, device(UIDS, SYSTEM), (720, 1280))
+    r = agent.Run("t", [], True, device(UIDS, SYSTEM, ""), (720, 1280))
     script = iter([step("back"), step("done")])
     mp.setattr(adb, "shell", lambda cmd, timeout=30: "")
     list(agent.run(r, lambda *a: next(script), 5, 1.0, lambda i: order.append(f"attack {i}")))

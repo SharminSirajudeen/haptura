@@ -6,7 +6,7 @@
 
 The task app is the app the agent last opened from the person's `--apps` list, never whatever is on
 screen. A tap or a scroll is sent only when the window under it belongs to the task app or an
-allowlisted system package; typing only when the task app holds focus. A refusal and its reason go
+allowlisted package; typing only when the task app holds focus. A refusal and its reason go
 back to Muse in the next step's history. One JSONL record per step; <out.jsonl> must not exist.
 """
 
@@ -72,7 +72,7 @@ def scroll(direction: str, r: Run) -> Record:
 
 def type_gated(text: str, r: Run) -> Record:
     """Type into the focused field only when the task app itself owns the focused window, never an
-    allowlisted system one (systemui draws a notification's reply field)."""
+    allowlisted one (systemui draws a notification's reply field)."""
     owner = ghostei.owner_now(r.dev, r.app)
     v = check_tap(owner, r.app, frozenset())
     sent = not r.gate or v.kind == "allow"
@@ -222,7 +222,8 @@ def main(argv: list[str]) -> int:
     with a.out.open("x") as f:  # before anything touches the device: an existing file stops here
         attack = attacker(a.attack, a.attack_case, a.attack_at)
         uids, system = adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
-        r = Run(a.task, apps, not a.no_gate, ghostei.device(uids, system), adb.screen_size())
+        dev = ghostei.device(uids, system, adb.keyboard())
+        r = Run(a.task, apps, not a.no_gate, dev, adb.screen_size())
         side = meta(a, apps, adb.shell("getprop ro.build.fingerprint"), revision())
         a.out.with_suffix(".meta.json").write_text(json.dumps(side, indent=1) + "\n")
         start(apps, a.attack is not None)

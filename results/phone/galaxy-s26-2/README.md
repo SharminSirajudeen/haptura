@@ -58,8 +58,9 @@ nothing outside `results/` had changed. The takes' side files name GhostEI's dat
 
 ## Limits
 - One phone model, single-step cases for the measurements, three takes of one task.
-- The allowlist names Google's keyboard; this phone's system packages hold only the system UI of it (`preflight.txt`),
-  so a tap on this phone's own keyboard would be refused. No case tapped a keyboard. Pinned by an expected-fail test.
+- At this session's commit the allowlist named Google's keyboard; this phone's system packages held only the system UI
+  of it (`preflight.txt`), so a tap on this phone's own keyboard would have been refused. No case tapped a keyboard.
+  Since fixed: the gate allows the keyboard the device is set to, read from its settings.
 - A task app whose screens belong to another package (Settings' search here) has those touches refused.
 
 ## Reproduce

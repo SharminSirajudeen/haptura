@@ -28,7 +28,7 @@ def side(
     sent = fake_device(monkeypatch, "overlay")
     monkeypatch.setattr(adb, "ui_xml", lambda: XML)
     monkeypatch.setattr(time, "sleep", lambda s: None)
-    r = agent.Run("", [SETTINGS], gate, device(UIDS, SYSTEM), (720, 1280))
+    r = agent.Run("", [SETTINGS], gate, device(UIDS, SYSTEM, ""), (720, 1280))
     return replay.side(recs, step, r, lambda i: sent.append(f"attack {i}")), sent
 
 

@@ -18,7 +18,8 @@ in front misses the second.
 
 **The mechanism.** Before each tap and scroll, the gate asks Android's input dispatcher which window the touch will
 reach, takes that window's owner uid (assigned by the system, not chosen by the app) and maps it to its package. The
-touch is sent only when that package is the task's app or an allowlisted system package; an unknown owner is refused.
+touch is sent only when that package is the task's app or an allowlisted package (the system UI, and the keyboard the
+phone is set to, read from its settings); an unknown owner is refused.
 Typing is checked against the focused window's owner. The model, Muse, proposes every action; the gate, outside the
 model, grants or refuses each touch, and a refusal goes back to Muse as part of its next step. Meta describes the same
 split for its own agent's connectors and network egress: "Muse proposes actions, but only Sentinel can grant
@@ -71,8 +72,6 @@ the sideways screen's edge, so it states the size of the screenshot it sends.
   window; the owner at a point was not tested (`results/phone/a11y-owner/`).
 - A task app's screen that belongs to another package is refused: Settings' search page, on the emulator and on the
   Galaxy S26.
-- The allowlist names Google's keyboard, so a phone whose keyboard is another app's has its keyboard refused (the
-  Galaxy S26's system packages hold no Google keyboard); pinned by an expected-fail test.
 
 **Closest work.** Google's ARTEMIS (github.com/google/artemis at 351ca84) checks before each action that the chosen
 element is still present ("Checks that the element the Operator decided to interact with is still present on the live
@@ -83,7 +82,7 @@ matches; "package" in `artemis/agents/validator`: 0 matches).
 ## The phone tap gate, measured on GhostEI
 
 A phone agent about to tap asks one question first: **which app owns the window under this point?** If it is not the
-task's own app or an allowlisted system package, the tap does not happen, and the agent (in this single-step runner) stops and reports the owner.
+task's own app or an allowlisted package (the system UI, the phone's keyboard), the tap does not happen, and the agent (in this single-step runner) stops and reports the owner.
 (Pressing Back does not remove these overlays: measured, 0 of 20.) Muse Spark proposes every action; the gate decides
 whether a proposed tap may run.
 
@@ -115,7 +114,7 @@ stands in for a not-focusable window of another app; no hostile not-focusable ov
 review found that the first owner lookup (the accessibility dump) misses windows that never take focus; the
 runner now reads every owner from the input dispatcher's window list, keyed by uid, and judges and taps back to back
 (`phone/windows.py`, `phone/ghostei.py`; `docs/pilot-runs.md`, run 16); the table above was measured with it. The phone
-allowlist is the system UI and the keyboard, cut to the device's own system packages.
+allowlist is the system UI, cut to the device's own system packages, and the keyboard the device is set to.
 
 **How the owner is read, and its limit:** the window list comes from `dumpsys input`, text in which every app chooses
 its own window title. The parser accepts only the dump's exact grammar (each owner field once per window line,

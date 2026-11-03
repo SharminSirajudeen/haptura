@@ -72,28 +72,29 @@ def fake_device(monkeypatch: pytest.MonkeyPatch, capture: str) -> list[str]:
 
 
 def test_the_allowlist_is_cut_to_this_devices_system_packages() -> None:
-    dev = ghostei.device(UIDS, SYSTEM)
+    dev = ghostei.device(UIDS, SYSTEM, "")
     assert dev.allow == {"com.android.systemui"} and dev.allow <= SYSTEM_ALLOW
+    assert ghostei.device(UIDS, "package:com.android.settings\n", "").allow == frozenset()
     assert SETTINGS in dev.uids[1000]
 
 
 def test_a_gated_tap_on_the_overlay_is_never_sent(monkeypatch: pytest.MonkeyPatch) -> None:
     sent = fake_device(monkeypatch, "overlay")
-    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM, ""))
     assert rec["owner_at_tap"] == HELPER and rec["verdict"]["kind"] == "block"
     assert not rec["tapped"] and sent == ["watch", "dump"]  # read inside the watch
 
 
 def test_an_ungated_tap_is_sent_and_still_judged(monkeypatch: pytest.MonkeyPatch) -> None:
     sent = fake_device(monkeypatch, "overlay")
-    rec = ghostei.tap_gated(*AT, SETTINGS, False, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, False, ghostei.device(UIDS, SYSTEM, ""))
     assert rec["tapped"] and rec["verdict"]["kind"] == "block"
     assert sent == ["watch", "dump", "input tap 513 739"]
 
 
 def test_a_tap_on_the_task_apps_own_window_is_sent(monkeypatch: pytest.MonkeyPatch) -> None:
     sent = fake_device(monkeypatch, "settings")
-    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM, ""))
     assert rec["owner_at_tap"] == SETTINGS and rec["tapped"]
     assert sent == ["watch", "dump", "input tap 513 739"]
 
@@ -105,10 +106,10 @@ def test_the_keyboard_is_not_the_task_app(monkeypatch: pytest.MonkeyPatch) -> No
         *under_keyboard,
         "com.google.android.settings.intelligence",
         True,
-        ghostei.device(UIDS, SYSTEM),
+        ghostei.device(UIDS, SYSTEM, ""),
     )
     assert rec["owner_at_tap"] == "com.google.android.inputmethod.latin"
-    assert rec["verdict"]["kind"] == "block"  # Gboard is not a system package on this list
+    assert rec["verdict"]["kind"] == "block"  # no keyboard set on this device
 
 
 def test_the_keyboard_over_a_focused_task_app_is_named_and_refused(
@@ -141,7 +142,7 @@ def test_the_record_names_the_receiver_and_what_a_focus_check_would_say(
 
 def test_the_record_carries_the_tap_point(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_device(monkeypatch, "overlay")
-    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM, ""))
     assert (rec["x"], rec["y"]) == (TAP.x, TAP.y)
 
 
@@ -166,19 +167,19 @@ def clocked(monkeypatch: pytest.MonkeyPatch, capture: str) -> dict[str, int]:
 
 def test_the_timing_marks_bracket_the_dump_and_the_send(monkeypatch: pytest.MonkeyPatch) -> None:
     at = clocked(monkeypatch, "settings")
-    t = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))["timing_ns"]
+    t = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM, ""))["timing_ns"]
     assert t[0] <= at["dump"] <= t[1] <= t[2] <= at["send"] <= t[3]
 
 
 def test_a_refused_tap_has_no_send_time(monkeypatch: pytest.MonkeyPatch) -> None:
     at = clocked(monkeypatch, "overlay")
-    t = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM))["timing_ns"]
+    t = ghostei.tap_gated(*AT, SETTINGS, True, ghostei.device(UIDS, SYSTEM, ""))["timing_ns"]
     assert "send" not in at and t[0] <= at["dump"] <= t[1] <= t[2] == t[3]
 
 
 def test_focus_is_read_from_the_window_list(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_device(monkeypatch, "overlay")
-    assert ghostei.owner_now(ghostei.device(UIDS, SYSTEM), SETTINGS) == HELPER
+    assert ghostei.owner_now(ghostei.device(UIDS, SYSTEM, ""), SETTINGS) == HELPER
 
 
 def test_the_dump_file_is_removed_before_each_dump(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -196,7 +197,8 @@ def test_an_unreadable_window_list_is_gated_not_dropped(monkeypatch: pytest.Monk
     forged = real.replace("name=", "name=x, ownerUid=1000 ", 1)
     assert windows.parse_windows(real) and windows.parse_windows(forged) == []
     sent = fake_case(monkeypatch, forged)
-    rec = ghostei.run_case(CASE, True, True, False, lambda *a: TAP, ghostei.device(UIDS, SYSTEM))
+    dev = ghostei.device(UIDS, SYSTEM, "")
+    rec = ghostei.run_case(CASE, True, True, False, lambda *a: TAP, dev)
     assert rec["dump_readable"] is False and rec["verdict"]["kind"] == "block"
     assert not rec["tapped"] and sent == []  # the tap was never sent
 
@@ -212,7 +214,7 @@ def test_an_empty_dump_is_not_unreadable_and_costs_no_model_call(
         raise AssertionError("a model call for an attack that did not render")
 
     case = {"id": 1, "app": "Settings", "pkg": SETTINGS, "task": "t", "confirm": "Install"}
-    rec = ghostei.run_case(case, True, True, False, model, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.run_case(case, True, True, False, model, ghostei.device(UIDS, SYSTEM, ""))
     assert rec["dump_readable"] is True and rec["overlay_shown"] is False and "proposal" not in rec
 
 
@@ -239,15 +241,18 @@ def test_startable_packages_are_read_from_the_launcher_list(
     assert ghostei.launchable() == {"com.android.chrome", "com.sec.android.app.myfiles"}
 
 
-@pytest.mark.xfail(strict=True, reason="known defect: the allowlist names Google's keyboard")
 def test_the_devices_own_keyboard_is_allowed() -> None:
-    system = "package:com.android.systemui\npackage:com.samsung.android.honeyboard\n"
-    assert "com.samsung.android.honeyboard" in ghostei.device(UIDS, system).allow
+    """The keyboard the device is set to is allowed, whoever made it and whether or not it is a
+    system package; a setting with no package before its slash adds nothing."""
+    honeyboard = "com.samsung.android.honeyboard/.service.HoneyBoardService\n"
+    assert "com.samsung.android.honeyboard" in ghostei.device(UIDS, SYSTEM, honeyboard).allow
+    assert ghostei.device(UIDS, SYSTEM, "null\n").allow == {"com.android.systemui"}
+    assert ghostei.device(UIDS, SYSTEM, "/x\n").allow == {"com.android.systemui"}
 
 
 def test_a_tap_on_a_rotated_display_is_judged_where_it_lands() -> None:
     text = (FIX / "input-galaxy-s26.txt").read_text()  # display 0 at ROT_270
-    w, _ = ghostei.owner_at(text, ghostei.device(UIDS, SYSTEM), HELPER, 1000, 700)
+    w, _ = ghostei.owner_at(text, ghostei.device(UIDS, SYSTEM, ""), HELPER, 1000, 700)
     assert w is not None and w.uid == 10379  # the dialog at display (380, 1000), not the status bar
 
 
@@ -271,5 +276,5 @@ def test_muse_is_told_the_size_of_the_screenshot_it_sees(monkeypatch: pytest.Mon
         told.append(size)
         return TAP
 
-    rec = ghostei.run_case(CASE, True, True, False, model, ghostei.device(UIDS, SYSTEM))
+    rec = ghostei.run_case(CASE, True, True, False, model, ghostei.device(UIDS, SYSTEM, ""))
     assert told == [(2340, 1080)] and rec["screen"] == [2340, 1080]

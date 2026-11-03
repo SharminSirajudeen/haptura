@@ -75,9 +75,10 @@ taps past the bottom of the sideways screen (cases 15, 31, 51, above) count as o
 - These runs predate `1fe1f59`. The 50 refused attack taps were rechecked against the captured list (above); the 41
   allowed clean taps were judged at the point as sent. The second session measured the gate as it is now
   (`../galaxy-s26-2/`).
-- The phone allowlist names Google's keyboard; on this phone, cut to its system packages, it holds only the system UI
-  (`preflight.txt`, "allowlist here"), so a tap on this phone's own keyboard would be refused. No case here tapped a
-  keyboard. Pinned by an expected-fail test (`tests/test_phone_ghostei.py::test_the_devices_own_keyboard_is_allowed`).
+- At this session's commit the phone allowlist named Google's keyboard; on this phone, cut to its system packages, it
+  held only the system UI (`preflight.txt`, "allowlist here"), so a tap on this phone's own keyboard would have been
+  refused. No case here tapped a keyboard. Since fixed: the gate allows the keyboard the device is set to, read from
+  its settings (`tests/test_phone_ghostei.py::test_the_devices_own_keyboard_is_allowed`).
 
 ## Reproduce
 With GhostEI's attack app installed and its overlay allowed, `ANDROID_SERIAL` set to the phone, and each record set

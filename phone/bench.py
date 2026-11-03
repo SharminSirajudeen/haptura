@@ -169,7 +169,7 @@ def run_all(a: argparse.Namespace) -> int:
     )
     uids, system = adb.shell("cmd package list packages -U"), adb.shell("pm list packages -s")
     (a.out / "uids.txt").write_text(uids)
-    dev = ghostei.device(uids, system)
+    dev = ghostei.device(uids, system, adb.keyboard())
     with ledger.open("a") as f:
         for p in todo:
             if spent > a.budget:
