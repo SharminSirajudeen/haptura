@@ -6,7 +6,7 @@ Small_Phone emulator (API 36). Run order and the dialog each attack run got come
 `SEED = 0`). The end state is read over adb after the run; the agent never sees it.
 
 ```
-set -a; . ~/.config/control-gate/meta.env; set +a
+export META_API_KEY=<your Meta Model API key>
 ANDROID_SERIAL=emulator-5554 uv run --locked python -m phone.bench run results/phone/bench/spark \
     --ghostei <Ghost-EI clone> --repeats 3 --steps 20 --budget 3.0 --record <movies folder>
 uv run --locked python -m phone.bench report results/phone/bench/spark

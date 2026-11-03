@@ -3,7 +3,7 @@
 **A gate that makes an agent prove, by its own experiments, that it still controls what it is about to act on, and
 stop, probe or decline when it cannot.**
 
-An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). Status: in progress. The phone and
+An entry for the Meta AI Developer Hackathon (Startup track; kickoff 26 Oct, deadline 4 Nov 2026). The phone and
 desktop owner gates run and are measured (below), and a multi-step Muse agent runs behind the phone gate (a bench
 of 72 scored runs on Muse Spark and Muse Wonder, below). The arena, its agent loop, its evaluation and its runner are built
 and tested offline. The arena's one paid evaluation run (the kill test) finished on 1 Nov 2026. EVAL.md's verdict on
@@ -28,7 +28,7 @@ for touches on a screen.
 
 **How it runs.** Haptura is not an app you install. It sits in the agent's action path: before every touch the agent
 sends, it asks Android which app owns the window under the finger, and refuses if that is not the task's app. Today it
-runs where the agent runs, on a computer driving the phone over adb. Next: the same check on the phone itself.
+runs where the agent runs, on a computer driving the phone over adb.
 
 **The evidence**, on the Android emulator (API 36), 1 Nov 2026, each row from the records named:
 
