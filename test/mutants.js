@@ -13,13 +13,14 @@
 // One shard by default, to keep the machine quiet; EG_MUTANT_SHARDS=n runs n at once, at most one a core. Each
 // shard is this file again, with its own copy of the tree.
 'use strict';
-const fs = require('fs'), os = require('os'), path = require('path');
+const fs = require('fs'), os = require('os'), path = require('path'), crypto = require('crypto');
 const { spawnSync, spawn } = require('child_process');
 const root = path.join(__dirname, '..'), LIST = 'test/mutants.list.js';
 // the test an entry names: pytest's node after `FAILED `, or Playwright's `<spec>:<line>` before `:<col> › <title>`
 const named = m => m.expect.startsWith('FAILED ') ? m.expect.slice(7) : m.expect.replace(/:\d+ › .*$/, '');
 const MUTANTS = require(path.join(root, LIST))
   .map(m => m.cmd ? Object.assign({}, m, { cmd:m.cmd.replace(/\S+$/, () => "'" + named(m) + "'") }) : m);
+const PREFIX = 'mutants-' + crypto.createHash('sha1').update(root).digest('hex').slice(0, 8) + '-';   // this checkout's shard copies
 const LIMIT = 300000;   // a runaway mutant is killed here
 
 const count = (text, s) => text.split(s).length - 1;
@@ -60,7 +61,7 @@ const SELECTED = process.env.EG_MUTANTS === 'changed' ? changedOnly() : MUTANTS;
 /* one shard: every n-th selected mutant from k, in its own copy, after the control of every n-th named test from k (the
    test green unmutated, after its mutant's `before` step, since a test that needs a build is red without one) */
 function shard(k, n){
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mutants-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), PREFIX + k + '-'));
   let fails = 0;
   try {
     // skipped: the root's own caches and outputs (not a tests/fixtures/cache), plus any tool cache anywhere
@@ -89,6 +90,7 @@ if (process.env.MUTANT_SHARD){
   const [k, n] = process.env.MUTANT_SHARD.split('/').map(Number);
   process.exit(shard(k, n) ? 1 : 0);
 }
+fs.readdirSync(os.tmpdir()).filter(n => n.startsWith(PREFIX)).forEach(n => fs.rmSync(path.join(os.tmpdir(), n), { recursive:true, force:true }));
 const N = Math.max(1, Math.min(parseInt(process.env.EG_MUTANT_SHARDS, 10) || 1, os.cpus().length, SELECTED.length));
 Promise.all(Array.from({ length:N }, (_, k) => new Promise(done => {
   const c = spawn(process.execPath, [__filename], { env:Object.assign({}, process.env, { MUTANT_SHARD:k + '/' + N }) });

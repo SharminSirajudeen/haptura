@@ -5,6 +5,8 @@
 # Which gate runs is package.json's `gateMode` at the gated commit: `development` (also when absent) runs every
 # mutant, `live` runs the mutants the change touches (EG_MUTANTS=changed). GATE=gate forces the full run.
 # Usage: scripts/ci.sh [ref]   (default: the current branch's pushed head)
+# The clone and the gate's temp files are deleted when this script exits (pass, fail or Ctrl-C). A kill aimed at this
+# script alone can leave a still-running gate process writing into them; stop the whole process group instead.
 set -euo pipefail
 repo=$(git remote get-url origin | sed -E 's#.*github\.com[:/]##; s#\.git$##')
 ref=${1:-origin/$(git rev-parse --abbrev-ref HEAD)}
@@ -15,9 +17,10 @@ if [ "$mode" = live ]; then default=gate:fast; else default=gate; fi
 gate=${GATE:-$default}
 post(){ gh auth status >/dev/null 2>&1 && gh api -X POST "repos/$repo/statuses/$sha" -f state="$1" -f context=gate/local -f description="$2" >/dev/null || true; }
 post pending "fresh clone + scripts/gate.sh ($gate)"
-dir=$(mktemp -d); log="$dir/gate.log"; start=$(date +%s)
-if git clone -q "https://github.com/$repo.git" "$dir/repo" && cd "$dir/repo" && git checkout -q --detach "$sha" \
-   && npm ci --silent >"$log" 2>&1 && EG_MUTANTS=$([ "$gate" = gate:fast ] && echo changed || true) scripts/gate.sh >>"$log" 2>&1; then
+log="${TMPDIR:-/tmp}/gate-$(basename "$(git rev-parse --show-toplevel)").log"   # one log per repo, outside the clone, replaced by the next run
+dir=$(mktemp -d); trap 'rm -rf "$dir"' EXIT; export TMPDIR="$dir"; start=$(date +%s)   # the clone and every temp file the gate makes go when the run ends
+if git clone -q "https://github.com/$repo.git" "$dir/repo" >"$log" 2>&1 && cd "$dir/repo" && git checkout -q --detach "$sha" \
+   && npm ci --silent >>"$log" 2>&1 && EG_MUTANTS=$([ "$gate" = gate:fast ] && echo changed || true) scripts/gate.sh >>"$log" 2>&1; then
   post success "$gate exit 0 in $(( ($(date +%s) - start) / 60 )) min: $(grep -m1 'mutants:' "$log" | cut -c1-80)"
   echo "gate/local success on $sha ($gate)"
 else
