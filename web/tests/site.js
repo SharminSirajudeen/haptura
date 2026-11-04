@@ -24,12 +24,21 @@ const TYPES = {
   '.json': 'application/json',
   '.mp4': 'video/mp4',
   '.png': 'image/png',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.wasm': 'application/wasm',
+  '.zip': 'application/zip',
+  '.py': 'text/x-python; charset=utf-8',
 };
+// The gate's own two files, which the page runs, are served from the repository: .github/workflows/pages.yml copies
+// them under the site the same way.
+const SOURCE = /^phone\/(windows|rules)\.py$/;
 
 function serve(req, res) {
   const url = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-  const file = path.join(ROOT, url.slice(PREFIX.length) || 'index.html');
-  if (!url.startsWith(PREFIX) || !file.startsWith(ROOT + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+  const rel = url.slice(PREFIX.length) || 'index.html';
+  const base = SOURCE.test(rel) ? path.join(ROOT, '..') : ROOT;
+  const file = path.join(base, rel);
+  if (!url.startsWith(PREFIX) || !file.startsWith(base + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
     res.writeHead(404).end('not found');
     return;
   }

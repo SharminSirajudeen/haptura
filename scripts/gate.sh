@@ -7,6 +7,7 @@ cd "$(dirname "$0")/.."
 uv sync --locked --quiet
 # reinstall whenever the lockfile changed since the last install (npm writes node_modules/.package-lock.json)
 [ node_modules/.package-lock.json -nt package-lock.json ] || npm ci --silent
+scripts/pyodide.sh  # the demo page's Python runtime, into web/vendor/ (ignored), once per version
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv run --locked mypy

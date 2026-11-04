@@ -1,12 +1,13 @@
 # Publishes web/ to GitHub Pages at https://sharminsirajudeen.github.io/haptura/: the tree web/tests/site.js serves under
-# /haptura/. Adapted from GitHub's starter workflow (actions/starter-workflows, pages/static.yml).
+# /haptura/, with the gate's own two files (phone/windows.py, phone/rules.py), which the page runs in the browser, and
+# Pyodide (scripts/pyodide.sh) copied in. Adapted from GitHub's starter workflow (actions/starter-workflows, pages/static.yml).
 # Turn Pages on with Settings > Pages > Source: GitHub Actions. While the repository is private the job is skipped.
 name: pages
 
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/pages.yml']
+    paths: ['web/**', 'phone/windows.py', 'phone/rules.py', 'scripts/pyodide.sh', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -27,6 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: scripts/pyodide.sh
+      - run: mkdir -p web/phone && cp phone/windows.py phone/rules.py web/phone/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

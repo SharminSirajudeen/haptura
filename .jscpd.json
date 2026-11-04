@@ -4,7 +4,7 @@
   "threshold": 0,
   "format": ["python", "javascript"],
   "path": ["gate", "tests", "test", "scripts", "web"],
-  "ignore": ["**/node_modules/**", "**/.venv/**"],
+  "ignore": ["**/node_modules/**", "**/.venv/**", "**/web/vendor/**"],
   "reporters": ["console"],
   "absolute": true
 }

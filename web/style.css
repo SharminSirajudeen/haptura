@@ -17,6 +17,8 @@
   --action: #0071e3; /* white label on it: 4.7:1 */
   --caution: #8a4b00;
   --caution-bg: #fdf0dc;
+  --allow: #1a7f37; /* on the card: 5.1:1 */
+  --block: #c62828; /* 5.6:1 */
   --gutter: clamp(16px, 5vw, 96px); /* web/tests/look.spec.js reads the same clamp */
   --nav: 48px;
   --ease: cubic-bezier(0.2, 0, 0, 1);
@@ -34,6 +36,8 @@
     --link: #2997ff;
     --caution: #f0b25a;
     --caution-bg: #2b1f0b;
+    --allow: #3fb950;
+    --block: #ff6b6b;
   }
 }
 @media (prefers-contrast: more) {
@@ -230,7 +234,23 @@ tbody td { font-weight: 600; }
 .fix { color: var(--caution); font-weight: 600; }
 .labels { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--fg-2); font-size: 0.875rem; }
 
-footer { padding: 32px var(--gutter) 48px; background: var(--band); color: var(--fg-2); font-size: 0.8125rem; }
+/* Try the gate (index.html#try): two recorded screens a visitor taps, the verdict under each. */
+.try { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: clamp(24px, 3vw, 48px); margin-top: clamp(32px, 4vw, 56px); }
+.try figure { display: grid; align-content: start; gap: 12px; margin: 0; }
+.screen { position: relative; display: block; width: min(100%, 360px); padding: 0; border: 0; border-radius: 20px; background: #000; cursor: crosshair; }
+.screen img { display: block; width: 100%; height: auto; border-radius: 20px; }
+.mark { position: absolute; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 3px solid var(--action); border-radius: 50%; box-shadow: 0 0 0 2px #fff; pointer-events: none; }
+.status { min-height: 1.5em; color: var(--fg-2); font-size: 0.9375rem; }
+.recorded { justify-self: start; }
+.verdict { display: grid; gap: 8px; max-width: 70ch; padding: 16px 18px; border-radius: 14px; background: var(--card); font-size: 0.9375rem; }
+.verdict[hidden] { display: none; } /* until the first verdict */
+.verdict p { overflow-wrap: anywhere; }
+.verdict .kind { font-size: 1.3125rem; font-weight: 600; }
+.verdict[data-kind="allow"] .kind { color: var(--allow); }
+.verdict[data-kind="block"] .kind { color: var(--block); }
+.try figcaption { max-width: 70ch; color: var(--fg-2); font-size: 0.875rem; }
+
+footer { padding: 32px var(--gutter) 48px; border-top: 1px solid var(--line); color: var(--fg-2); font-size: 0.8125rem; }
 footer p { max-width: 70ch; }
 
 /* Motion: feedback on press and a smooth jump to a section; both off when the visitor asks for less motion. */

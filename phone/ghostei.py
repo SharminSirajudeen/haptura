@@ -130,16 +130,13 @@ def device(uid_list: str, system_list: str, ime: str) -> Device:
 def owner_at(
     text: str, dev: Device, task: str, x: int, y: int
 ) -> tuple[windows.Window | None, str]:
-    """From one `dumpsys input`: the window a touch injected at (x, y) reaches, and its owner."""
-    p = windows.display_point(text, x, y)
-    w = windows.receiver(windows.parse_windows(text), *p) if p else None
-    return w, windows.owner_package(w, dev.uids, task, dev.allow)
+    """The device's window under a touch at (x, y), and its owner (phone/windows.py)."""
+    return windows.owner_at(text, dev.uids, dev.allow, task, x, y)
 
 
 def focus_owner(text: str, dev: Device, task: str) -> str:
-    """From one `dumpsys input`: the owner of the focused window."""
-    w = windows.focused(windows.parse_windows(text), text)
-    return windows.owner_package(w, dev.uids, task, dev.allow)
+    """The owner of the device's focused window (phone/windows.py)."""
+    return windows.focus_owner(text, dev.uids, dev.allow, task)
 
 
 def owner_now(dev: Device, task: str) -> str:

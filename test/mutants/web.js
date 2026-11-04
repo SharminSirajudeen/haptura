@@ -24,6 +24,13 @@ const PANE = (log, clip) => `{ log: 'episodes/${log}.json', clip: 'episodes/${cl
 const PLACE = (width, on) => `labels stay on the canvas and clear of each other at ${width} px on ${on}`;
 const INTRO = 'the intro says a label with no free place is left off the picture, and the list names every track';
 const FIRST = "each pane starts on its log's first frame, though its clip's first frame is not at media time 0";
+const GATE = 'web/gate.js', SITE = 'web/tests/site.js'; // Try the gate: the page's script and the test server
+const DIALOG = "the dialog screen: Muse's own tap is blocked and the attacker named; the status bar is allowed";
+const KEYS = 'the keyboard screen: the key is blocked and the keyboard named, the page beside it allowed, and a focus check would allow both';
+const SERVED = "the gate's two files are served as they stand in the repository";
+const LAZY = 'nothing of the gate is fetched before the first tap';
+const ENTER = 'Enter on a screen taps where its recording did', RETRY = 'a fetch that failed is tried again on the next tap';
+const DEPLOY = 'the deploy copies exactly the files the page runs, and runs again when they change', PAGES = '.github/workflows/pages.yml';
 module.exports = [
   m('web: the layout fills the screen', 'web/style.css', 'header p { max-width: 70ch; }', 'header, main { max-width: 64rem; margin: 0 auto; } header p { max-width: 70ch; }',
     'fill.spec.js', '6:3', 'the layout fills a 1440 px screen minus the gutter'),
@@ -35,7 +42,28 @@ module.exports = [
   m('origin: an outside script', HTML, LINK, LINK + '<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>\n', 'origin.spec.js', '5:1', ORIGIN),
   m('origin: an outside image', HTML, LINK, LINK + '<img src="https://example.com/pixel.gif" alt="">\n', 'origin.spec.js', '5:1', ORIGIN),
   m('origin: an outside fetch', JS, "  const log = await (await fetch(logUrl)).json();\n", "  fetch('https://example.com/ping');\n  const log = await (await fetch(logUrl)).json();\n", 'origin.spec.js', '5:1', ORIGIN),
-  m('paths: the script is found only at the site root', ARENA, '<script src="app.js"></script>', '<script src="/app.js"></script>', 'origin.spec.js', '22:1', SUBPATH),
+  m('paths: the script is found only at the site root', ARENA, '<script src="app.js"></script>', '<script src="/app.js"></script>', 'origin.spec.js', '25:1', SUBPATH),
+  // Try the gate (web/gate.js): the Python runtime and the gate's files from this site only, loaded on the first tap; the
+  // point scaled to the screen; the verdict, its reason and the focus check shown as the rule gave them.
+  m('origin: the Python runtime from a CDN', GATE, "import('./vendor/pyodide/pyodide.mjs')", "import('https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.mjs')", 'origin.spec.js', '5:1', ORIGIN),
+  m("origin: the gate's files from GitHub", GATE, '...SOURCE.map((f) => fetched(f)', "...SOURCE.map((f) => fetched('https://raw.githubusercontent.com/SharminSirajudeen/haptura/main/' + f)", 'origin.spec.js', '5:1', ORIGIN),
+  m('try: the Python runtime loads with the page', GATE, 'let loading; // the one runtime, shared by both screens, started on the first tap\n', 'let loading; // the one runtime, shared by both screens, started on the first tap\nqueueMicrotask(gate);\n', 'gate.spec.js', '117:1', LAZY),
+  m('try: the tap point not scaled to the screen', GATE, '[Math.round(fx * cap.screen[0]), Math.round(fy * cap.screen[1])]', '[Math.round(fx * 360), Math.round(fy * 640)]', 'gate.spec.js', '66:1', KEYS),
+  m('try: the button taps elsewhere than the recording', GATE, 'const recorded = (cap) => [cap.touch.x, cap.touch.y];', 'const recorded = (cap) => [cap.touch.y, cap.touch.x];', 'gate.spec.js', '58:1', DIALOG),
+  m('try: the headline says the opposite', GATE, "r.verdict.kind === 'allow' ? 'Allowed' : 'Blocked'", "r.verdict.kind === 'allow' ? 'Blocked' : 'Allowed'", 'gate.spec.js', '58:1', DIALOG),
+  m("try: the verdict shown is the focus check's", GATE, 'out.dataset.kind = r.verdict.kind;', 'out.dataset.kind = r.focus.kind;', 'gate.spec.js', '66:1', KEYS),
+  m("try: the reason shown is not the rule's", GATE, "out.querySelector('.reason').textContent = r.verdict.reason;", "out.querySelector('.reason').textContent = r.focus.owner;", 'gate.spec.js', '58:1', DIALOG),
+  m("try: the focus line says the gate's verdict", GATE, "${r.focus.kind === 'allow' ? 'allowed' : 'blocked'}", "${r.verdict.kind === 'allow' ? 'allowed' : 'blocked'}", 'gate.spec.js', '66:1', KEYS),
+  m("try: another file served as the gate's", SITE, '  const file = path.join(base, rel);\n', "  const file = path.join(base, SOURCE.test(rel) ? 'phone/ui.py' : rel);\n", 'gate.spec.js', '100:1', SERVED),
+  m("try: the button's label names another point", HTML, 'Tap where Muse tapped, (206, 777)', 'Tap where Muse tapped, (206, 778)', 'gate.spec.js', '58:1', DIALOG),
+  m('try: the verdict box stays hidden', GATE, '  out.hidden = false;\n', '', 'gate.spec.js', '58:1', DIALOG),
+  m('try: the mark drawn at the wrong place', GATE, 'mark.style.left = `${(100 * x) / cap.screen[0]}%`;', 'mark.style.left = `${(100 * y) / cap.screen[1]}%`;', 'gate.spec.js', '58:1', DIALOG),
+  m("try: a screen shows the other screen's frame", HTML, 'src="media/replay-run37-step6.png"', 'src="media/lab-gated-key.png"', 'gate.spec.js', '58:1', DIALOG),
+  m('try: Enter on a screen taps the corner', GATE, ': recorded(cap)));', ': [0, 0]));', 'gate.spec.js', '75:1', ENTER),
+  m('try: a capture that failed to load is not tried again', GATE, '.catch(failed(() => { delete captures[k]; }))', '.catch(failed(() => {}))', 'gate.spec.js', '83:1', RETRY),
+  m('try: a runtime that failed to load is not tried again', GATE, '.catch(failed(() => { loading = undefined; }))', '.catch(failed(() => {}))', 'gate.spec.js', '83:1', RETRY),
+  m('deploy: the copy step drops a file the page runs', PAGES, 'cp phone/windows.py phone/rules.py web/phone/', 'cp phone/windows.py web/phone/', 'gate.spec.js', '107:1', DEPLOY),
+  m('deploy: a file the page runs no longer redeploys the site', PAGES, "'phone/windows.py', 'phone/rules.py', 'scripts/pyodide.sh'", "'phone/windows.py', 'scripts/pyodide.sh'", 'gate.spec.js', '107:1', DEPLOY),
   m('label: eyes_swapped says the body line', JS, "eyes_swapped: 'my eyes swapped two objects, corrected',", "eyes_swapped: 'my controls changed, relearning',", 'overlay.spec.js', '15:1', OVERLAY),
   m('label: boxes are drawn on the elements that are visible', JS, 'items.filter((it) => it.pt[0] !== null)', 'items.filter((it) => it.pt[0] === null)', 'overlay.spec.js', '15:1', OVERLAY),
   m('label: boxes are scaled to the canvas', JS, '  const px = x * k;\n', '  const px = x;\n', 'overlay.spec.js', '15:1', OVERLAY),

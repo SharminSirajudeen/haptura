@@ -196,3 +196,17 @@ def owner_package(w: Window | None, uids: Uids, task_pkg: str, allow: frozenset[
     if w and task_pkg in pkgs and (len(pkgs) == 1 or f" {task_pkg}/" in w.name):
         return task_pkg
     return min(pkgs & allow, default=min(pkgs - {task_pkg}, default=""))
+
+
+def owner_at(
+    text: str, uids: Uids, allow: frozenset[str], task: str, x: int, y: int
+) -> tuple[Window | None, str]:
+    """From one `dumpsys input`: the window a touch injected at (x, y) reaches, and its owner."""
+    p = display_point(text, x, y)
+    w = receiver(parse_windows(text), *p) if p else None
+    return w, owner_package(w, uids, task, allow)
+
+
+def focus_owner(text: str, uids: Uids, allow: frozenset[str], task: str) -> str:
+    """From one `dumpsys input`: the owner of the focused window."""
+    return owner_package(focused(parse_windows(text), text), uids, task, allow)

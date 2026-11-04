@@ -21,8 +21,8 @@ module.exports = [
 ];
 const LABKEY = 'test_the_keyboard_over_a_focused_task_app_is_named_and_refused', CLOCK = 'test_the_timing_marks_bracket_the_dump_and_the_send';
 module.exports.push(
-  m('runner: a tap is judged by the window that receives it, not the focused one', 'phone/ghostei.py',
-    'w = windows.receiver(windows.parse_windows(text), *p) if p else None', 'w = windows.focused(windows.parse_windows(text), text)', G, LABKEY),
+  m('runner: a tap is judged by the window that receives it, not the focused one', 'phone/windows.py',
+    'w = receiver(parse_windows(text), *p) if p else None', 'w = focused(parse_windows(text), text)', G, LABKEY),
   m('runner: the first mark is taken before the dump', 'phone/ghostei.py',
     '        marks = [time.perf_counter_ns()]\n        dump = adb.input_dump()\n', '        dump = adb.input_dump()\n        marks = [time.perf_counter_ns()]\n', G, CLOCK),
   m('runner: the last mark is taken after the send', 'phone/ghostei.py',
@@ -51,9 +51,9 @@ module.exports.push(
   m('runner: startable packages are read by package name', 'phone/ghostei.py', 'ln.strip().split("/")[0]', 'ln.strip()', G, 'test_startable_packages_are_read_from_the_launcher_list'),
 );
 module.exports.push(
-  m('runner: the owner is read where the touch lands', 'phone/ghostei.py',
-    '    w = windows.receiver(windows.parse_windows(text), *p) if p else None\n',
-    '    w = windows.receiver(windows.parse_windows(text), x, y)\n', G, 'test_a_tap_on_a_rotated_display_is_judged_where_it_lands'),
+  m('runner: the owner is read where the touch lands', 'phone/windows.py',
+    '    w = receiver(parse_windows(text), *p) if p else None\n',
+    '    w = receiver(parse_windows(text), x, y)\n', G, 'test_a_tap_on_a_rotated_display_is_judged_where_it_lands'),
 );
 module.exports.push(
   m('adb: the screen size is the screenshot\'s own, width first', 'phone/adb.py',

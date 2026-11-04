@@ -10,8 +10,9 @@ and tested offline. The arena's one paid evaluation run (the kill test) finished
 it is Rethink: the arena's claim did not hold on these seeds. The gate's effect passed, 0.42 against a bar of 0.10;
 SAM's lead over a colour tracker did not clear its bar (below).
 
-**Live demo page:** https://sharminsirajudeen.github.io/haptura/, the measured results, how the gate works and the
-arena replay, in a browser, no setup. **Video (3 min):** https://www.youtube.com/watch?v=UaFilR5qpPs
+**Live demo page:** https://sharminsirajudeen.github.io/haptura/, the measured results, how the gate works, the gate
+itself to tap (`phone/windows.py` and `phone/rules.py`, unchanged, run in the browser on two recorded screens) and the
+arena replay, no setup. **Video (3 min):** https://www.youtube.com/watch?v=UaFilR5qpPs
 
 ## The model proposes each touch; the gate grants it
 
@@ -395,6 +396,10 @@ Used, not ours:
   (github.com/cyChen2003/Ghost-EI, MIT).
 - The Android emulator, its system image and its apps (Settings, Clock, the keyboard) are Google's.
 - Muse Spark, Muse Wonder and SAM 3.1 are Meta's models, called through Meta's API.
+- Pyodide 314.0.7 (MPL-2.0, github.com/pyodide/pyodide), the Python runtime the demo page runs the gate with in the
+  browser, fetched from its release by `scripts/pyodide.sh` and served from the demo page's own site.
+- CPython 3.14.2 (PSF-2.0, github.com/python/cpython), the interpreter inside that Pyodide release; its licence is
+  served beside Pyodide's.
 - The libraries in `pyproject.toml` (numpy, openai) and `package.json`, and the build and test tools (pytest, ruff,
   mypy, jscpd, Playwright).
 
@@ -405,7 +410,7 @@ Needs uv, Node.js and ffmpeg (`ffmpeg` and `ffprobe` on the PATH: two test files
 ```bash
 uv sync --locked && npm ci
 npx playwright install chromium   # the demo page's tests need its browser build
-scripts/gate.sh
+scripts/gate.sh                   # fetches the demo page's Python runtime (scripts/pyodide.sh) the first time
 ```
 
 `scripts/gate.sh` runs, in order: the lockfile check, ruff (complexity ≤ 10, nesting ≤ 3, statements ≤ 40), ruff
