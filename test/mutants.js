@@ -61,8 +61,7 @@ const SELECTED = process.env.EG_MUTANTS === 'changed' ? changedOnly() : MUTANTS;
 /* one shard: every n-th selected mutant from k, in its own copy, after the control of every n-th named test from k (the
    test green unmutated, after its mutant's `before` step, since a test that needs a build is red without one) */
 function shard(k, n){
-  const dir = path.join(os.tmpdir(), PREFIX + k);
-  fs.mkdirSync(dir);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), PREFIX + k + '-'));
   let fails = 0;
   try {
     // skipped: the root's own caches and outputs (not a tests/fixtures/cache), plus any tool cache anywhere
